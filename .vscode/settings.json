@@ -1,0 +1,16 @@
+{
+  "sqltools.connections": [
+    {
+      "mysqlOptions": {
+        "authProtocol": "default",
+        "enableSsl": "Disabled"
+      },
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "MySQL",
+      "connectString": "mysql+pymysql://root:Notdoppler%40y2k@localhost:3306",
+      "name": "WhatsMyNoteDB"
+    }
+  ]
+}
