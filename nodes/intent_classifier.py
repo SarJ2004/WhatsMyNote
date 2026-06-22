@@ -67,5 +67,7 @@ def intent_router(state):
 
     if state.intent == "delete":
         return "delete_record_extractor"
+    if state.intent == "query":
+        return "query_extractor"
     else:
         return "END"
