@@ -3,6 +3,7 @@ from nodes.extractors.create_record_extractor import create_record_extractor
 from nodes.extractors.update_record_extractor import update_record_extractor
 from nodes.extractors.delete_record_extractor import delete_record_extractor
 from nodes.extractors.query_extractor import query_extractor
+from nodes.response_formatter import response_formatter
 from langgraph.graph import START, StateGraph, END
 from models.state import State
 from services.record_saver import record_saver
@@ -42,6 +43,7 @@ graph.add_node(
     record_deleter,
 )
 graph.add_node("query_executor", query_executor)
+graph.add_node("response_formatter", response_formatter)
 
 graph.add_edge(START, "intent_evaluator")
 graph.add_conditional_edges(
@@ -59,23 +61,15 @@ graph.add_edge("create_record_extractor", "record_saver")
 graph.add_edge("update_record_extractor", "record_updater")
 graph.add_edge("delete_record_extractor", "record_deleter")
 graph.add_edge("query_extractor", "query_executor")
-graph.add_edge("record_saver", END)
-graph.add_edge("record_updater", END)
-graph.add_edge("record_deleter", END)
-graph.add_edge("query_executor", END)
+graph.add_edge("record_saver", "response_formatter")
+graph.add_edge("record_updater", "response_formatter")
+graph.add_edge("record_deleter", "response_formatter")
+graph.add_edge("query_executor", "response_formatter")
+
+graph.add_edge("response_formatter", END)
 
 compiled_graph = graph.compile()
 message = input("Enter your message: ")
 result = compiled_graph.invoke({"raw_text": message})
 
-if "saved_record_ids" in result:
-    print(result["saved_record_ids"])
-
-if "updated_record_id" in result:
-    print("record updated id: ", result["updated_record_id"])
-
-if "deleted_record_id" in result:
-    print("record deleted id: ", result["deleted_record_id"])
-
-if "query_result" in result:
-    print("query result: ", result["query_result"])
+print("result: ", result["answer"])

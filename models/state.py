@@ -12,7 +12,7 @@ class State(BaseModel):
     saved_record_ids: list[int] = Field(default_factory=list)
     updated_record_id: int | None = None
     deleted_record_id: int | None = None
-    response: str | None = None
+    # response: str | None = None
     query_result: object | None = None
     answer: str | None = None
     error: str | None = None
