@@ -1,15 +1,16 @@
 from models.query_plan_model import QueryPlan
 from db.config import SessionLocal
 from services.record_resolver import resolve_records
+from db.models import LendingDirection
 
 
 def _net_balance(records):
     balance = 0
 
     for record in records:
-        if record.direction == "lent":
+        if record.direction == LendingDirection.LENT:
             balance += record.amount
-        elif record.direction == "borrowed":
+        elif record.direction == LendingDirection.BORROWED:
             balance -= record.amount
 
     return balance
@@ -103,6 +104,7 @@ def query_executor(state):
 
             case _:
                 state.error = f"Unsupported operation: {extraction.operation}"
+        print(state.extraction)
 
         return state
 

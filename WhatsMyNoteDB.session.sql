@@ -1,0 +1,1 @@
+DROP TABLE lending_records;

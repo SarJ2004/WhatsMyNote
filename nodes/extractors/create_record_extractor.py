@@ -1,13 +1,18 @@
 from pathlib import Path
 from llms import extractor_llm
 from models.create_record_model import CreateRecord
+from langchain_core.messages import SystemMessage, HumanMessage
 
 from langchain_core.prompts import ChatPromptTemplate
 
 EXTRACTION_PROMPT = Path("prompts/extract_create_record.md").read_text()
 
+
 record_extraction_prompt = ChatPromptTemplate.from_messages(
-    [("system", EXTRACTION_PROMPT), ("human", "{user_input}")]
+    [
+        SystemMessage(content=EXTRACTION_PROMPT),
+        ("human", "{user_input}"),
+    ]
 )
 
 

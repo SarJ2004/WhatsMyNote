@@ -18,13 +18,16 @@ def record_deleter(state):
 
         person = record.person
         amount = record.amount
+        record_id = record.record_id
 
-        db.delete(record)
+        # Delete the parent record.
+        db.delete(record.record)
+
         db.commit()
 
         return {
             "response": f"Deleted record: {person} ({amount})",
-            "deleted_record_id": record.id,
+            "deleted_record_id": record_id,
         }
 
     except Exception as e:
