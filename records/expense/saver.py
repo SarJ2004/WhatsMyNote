@@ -1,5 +1,5 @@
 from db.config import SessionLocal
-from db.models import BaseRecord, LendingRecord, RecordType, LendingDirection
+from db.schema import BaseRecord, ExpenseRecord, RecordType
 
 
 def record_saver(state):
@@ -10,19 +10,22 @@ def record_saver(state):
         for record in state.extraction.records:
             # Create the base record
             base_record = BaseRecord(
-                record_type=RecordType.LENDING,
+                record_type=RecordType.EXPENSE,
                 raw_text=state.raw_text,
             )
 
-            # Create the lending record
-            base_record.lending = LendingRecord(
-                person=record.person,
+            # Create the expense record
+            base_record.expense = ExpenseRecord(
                 amount=record.amount,
-                direction=record.direction,
-                expected_payback_by=record.expected_payback_by,
+                category=record.category,
+                merchant=record.merchant,
+                payment_source=record.payment_source,
+                expense_date=record.expense_date,
+                notes=record.notes,
             )
+
             session.add(base_record)
-            session.flush()  # Flush to get the ID of the base_record
+            session.flush()  # Flush to get the ID of the base record
 
             saved_ids.append(base_record.id)
 

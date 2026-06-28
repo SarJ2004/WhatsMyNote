@@ -1,75 +1,216 @@
-from nodes.intent_classifier import intent_evaluator, intent_router
-from nodes.extractors.create_record_extractor import create_record_extractor
-from nodes.extractors.update_record_extractor import update_record_extractor
-from nodes.extractors.delete_record_extractor import delete_record_extractor
-from nodes.extractors.query_extractor import query_extractor
-from nodes.response_formatter import response_formatter
-from langgraph.graph import START, StateGraph, END
+from langgraph.graph import START, END, StateGraph
+
 from models.state import State
-from services.record_saver import record_saver
-from services.record_updater import record_updater
-from services.record_deleter import record_deleter
-from services.query_executor import query_executor
+
+from nodes.intent_classifier import (
+    intent_evaluator,
+    record_type_evaluator,
+    intent_router,
+    record_type_router,
+)
+from nodes.response_formatter import response_formatter
+
+# Lending
+from records.lending.extractor import (
+    create_extractor as create_lending_extractor,
+    update_extractor as update_lending_extractor,
+    delete_extractor as delete_lending_extractor,
+    query_extractor as lending_query_extractor,
+)
+
+from records.lending.saver import record_saver as lending_saver
+from records.lending.updater import record_updater as lending_updater
+from records.lending.deleter import record_deleter as lending_deleter
+from records.lending.query_executor import (
+    query_executor as lending_query_executor,
+)
+
+# Expense
+from records.expense.extractor import (
+    create_extractor as create_expense_extractor,
+)
+from records.expense.saver import (
+    record_saver as expense_saver,
+)
 
 graph = StateGraph(State)
 
-# Add nodes to the graph
+# --------------------------------------------------
+# Intent
+# --------------------------------------------------
 
 graph.add_node("intent_evaluator", intent_evaluator)
 graph.add_node(
-    "create_record_extractor",
-    create_record_extractor,
+    "record_type_evaluator",
+    record_type_evaluator,
+)
+
+# --------------------------------------------------
+# Lending
+# --------------------------------------------------
+
+graph.add_node(
+    "create_lending_extractor",
+    create_lending_extractor,
 )
 
 graph.add_node(
-    "update_record_extractor",
-    update_record_extractor,
+    "update_lending_extractor",
+    update_lending_extractor,
 )
 
 graph.add_node(
-    "delete_record_extractor",
-    delete_record_extractor,
+    "delete_lending_extractor",
+    delete_lending_extractor,
 )
-graph.add_node("query_extractor", query_extractor)
 
-
-graph.add_node("record_saver", record_saver)
 graph.add_node(
-    "record_updater",
-    record_updater,
+    "lending_query_extractor",
+    lending_query_extractor,
 )
-graph.add_node(
-    "record_deleter",
-    record_deleter,
-)
-graph.add_node("query_executor", query_executor)
-graph.add_node("response_formatter", response_formatter)
 
-graph.add_edge(START, "intent_evaluator")
+graph.add_node(
+    "lending_saver",
+    lending_saver,
+)
+
+graph.add_node(
+    "lending_updater",
+    lending_updater,
+)
+
+graph.add_node(
+    "lending_deleter",
+    lending_deleter,
+)
+
+graph.add_node(
+    "lending_query_executor",
+    lending_query_executor,
+)
+
+# --------------------------------------------------
+# Expense
+# --------------------------------------------------
+
+graph.add_node(
+    "create_expense_extractor",
+    create_expense_extractor,
+)
+
+graph.add_node(
+    "expense_saver",
+    expense_saver,
+)
+
+# --------------------------------------------------
+# Shared
+# --------------------------------------------------
+
+graph.add_node(
+    "response_formatter",
+    response_formatter,
+)
+
+# --------------------------------------------------
+# Edges
+# --------------------------------------------------
+
+graph.add_edge(
+    START,
+    "intent_evaluator",
+)
+
 graph.add_conditional_edges(
     "intent_evaluator",
     intent_router,
     {
-        "create_record_extractor": "create_record_extractor",
-        "update_record_extractor": "update_record_extractor",
-        "delete_record_extractor": "delete_record_extractor",
-        "query_extractor": "query_extractor",
+        "record_type_evaluator": "record_type_evaluator",
+        "query_router": "lending_query_extractor",  # temporary
         "END": END,
     },
 )
-graph.add_edge("create_record_extractor", "record_saver")
-graph.add_edge("update_record_extractor", "record_updater")
-graph.add_edge("delete_record_extractor", "record_deleter")
-graph.add_edge("query_extractor", "query_executor")
-graph.add_edge("record_saver", "response_formatter")
-graph.add_edge("record_updater", "response_formatter")
-graph.add_edge("record_deleter", "response_formatter")
-graph.add_edge("query_executor", "response_formatter")
 
-graph.add_edge("response_formatter", END)
+graph.add_conditional_edges(
+    "record_type_evaluator",
+    record_type_router,
+    {
+        "create_lending_extractor": "create_lending_extractor",
+        "create_expense_extractor": "create_expense_extractor",
+        "update_lending_extractor": "update_lending_extractor",
+        "delete_lending_extractor": "delete_lending_extractor",
+        "END": END,
+    },
+)
+
+# Lending
+
+graph.add_edge(
+    "create_lending_extractor",
+    "lending_saver",
+)
+
+graph.add_edge(
+    "update_lending_extractor",
+    "lending_updater",
+)
+
+graph.add_edge(
+    "delete_lending_extractor",
+    "lending_deleter",
+)
+
+graph.add_edge(
+    "lending_query_extractor",
+    "lending_query_executor",
+)
+
+graph.add_edge(
+    "lending_saver",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "lending_updater",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "lending_deleter",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "lending_query_executor",
+    "response_formatter",
+)
+
+# Expense
+
+graph.add_edge(
+    "create_expense_extractor",
+    "expense_saver",
+)
+
+graph.add_edge(
+    "expense_saver",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "response_formatter",
+    END,
+)
 
 compiled_graph = graph.compile()
-message = input("Enter your message: ")
-result = compiled_graph.invoke({"raw_text": message})
 
-print("result: ", result["answer"])
+if __name__ == "__main__":
+    message = input("Enter your message: ")
+
+    result = compiled_graph.invoke(
+        {
+            "raw_text": message,
+        }
+    )
+
+    print(result["answer"])

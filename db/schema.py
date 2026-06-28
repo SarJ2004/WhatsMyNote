@@ -43,6 +43,12 @@ class BaseRecord(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    expense: Mapped["ExpenseRecord"] = relationship(
+        "ExpenseRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -81,5 +87,26 @@ class LendingRecord(Base):
     record: Mapped["BaseRecord"] = relationship(
         "BaseRecord",
         back_populates="lending",
+        uselist=False,
+    )
+
+
+class ExpenseRecord(Base):
+    __tablename__ = "expense_records"
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    category: Mapped[str] = mapped_column(String(255), nullable=False)
+    merchant: Mapped[str] = mapped_column(String(255), nullable=True)
+    payment_source: Mapped[str] = mapped_column(String(255), nullable=True)
+    expense_date: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="expense",
         uselist=False,
     )
