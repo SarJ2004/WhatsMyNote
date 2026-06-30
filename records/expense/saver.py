@@ -20,10 +20,16 @@ def record_saver(state):
                 category=record.category,
                 merchant=record.merchant,
                 payment_source=record.payment_source,
+                item=record.item,
                 expense_date=record.expense_date,
                 notes=record.notes,
             )
-
+            # print(
+            #     "expense_date type:",
+            #     type(record.expense_date),
+            #     "value:",
+            #     record.expense_date,
+            # )
             session.add(base_record)
             session.flush()  # Flush to get the ID of the base record
 

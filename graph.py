@@ -1,5 +1,5 @@
 from langgraph.graph import START, END, StateGraph
-
+from pprint import pprint
 from models.state import State
 
 from nodes.intent_classifier import (
@@ -28,9 +28,15 @@ from records.lending.query_executor import (
 # Expense
 from records.expense.extractor import (
     create_extractor as create_expense_extractor,
+    update_extractor as update_expense_extractor,
+    delete_extractor as delete_expense_extractor,
+    query_extractor as expense_query_extractor,
 )
-from records.expense.saver import (
-    record_saver as expense_saver,
+from records.expense.saver import record_saver as expense_saver
+from records.expense.updater import record_updater as expense_updater
+from records.expense.deleter import record_deleter as expense_deleter
+from records.expense.query_executor import (
+    query_executor as expense_query_executor,
 )
 
 graph = StateGraph(State)
@@ -99,9 +105,39 @@ graph.add_node(
 )
 
 graph.add_node(
+    "update_expense_extractor",
+    update_expense_extractor,
+)
+
+graph.add_node(
+    "delete_expense_extractor",
+    delete_expense_extractor,
+)
+
+graph.add_node(
+    "expense_query_extractor",
+    expense_query_extractor,
+)
+graph.add_node(
     "expense_saver",
     expense_saver,
 )
+
+graph.add_node(
+    "expense_updater",
+    expense_updater,
+)
+
+graph.add_node(
+    "expense_deleter",
+    expense_deleter,
+)
+
+graph.add_node(
+    "expense_query_executor",
+    expense_query_executor,
+)
+
 
 # --------------------------------------------------
 # Shared
@@ -126,7 +162,6 @@ graph.add_conditional_edges(
     intent_router,
     {
         "record_type_evaluator": "record_type_evaluator",
-        "query_router": "lending_query_extractor",  # temporary
         "END": END,
     },
 )
@@ -136,9 +171,13 @@ graph.add_conditional_edges(
     record_type_router,
     {
         "create_lending_extractor": "create_lending_extractor",
-        "create_expense_extractor": "create_expense_extractor",
         "update_lending_extractor": "update_lending_extractor",
         "delete_lending_extractor": "delete_lending_extractor",
+        "create_expense_extractor": "create_expense_extractor",
+        "update_expense_extractor": "update_expense_extractor",
+        "delete_expense_extractor": "delete_expense_extractor",
+        "lending_query_extractor": "lending_query_extractor",
+        "expense_query_extractor": "expense_query_extractor",
         "END": END,
     },
 )
@@ -185,6 +224,7 @@ graph.add_edge(
     "response_formatter",
 )
 
+
 # Expense
 
 graph.add_edge(
@@ -193,7 +233,37 @@ graph.add_edge(
 )
 
 graph.add_edge(
+    "update_expense_extractor",
+    "expense_updater",
+)
+
+graph.add_edge(
+    "delete_expense_extractor",
+    "expense_deleter",
+)
+
+graph.add_edge(
+    "expense_query_extractor",
+    "expense_query_executor",
+)
+
+graph.add_edge(
     "expense_saver",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "expense_updater",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "expense_deleter",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "expense_query_executor",
     "response_formatter",
 )
 
@@ -213,4 +283,4 @@ if __name__ == "__main__":
         }
     )
 
-    print(result["answer"])
+    pprint(result)

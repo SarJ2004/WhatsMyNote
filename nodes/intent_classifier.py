@@ -109,7 +109,12 @@ def record_type_evaluator(state):
             SystemMessage(content="""
 You are a financial record classifier.
 
-Return exactly one word.
+Your job is to determine the TYPE of financial record mentioned in the user's message.
+
+Ignore whether the user is creating, updating, deleting, or querying.
+Only determine the record type.
+
+Return exactly one word:
 
 lending
 expense
@@ -120,19 +125,87 @@ Do not explain.
 Do not output JSON.
 Do not output markdown.
 
-Examples:
+Examples
+
+Lent Rahul 500
+lending
+
+Borrowed 500 from Amit
+lending
+
+Rahul repaid me
+lending
+
+Delete the last lending record
+lending
+
+Update Rahul's loan
+lending
+
+Remove the previous borrowing
+lending
+
+Who owes me money?
+lending
+
+How much have I lent?
+lending
 
 Spent 200
 expense
 
-Borrowed 500
-lending
+Paid 500 for groceries
+expense
+
+Bought a laptop
+expense
+
+Delete the last expense
+expense
+
+Update my grocery expense
+expense
+
+Remove the previous purchase
+expense
+
+How much did I spend?
+expense
+
+Show all expenses
+expense
 
 Received salary
 income
 
-Transferred money
+Got my monthly salary
+income
+
+Delete the last income
+income
+
+Update my salary entry
+income
+
+Show all income
+income
+
+Transferred 500 to SBI
 transfer
+
+Sent money to HDFC account
+transfer
+
+Delete the last transfer
+transfer
+
+Update the transfer amount
+transfer
+
+Show my transfers
+transfer
+
+Return only one word.
 """),
             HumanMessage(content=state.raw_text),
         ]
@@ -153,10 +226,7 @@ def intent_router(state):
     Route after intent classification.
     """
 
-    if state.intent == "query":
-        return "query_router"
-
-    if state.intent in {"create", "update", "delete"}:
+    if state.intent in {"create", "update", "delete", "query"}:
         return "record_type_evaluator"
 
     return "END"
@@ -186,6 +256,13 @@ def record_type_router(state):
 
         case ("delete", "expense"):
             return "delete_expense_extractor"
+            # Query
+        case ("query", "lending"):
+            return "lending_query_extractor"
 
+        case ("query", "expense"):
+            return "expense_query_extractor"
         case _:
-            return "END"
+            raise ValueError(
+                f"Unsupported route: intent={state.intent}, record_type={state.record_type}"
+            )

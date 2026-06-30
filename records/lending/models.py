@@ -37,7 +37,7 @@ class LendingField(str, Enum):
     EXPECTED_PAYBACK_BY = "expected_payback_by"
 
 
-class FieldUpdate(BaseModel):
+class LendingFieldUpdate(BaseModel):
     field: LendingField
     operation: UpdateOperation = UpdateOperation.SET
     value: Union[
@@ -50,7 +50,7 @@ class UpdateLending(BaseModel):
 
     selector: RecordSelector
 
-    updates: List[FieldUpdate]
+    updates: List[LendingFieldUpdate] = Field(default_factory=list)
 
 
 class QueryLending(BaseModel):

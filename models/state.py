@@ -4,9 +4,19 @@ from records.lending.models import UpdateLending
 from records.lending.models import DeleteLending
 from records.lending.models import QueryLending
 from records.expense.models import CreateExpense
+from records.expense.models import UpdateExpense
+from records.expense.models import DeleteExpense
+from records.expense.models import QueryExpense
 
 Extraction = (
-    CreateLending | UpdateLending | DeleteLending | QueryLending | CreateExpense
+    CreateLending
+    | UpdateLending
+    | DeleteLending
+    | QueryLending
+    | CreateExpense
+    | UpdateExpense
+    | DeleteExpense
+    | QueryExpense
 )
 
 

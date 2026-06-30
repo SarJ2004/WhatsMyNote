@@ -1,0 +1,2 @@
+ALTER TABLE expense_records
+ADD COLUMN item VARCHAR(255) NULL;
