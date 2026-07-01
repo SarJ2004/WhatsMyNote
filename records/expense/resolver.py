@@ -1,7 +1,54 @@
+from calendar import monthrange
+from datetime import date, datetime, timedelta
+
 from sqlalchemy.orm import joinedload
 
 from db.schema import BaseRecord, ExpenseRecord
 from models.selectors import RecordSelector, TargetRecord
+
+
+def _month_bounds(value: str, fallback_year: int | None = None):
+    if value.lower() in {"current", "this"}:
+        today = date.today()
+        start = today.replace(day=1)
+        end_day = monthrange(today.year, today.month)[1]
+        end = today.replace(day=end_day)
+        return start, end
+
+    if value.lower() == "last":
+        today = date.today()
+        year = today.year if today.month > 1 else today.year - 1
+        month = today.month - 1 if today.month > 1 else 12
+        start = date(year, month, 1)
+        end_day = monthrange(year, month)[1]
+        end = date(year, month, end_day)
+        return start, end
+
+    parsed = datetime.strptime(value, "%B %Y").date()
+    start = parsed.replace(day=1)
+    end_day = monthrange(parsed.year, parsed.month)[1]
+    end = parsed.replace(day=end_day)
+    return start, end
+
+
+def _year_bounds(value: str):
+    if value.lower() in {"current", "this"}:
+        year = date.today().year
+    elif value.lower() == "last":
+        year = date.today().year - 1
+    else:
+        year = int(value)
+    return date(year, 1, 1), date(year, 12, 31)
+
+
+def _week_bounds(value: str):
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    if value.lower() in {"current", "this"}:
+        start = start_of_week
+    else:
+        start = start_of_week - timedelta(days=7)
+    return start, start + timedelta(days=6)
 
 
 def resolve_record(db, selector: RecordSelector):
@@ -59,41 +106,45 @@ def resolve_records(
 
     # Date / time filters
     if filters:
-
         expense_date = filters.get("expense_date")
         if expense_date:
-            # TODO
-            pass
+            query = query.filter(ExpenseRecord.expense_date == date.fromisoformat(expense_date))
 
         today = filters.get("today")
         if today:
-            # TODO
-            pass
+            query = query.filter(ExpenseRecord.expense_date == date.today())
 
         yesterday = filters.get("yesterday")
         if yesterday:
-            # TODO
-            pass
+            query = query.filter(ExpenseRecord.expense_date == date.today() - timedelta(days=1))
 
         week = filters.get("week")
         if week:
-            # TODO
-            pass
+            start, end = _week_bounds(week)
+            query = query.filter(ExpenseRecord.expense_date.between(start, end))
 
         month = filters.get("month")
         if month:
-            # TODO
-            pass
+            start, end = _month_bounds(month)
+            query = query.filter(ExpenseRecord.expense_date.between(start, end))
 
         year = filters.get("year")
         if year:
-            # TODO
-            pass
+            start, end = _year_bounds(year)
+            query = query.filter(ExpenseRecord.expense_date.between(start, end))
 
         start = filters.get("from")
         end = filters.get("to")
         if start and end:
-            # TODO
-            pass
+            query = query.filter(
+                ExpenseRecord.expense_date.between(
+                    date.fromisoformat(start),
+                    date.fromisoformat(end),
+                )
+            )
+
+        single_date = filters.get("date")
+        if single_date:
+            query = query.filter(ExpenseRecord.expense_date == date.fromisoformat(single_date))
 
     return query.order_by(BaseRecord.created_at.desc()).all()
