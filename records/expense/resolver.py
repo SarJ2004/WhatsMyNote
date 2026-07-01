@@ -1,5 +1,6 @@
 from calendar import monthrange
 from datetime import date, datetime, timedelta
+import re
 
 from sqlalchemy.orm import joinedload
 
@@ -19,6 +20,15 @@ def _month_bounds(value: str, fallback_year: int | None = None):
         today = date.today()
         year = today.year if today.month > 1 else today.year - 1
         month = today.month - 1 if today.month > 1 else 12
+        start = date(year, month, 1)
+        end_day = monthrange(year, month)[1]
+        end = date(year, month, end_day)
+        return start, end
+
+    iso_match = re.fullmatch(r"(\d{4})-(\d{1,2})", value)
+    if iso_match:
+        year = int(iso_match.group(1))
+        month = int(iso_match.group(2))
         start = date(year, month, 1)
         end_day = monthrange(year, month)[1]
         end = date(year, month, end_day)
@@ -145,6 +155,11 @@ def resolve_records(
 
         single_date = filters.get("date")
         if single_date:
-            query = query.filter(ExpenseRecord.expense_date == date.fromisoformat(single_date))
+            iso_month = re.fullmatch(r"(\d{4})-(\d{1,2})", single_date)
+            if iso_month:
+                start, end = _month_bounds(single_date)
+                query = query.filter(ExpenseRecord.expense_date.between(start, end))
+            else:
+                query = query.filter(ExpenseRecord.expense_date == date.fromisoformat(single_date))
 
     return query.order_by(BaseRecord.created_at.desc()).all()

@@ -1,4 +1,7 @@
 def response_formatter(state):
+    if getattr(state, "error", None):
+        return {"answer": f"Error: {state.error}"}
+
     if getattr(state, "saved_record_ids", None):
         count = len(state.saved_record_ids)
         return {"answer": f"Successfully created {count} record(s)."}
