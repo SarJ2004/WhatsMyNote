@@ -1,6 +1,6 @@
 # Task
 
-You are an extraction agent for create record tasks. Your task is to extract lending and borrowing records from natural language.
+You are an extraction agent for create lending record tasks. Your task is to extract lending and borrowing records from natural language.
 
 ## Rules
 

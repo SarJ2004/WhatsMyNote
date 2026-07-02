@@ -1,1 +1,2 @@
-DROP TABLE lending_records;
+ALTER TABLE expense_records
+ADD COLUMN item VARCHAR(255) NULL;

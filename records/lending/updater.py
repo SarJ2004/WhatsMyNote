@@ -1,13 +1,13 @@
-from models.update_record_model import (
-    UpdateRecord,
+from records.lending.models import (
+    UpdateLending,
     UpdateOperation,
 )
 from db.config import SessionLocal
-from services.record_resolver import resolve_record
+from records.lending.resolver import resolve_record
 
 
 def record_updater(state):
-    extraction: UpdateRecord = state.extraction
+    extraction: UpdateLending = state.extraction
 
     db = SessionLocal()
 

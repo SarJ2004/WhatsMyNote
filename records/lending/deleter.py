@@ -1,10 +1,10 @@
-from models.delete_record_model import DeleteRecord
+from records.lending.models import DeleteLending
 from db.config import SessionLocal
-from services.record_resolver import resolve_record
+from records.lending.resolver import resolve_record
 
 
 def record_deleter(state):
-    extraction: DeleteRecord = state.extraction
+    extraction: DeleteLending = state.extraction
     db = SessionLocal()
 
     try:

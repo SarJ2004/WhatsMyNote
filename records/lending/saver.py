@@ -1,5 +1,5 @@
 from db.config import SessionLocal
-from db.models import BaseRecord, LendingRecord, RecordType, LendingDirection
+from db.schema import BaseRecord, LendingRecord, RecordType, LendingDirection
 
 
 def record_saver(state):

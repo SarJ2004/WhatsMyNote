@@ -1,18 +1,33 @@
 from pydantic import BaseModel, Field
-from models.create_record_model import CreateRecord
-from models.update_record_model import UpdateRecord
-from models.delete_record_model import DeleteRecord
-from models.query_plan_model import QueryPlan
+from records.lending.models import CreateLending
+from records.lending.models import UpdateLending
+from records.lending.models import DeleteLending
+from records.lending.models import QueryLending
+from records.expense.models import CreateExpense
+from records.expense.models import UpdateExpense
+from records.expense.models import DeleteExpense
+from records.expense.models import QueryExpense
+
+Extraction = (
+    CreateLending
+    | UpdateLending
+    | DeleteLending
+    | QueryLending
+    | CreateExpense
+    | UpdateExpense
+    | DeleteExpense
+    | QueryExpense
+)
 
 
 class State(BaseModel):
     raw_text: str
     intent: str | None = None
-    extraction: CreateRecord | UpdateRecord | DeleteRecord | QueryPlan | None = None
+    extraction: Extraction | None = None
+    record_type: str | None = None
     saved_record_ids: list[int] = Field(default_factory=list)
     updated_record_id: int | None = None
     deleted_record_id: int | None = None
-    # response: str | None = None
     query_result: object | None = None
     answer: str | None = None
     error: str | None = None

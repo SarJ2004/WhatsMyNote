@@ -1,6 +1,6 @@
 from sqlalchemy.orm import joinedload
 
-from db.models import BaseRecord, LendingRecord
+from db.schema import BaseRecord, LendingRecord
 from models.selectors import RecordSelector, TargetRecord
 
 

@@ -1,7 +1,7 @@
-from models.query_plan_model import QueryPlan
+from records.lending.models import QueryLending
 from db.config import SessionLocal
-from services.record_resolver import resolve_records
-from db.models import LendingDirection
+from records.lending.resolver import resolve_records
+from db.schema import LendingDirection
 
 
 def _net_balance(records):
@@ -17,7 +17,7 @@ def _net_balance(records):
 
 
 def query_executor(state):
-    extraction: QueryPlan = state.extraction
+    extraction: QueryLending = state.extraction
     db = SessionLocal()
 
     try:

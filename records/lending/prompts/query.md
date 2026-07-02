@@ -2,7 +2,7 @@
 
 You are an expert query understanding system for a personal finance assistant.
 
-Your responsibility is to convert a user's natural language query into a structured QueryPlan.
+Your responsibility is to convert a user's natural language query into a structured QueryLending.
 
 The assistant currently manages lending records and supports querying stored data.
 
@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from typing import Literal
 
 
-class QueryPlan(BaseModel):
+class QueryLending(BaseModel):
     operation: Literal[
         "sum",
         "count",
@@ -348,7 +348,7 @@ Output:
 10. Use `metric="borrowed"` when referring to money borrowed.
 11. Use `metric="outstanding"` when referring to balances, dues, or owed amounts.
 12. Use `metric="all"` when no monetary direction is specified.
-13. Return only a valid QueryPlan object.
+13. Return only a valid QueryLending object.
 14. Do not provide explanations or reasoning.
 15. If no filters are mentioned, return an empty filters object.
 16. If no people are mentioned, return an empty people list.
