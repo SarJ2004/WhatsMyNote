@@ -48,6 +48,18 @@ class BaseRecord(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+    income: Mapped["IncomeRecord"] = relationship(
+        "IncomeRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    transfer: Mapped["TransferRecord"] = relationship(
+        "TransferRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc)
@@ -98,5 +110,44 @@ class ExpenseRecord(Base):
     record: Mapped["BaseRecord"] = relationship(
         "BaseRecord",
         back_populates="expense",
+        uselist=False,
+    )
+
+
+class IncomeRecord(Base):
+    __tablename__ = "income_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    income_date: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="income",
+        uselist=False,
+    )
+
+
+class TransferRecord(Base):
+    __tablename__ = "transfer_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    source_account: Mapped[str] = mapped_column(String(255), nullable=False)
+    destination_account: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    transfer_date: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="transfer",
         uselist=False,
     )

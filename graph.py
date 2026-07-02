@@ -39,6 +39,34 @@ from records.expense.query_executor import (
     query_executor as expense_query_executor,
 )
 
+# Income
+from records.income.extractor import (
+    create_extractor as create_income_extractor,
+    update_extractor as update_income_extractor,
+    delete_extractor as delete_income_extractor,
+    query_extractor as income_query_extractor,
+)
+from records.income.saver import record_saver as income_saver
+from records.income.updater import record_updater as income_updater
+from records.income.deleter import record_deleter as income_deleter
+from records.income.query_executor import (
+    query_executor as income_query_executor,
+)
+
+# Transfer
+from records.transfer.extractor import (
+    create_extractor as create_transfer_extractor,
+    update_extractor as update_transfer_extractor,
+    delete_extractor as delete_transfer_extractor,
+    query_extractor as transfer_query_extractor,
+)
+from records.transfer.saver import record_saver as transfer_saver
+from records.transfer.updater import record_updater as transfer_updater
+from records.transfer.deleter import record_deleter as transfer_deleter
+from records.transfer.query_executor import (
+    query_executor as transfer_query_executor,
+)
+
 graph = StateGraph(State)
 
 # --------------------------------------------------
@@ -138,6 +166,94 @@ graph.add_node(
     expense_query_executor,
 )
 
+# --------------------------------------------------
+# Income
+# --------------------------------------------------
+
+graph.add_node(
+    "create_income_extractor",
+    create_income_extractor,
+)
+
+graph.add_node(
+    "update_income_extractor",
+    update_income_extractor,
+)
+
+graph.add_node(
+    "delete_income_extractor",
+    delete_income_extractor,
+)
+
+graph.add_node(
+    "income_query_extractor",
+    income_query_extractor,
+)
+
+graph.add_node(
+    "income_saver",
+    income_saver,
+)
+
+graph.add_node(
+    "income_updater",
+    income_updater,
+)
+
+graph.add_node(
+    "income_deleter",
+    income_deleter,
+)
+
+graph.add_node(
+    "income_query_executor",
+    income_query_executor,
+)
+
+# --------------------------------------------------
+# Transfer
+# --------------------------------------------------
+
+graph.add_node(
+    "create_transfer_extractor",
+    create_transfer_extractor,
+)
+
+graph.add_node(
+    "update_transfer_extractor",
+    update_transfer_extractor,
+)
+
+graph.add_node(
+    "delete_transfer_extractor",
+    delete_transfer_extractor,
+)
+
+graph.add_node(
+    "transfer_query_extractor",
+    transfer_query_extractor,
+)
+
+graph.add_node(
+    "transfer_saver",
+    transfer_saver,
+)
+
+graph.add_node(
+    "transfer_updater",
+    transfer_updater,
+)
+
+graph.add_node(
+    "transfer_deleter",
+    transfer_deleter,
+)
+
+graph.add_node(
+    "transfer_query_executor",
+    transfer_query_executor,
+)
+
 
 # --------------------------------------------------
 # Shared
@@ -178,6 +294,14 @@ graph.add_conditional_edges(
         "delete_expense_extractor": "delete_expense_extractor",
         "lending_query_extractor": "lending_query_extractor",
         "expense_query_extractor": "expense_query_extractor",
+        "create_income_extractor": "create_income_extractor",
+        "update_income_extractor": "update_income_extractor",
+        "delete_income_extractor": "delete_income_extractor",
+        "income_query_extractor": "income_query_extractor",
+        "create_transfer_extractor": "create_transfer_extractor",
+        "update_transfer_extractor": "update_transfer_extractor",
+        "delete_transfer_extractor": "delete_transfer_extractor",
+        "transfer_query_extractor": "transfer_query_extractor",
         "END": END,
     },
 )
@@ -264,6 +388,92 @@ graph.add_edge(
 
 graph.add_edge(
     "expense_query_executor",
+    "response_formatter",
+)
+
+
+# Income
+
+graph.add_edge(
+    "create_income_extractor",
+    "income_saver",
+)
+
+graph.add_edge(
+    "update_income_extractor",
+    "income_updater",
+)
+
+graph.add_edge(
+    "delete_income_extractor",
+    "income_deleter",
+)
+
+graph.add_edge(
+    "income_query_extractor",
+    "income_query_executor",
+)
+
+graph.add_edge(
+    "income_saver",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "income_updater",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "income_deleter",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "income_query_executor",
+    "response_formatter",
+)
+
+
+# Transfer
+
+graph.add_edge(
+    "create_transfer_extractor",
+    "transfer_saver",
+)
+
+graph.add_edge(
+    "update_transfer_extractor",
+    "transfer_updater",
+)
+
+graph.add_edge(
+    "delete_transfer_extractor",
+    "transfer_deleter",
+)
+
+graph.add_edge(
+    "transfer_query_extractor",
+    "transfer_query_executor",
+)
+
+graph.add_edge(
+    "transfer_saver",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "transfer_updater",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "transfer_deleter",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "transfer_query_executor",
     "response_formatter",
 )
 

@@ -245,23 +245,47 @@ def record_type_router(state):
         case ("create", "expense"):
             return "create_expense_extractor"
 
+        case ("create", "income"):
+            return "create_income_extractor"
+
+        case ("create", "transfer"):
+            return "create_transfer_extractor"
+
         case ("update", "lending"):
             return "update_lending_extractor"
 
         case ("update", "expense"):
             return "update_expense_extractor"
 
+        case ("update", "income"):
+            return "update_income_extractor"
+
+        case ("update", "transfer"):
+            return "update_transfer_extractor"
+
         case ("delete", "lending"):
             return "delete_lending_extractor"
 
         case ("delete", "expense"):
             return "delete_expense_extractor"
+
+        case ("delete", "income"):
+            return "delete_income_extractor"
+
+        case ("delete", "transfer"):
+            return "delete_transfer_extractor"
             # Query
         case ("query", "lending"):
             return "lending_query_extractor"
 
         case ("query", "expense"):
             return "expense_query_extractor"
+
+        case ("query", "income"):
+            return "income_query_extractor"
+
+        case ("query", "transfer"):
+            return "transfer_query_extractor"
         case _:
             raise ValueError(
                 f"Unsupported route: intent={state.intent}, record_type={state.record_type}"

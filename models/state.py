@@ -7,6 +7,14 @@ from records.expense.models import CreateExpense
 from records.expense.models import UpdateExpense
 from records.expense.models import DeleteExpense
 from records.expense.models import QueryExpense
+from records.income.models import CreateIncome
+from records.income.models import UpdateIncome
+from records.income.models import DeleteIncome
+from records.income.models import QueryIncome
+from records.transfer.models import CreateTransfer
+from records.transfer.models import UpdateTransfer
+from records.transfer.models import DeleteTransfer
+from records.transfer.models import QueryTransfer
 
 Extraction = (
     CreateLending
@@ -17,6 +25,14 @@ Extraction = (
     | UpdateExpense
     | DeleteExpense
     | QueryExpense
+    | CreateIncome
+    | UpdateIncome
+    | DeleteIncome
+    | QueryIncome
+    | CreateTransfer
+    | UpdateTransfer
+    | DeleteTransfer
+    | QueryTransfer
 )
 
 
