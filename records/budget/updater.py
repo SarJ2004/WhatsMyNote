@@ -26,7 +26,10 @@ def record_updater(state):
                     setattr(record, field, current_value * update.value)
         db.commit()
         db.refresh(record)
-        return {"updated_record_id": record.record_id, "response": "Budget updated successfully."}
+        return {
+            "updated_record_id": record.record_id,
+            "response": "Budget updated successfully.",
+        }
     except Exception as e:
         db.rollback()
         return {"error": str(e)}

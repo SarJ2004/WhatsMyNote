@@ -44,11 +44,29 @@ The app extracts structured data, stores it in MySQL, and answers supported quer
 - Delete transfers
 - Query by source account, destination account, and date filters
 
+### Budget and Balances
+
+- Set opening balances for cash, bank, wallet, or any named account
+- Track current balance per account from initial position forward
+- Set monthly or category budgets
+- Compare actual spend against budget
+- Surface overspend and savings signals in analytics
+
+### Setup Flow
+
+Start with two kinds of initial records:
+
+- Accounts: SBI, HDFC, wallet, cash, or any named place where money sits
+- Budgets: monthly or category limits like groceries, transport, rent, or shopping
+
+After that, the app can compute current balances and budget remaining from income, expense, and transfer history.
+
 ### Analytics
 
 - Read-only analytics over the stored database
 - Totals, counts, averages, maxima, minima, groupings, and comparisons
 - Safe SQL generation with validation before execution
+- Budget variance, cash-flow, account balance, and net-worth style summaries
 
 ---
 
@@ -152,6 +170,26 @@ Which expense category is highest this year?
 Compare my income and expense totals for July
 ```
 
+```text
+What is my current balance in SBI?
+```
+
+```text
+How much budget do I have left for groceries this month?
+```
+
+```text
+What is my net worth estimate?
+```
+
+```text
+Set opening balance for SBI to 50000
+```
+
+```text
+Set monthly budget for groceries to 10000
+```
+
 ---
 
 ## Query Boundary
@@ -162,6 +200,7 @@ It can answer:
 
 - Supported record queries for lending, expense, income, and transfer
 - Safe read-only analytics over the same data
+- Budget queries and account-balance summaries now that account and budget records exist
 
 It does not:
 
@@ -169,6 +208,10 @@ It does not:
 - Modify the schema
 - Insert, update, or delete records from an analytics query
 - Query tables or columns outside the supported schema
+
+- One-time initial balance setup is now part of the record model.
+
+If a question asks for arbitrary SQL or schema changes, it still rejects it.
 
 If a question is outside the supported data model, the system should reject it or return a limited answer.
 
@@ -236,6 +279,10 @@ Response Generation
 - [x] Delete records
 - [x] Query records
 - [x] Aggregations and analytics
+- [x] Budget tracking
+- [x] Opening balances for accounts
+- [x] Account balance summaries
+- [ ] Budget variance alerts
 - [ ] Multi-user support
 - [ ] REST API
 - [ ] Web dashboard

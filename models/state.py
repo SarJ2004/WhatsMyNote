@@ -7,6 +7,10 @@ from records.expense.models import CreateExpense
 from records.expense.models import UpdateExpense
 from records.expense.models import DeleteExpense
 from records.expense.models import QueryExpense
+from records.account.models import CreateAccount
+from records.account.models import UpdateAccount
+from records.account.models import DeleteAccount
+from records.account.models import QueryAccount
 from records.income.models import CreateIncome
 from records.income.models import UpdateIncome
 from records.income.models import DeleteIncome
@@ -15,6 +19,10 @@ from records.transfer.models import CreateTransfer
 from records.transfer.models import UpdateTransfer
 from records.transfer.models import DeleteTransfer
 from records.transfer.models import QueryTransfer
+from records.budget.models import CreateBudget
+from records.budget.models import UpdateBudget
+from records.budget.models import DeleteBudget
+from records.budget.models import QueryBudget
 
 Extraction = (
     CreateLending
@@ -25,6 +33,10 @@ Extraction = (
     | UpdateExpense
     | DeleteExpense
     | QueryExpense
+    | CreateAccount
+    | UpdateAccount
+    | DeleteAccount
+    | QueryAccount
     | CreateIncome
     | UpdateIncome
     | DeleteIncome
@@ -33,6 +45,10 @@ Extraction = (
     | UpdateTransfer
     | DeleteTransfer
     | QueryTransfer
+    | CreateBudget
+    | UpdateBudget
+    | DeleteBudget
+    | QueryBudget
 )
 
 

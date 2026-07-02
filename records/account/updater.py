@@ -30,7 +30,10 @@ def record_updater(state):
 
         db.commit()
         db.refresh(record)
-        return {"updated_record_id": record.record_id, "response": "Account updated successfully."}
+        return {
+            "updated_record_id": record.record_id,
+            "response": "Account updated successfully.",
+        }
     except Exception as e:
         db.rollback()
         return {"error": str(e)}

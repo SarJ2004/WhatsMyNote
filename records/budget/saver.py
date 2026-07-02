@@ -8,7 +8,9 @@ def record_saver(state):
 
     try:
         for record in state.extraction.records:
-            base_record = BaseRecord(record_type=RecordType.BUDGET, raw_text=state.raw_text)
+            base_record = BaseRecord(
+                record_type=RecordType.BUDGET, raw_text=state.raw_text
+            )
             base_record.budget = BudgetRecord(
                 category=record.category,
                 amount=record.amount,
@@ -25,4 +27,7 @@ def record_saver(state):
         return {"error": f"Failed to save budget records.\n{str(e)}"}
     finally:
         session.close()
-    return {"saved_record_ids": saved_ids, "response": f"Saved {len(saved_ids)} budget record(s)."}
+    return {
+        "saved_record_ids": saved_ids,
+        "response": f"Saved {len(saved_ids)} budget record(s).",
+    }

@@ -6,7 +6,12 @@ from models.selectors import RecordSelector, TargetRecord
 
 
 def _current_balance(db, account_name: str):
-    account = db.query(AccountRecord).join(BaseRecord).filter(AccountRecord.name == account_name).first()
+    account = (
+        db.query(AccountRecord)
+        .join(BaseRecord)
+        .filter(AccountRecord.name == account_name)
+        .first()
+    )
     if account is None:
         return None
 
@@ -26,7 +31,11 @@ def _current_balance(db, account_name: str):
 
 
 def resolve_record(db, selector: RecordSelector):
-    query = db.query(AccountRecord).join(BaseRecord).options(joinedload(AccountRecord.record))
+    query = (
+        db.query(AccountRecord)
+        .join(BaseRecord)
+        .options(joinedload(AccountRecord.record))
+    )
 
     if selector.target == TargetRecord.LAST:
         return query.order_by(BaseRecord.created_at.desc()).first()
@@ -37,8 +46,14 @@ def resolve_record(db, selector: RecordSelector):
     return None
 
 
-def resolve_records(db, accounts: list[str] | None = None, filters: dict[str, str] | None = None):
-    query = db.query(AccountRecord).join(BaseRecord).options(joinedload(AccountRecord.record))
+def resolve_records(
+    db, accounts: list[str] | None = None, filters: dict[str, str] | None = None
+):
+    query = (
+        db.query(AccountRecord)
+        .join(BaseRecord)
+        .options(joinedload(AccountRecord.record))
+    )
 
     if accounts:
         query = query.filter(AccountRecord.name.in_(accounts))

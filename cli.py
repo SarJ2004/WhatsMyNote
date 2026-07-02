@@ -11,7 +11,6 @@ from db.config import SessionLocal
 from db.schema import AccountRecord, BaseRecord, BudgetRecord, RecordType
 from graph import compiled_graph
 
-
 console = Console()
 
 
@@ -31,7 +30,9 @@ def _save_account_setup(records: list[dict[str, Any]]) -> None:
     db = SessionLocal()
     try:
         for item in records:
-            base_record = BaseRecord(record_type=RecordType.ACCOUNT, raw_text="Initial account setup")
+            base_record = BaseRecord(
+                record_type=RecordType.ACCOUNT, raw_text="Initial account setup"
+            )
             base_record.account = AccountRecord(
                 name=item["name"],
                 opening_balance=item["opening_balance"],
@@ -51,7 +52,9 @@ def _save_budget_setup(records: list[dict[str, Any]]) -> None:
     db = SessionLocal()
     try:
         for item in records:
-            base_record = BaseRecord(record_type=RecordType.BUDGET, raw_text="Initial budget setup")
+            base_record = BaseRecord(
+                record_type=RecordType.BUDGET, raw_text="Initial budget setup"
+            )
             base_record.budget = BudgetRecord(
                 category=item["category"],
                 amount=item["amount"],
@@ -69,7 +72,12 @@ def _save_budget_setup(records: list[dict[str, Any]]) -> None:
 
 
 def _prompt_account_setup() -> None:
-    console.print(Panel.fit("[bold]Initial account setup[/bold]\nEnter starting balances once. Later runs skip this.", border_style="cyan"))
+    console.print(
+        Panel.fit(
+            "[bold]Initial account setup[/bold]\nEnter starting balances once. Later runs skip this.",
+            border_style="cyan",
+        )
+    )
     count = IntPrompt.ask("How many accounts do you want to set up?", default=1)
     records: list[dict[str, Any]] = []
 
@@ -93,7 +101,12 @@ def _prompt_account_setup() -> None:
 
 
 def _prompt_budget_setup() -> None:
-    console.print(Panel.fit("[bold]Initial budget setup[/bold]\nSet monthly or custom limits once. Later runs skip this.", border_style="magenta"))
+    console.print(
+        Panel.fit(
+            "[bold]Initial budget setup[/bold]\nSet monthly or custom limits once. Later runs skip this.",
+            border_style="magenta",
+        )
+    )
     count = IntPrompt.ask("How many budgets do you want to set up?", default=0)
     if count <= 0:
         console.print("[yellow]Skipped budget setup.[/yellow]")
@@ -129,13 +142,17 @@ def ensure_initial_setup() -> None:
     if account_count == 0:
         _prompt_account_setup()
     else:
-        console.print(f"[dim]Found {account_count} account record(s). Skipping account setup.[/dim]")
+        console.print(
+            f"[dim]Found {account_count} account record(s). Skipping account setup.[/dim]"
+        )
 
     if budget_count == 0:
         if Confirm.ask("Set up budgets now?", default=True):
             _prompt_budget_setup()
     else:
-        console.print(f"[dim]Found {budget_count} budget record(s). Skipping budget setup.[/dim]")
+        console.print(
+            f"[dim]Found {budget_count} budget record(s). Skipping budget setup.[/dim]"
+        )
 
 
 def _normalize_item(item: Any) -> Any:
@@ -171,7 +188,11 @@ def _render_table_from_rows(rows: list[Any]) -> None:
 
 def render_result(state: dict[str, Any]) -> None:
     if state.get("error"):
-        console.print(Panel.fit(f"[bold red]Error[/bold red]\n{state['error']}", border_style="red"))
+        console.print(
+            Panel.fit(
+                f"[bold red]Error[/bold red]\n{state['error']}", border_style="red"
+            )
+        )
         return
 
     query_result = state.get("query_result")
@@ -198,7 +219,9 @@ def render_result(state: dict[str, Any]) -> None:
         console.print(Panel.fit(answer, title="Result", border_style="green"))
         return
 
-    console.print(Panel.fit("Operation completed.", title="Result", border_style="green"))
+    console.print(
+        Panel.fit("Operation completed.", title="Result", border_style="green")
+    )
 
 
 def run_chat_loop() -> None:

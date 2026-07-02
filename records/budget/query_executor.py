@@ -7,7 +7,9 @@ def query_executor(state):
     extraction: QueryBudget = state.extraction
     db = SessionLocal()
     try:
-        records = resolve_records(db, categories=extraction.categories, filters=extraction.filters)
+        records = resolve_records(
+            db, categories=extraction.categories, filters=extraction.filters
+        )
         if extraction.operation == "list":
             state.query_result = records
         elif extraction.operation == "count":
@@ -15,11 +17,17 @@ def query_executor(state):
         elif extraction.operation == "sum":
             state.query_result = sum(r.amount for r in records)
         elif extraction.operation == "average":
-            state.query_result = sum(r.amount for r in records) / len(records) if records else 0
+            state.query_result = (
+                sum(r.amount for r in records) / len(records) if records else 0
+            )
         elif extraction.operation == "max":
-            state.query_result = max(records, key=lambda r: r.amount) if records else None
+            state.query_result = (
+                max(records, key=lambda r: r.amount) if records else None
+            )
         elif extraction.operation == "min":
-            state.query_result = min(records, key=lambda r: r.amount) if records else None
+            state.query_result = (
+                min(records, key=lambda r: r.amount) if records else None
+            )
         elif extraction.operation == "remaining":
             state.query_result = {r.category: r.amount for r in records}
         elif extraction.operation == "variance":

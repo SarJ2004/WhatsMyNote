@@ -8,7 +8,9 @@ def record_saver(state):
 
     try:
         for record in state.extraction.records:
-            base_record = BaseRecord(record_type=RecordType.ACCOUNT, raw_text=state.raw_text)
+            base_record = BaseRecord(
+                record_type=RecordType.ACCOUNT, raw_text=state.raw_text
+            )
             base_record.account = AccountRecord(
                 name=record.name,
                 opening_balance=record.opening_balance,
@@ -26,4 +28,7 @@ def record_saver(state):
     finally:
         session.close()
 
-    return {"saved_record_ids": saved_ids, "response": f"Saved {len(saved_ids)} account record(s)."}
+    return {
+        "saved_record_ids": saved_ids,
+        "response": f"Saved {len(saved_ids)} account record(s).",
+    }

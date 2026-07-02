@@ -1,6 +1,5 @@
 import re
 
-
 FORBIDDEN = re.compile(
     r"\b(insert|update|delete|drop|alter|create|truncate|replace|grant|revoke|merge|call|execute|exec|into\s+outfile|load_file)\b",
     re.IGNORECASE,
@@ -23,6 +22,12 @@ def validate_sql(sql: str, allowed_tables: list[str]) -> None:
         raise ValueError("SQL comments are not allowed.")
 
     lower = candidate.lower()
-    for table in ["records", "lending_records", "expense_records", "income_records", "transfer_records"]:
+    for table in [
+        "records",
+        "lending_records",
+        "expense_records",
+        "income_records",
+        "transfer_records",
+    ]:
         if table in lower and table not in allowed_tables:
             raise ValueError(f"Table not allowed for this question: {table}")

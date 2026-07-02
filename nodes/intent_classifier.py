@@ -16,6 +16,8 @@ class RecordType(BaseModel):
     record_type: Literal[
         "lending",
         "expense",
+        "account",
+        "budget",
         "income",
         "transfer",
     ] = Field(description="The financial record type.")
@@ -98,6 +100,8 @@ Return only one word.
 VALID_RECORD_TYPES = {
     "lending",
     "expense",
+    "account",
+    "budget",
     "income",
     "transfer",
 }
@@ -269,6 +273,12 @@ def record_type_router(state):
         case ("create", "expense"):
             return "create_expense_extractor"
 
+        case ("create", "account"):
+            return "create_account_extractor"
+
+        case ("create", "budget"):
+            return "create_budget_extractor"
+
         case ("create", "income"):
             return "create_income_extractor"
 
@@ -280,6 +290,12 @@ def record_type_router(state):
 
         case ("update", "expense"):
             return "update_expense_extractor"
+
+        case ("update", "account"):
+            return "update_account_extractor"
+
+        case ("update", "budget"):
+            return "update_budget_extractor"
 
         case ("update", "income"):
             return "update_income_extractor"
@@ -293,6 +309,12 @@ def record_type_router(state):
         case ("delete", "expense"):
             return "delete_expense_extractor"
 
+        case ("delete", "account"):
+            return "delete_account_extractor"
+
+        case ("delete", "budget"):
+            return "delete_budget_extractor"
+
         case ("delete", "income"):
             return "delete_income_extractor"
 
@@ -304,6 +326,12 @@ def record_type_router(state):
 
         case ("query", "expense"):
             return "expense_query_extractor"
+
+        case ("query", "account"):
+            return "account_query_extractor"
+
+        case ("query", "budget"):
+            return "budget_query_extractor"
 
         case ("query", "income"):
             return "income_query_extractor"

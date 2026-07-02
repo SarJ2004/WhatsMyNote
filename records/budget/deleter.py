@@ -14,7 +14,10 @@ def record_deleter(state):
         category = record.category
         db.delete(record.record)
         db.commit()
-        return {"response": f"Deleted budget: {category}", "deleted_record_id": record_id}
+        return {
+            "response": f"Deleted budget: {category}",
+            "deleted_record_id": record_id,
+        }
     except Exception as e:
         db.rollback()
         return {"error": str(e)}

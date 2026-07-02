@@ -6,7 +6,12 @@ import re
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from llms import extractor_llm
-from records.account.models import CreateAccount, UpdateAccount, DeleteAccount, QueryAccount
+from records.account.models import (
+    CreateAccount,
+    UpdateAccount,
+    DeleteAccount,
+    QueryAccount,
+)
 
 CREATE_PROMPT = Path("records/account/prompts/create.md").read_text()
 UPDATE_PROMPT = Path("records/account/prompts/update.md").read_text()

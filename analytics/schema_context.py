@@ -1,9 +1,47 @@
 SCHEMA = {
-    "records": ["id", "record_type", "raw_text", "created_at", "updated_at", "settled_at"],
-    "lending_records": ["record_id", "person", "amount", "direction", "expected_payback_by"],
-    "expense_records": ["record_id", "amount", "category", "merchant", "payment_source", "expense_date", "item", "notes"],
+    "records": [
+        "id",
+        "record_type",
+        "raw_text",
+        "created_at",
+        "updated_at",
+        "settled_at",
+    ],
+    "lending_records": [
+        "record_id",
+        "person",
+        "amount",
+        "direction",
+        "expected_payback_by",
+    ],
+    "expense_records": [
+        "record_id",
+        "amount",
+        "category",
+        "merchant",
+        "payment_source",
+        "expense_date",
+        "item",
+        "notes",
+    ],
+    "account_records": ["record_id", "name", "opening_balance", "currency", "notes"],
+    "budget_records": [
+        "record_id",
+        "category",
+        "amount",
+        "period",
+        "budget_date",
+        "notes",
+    ],
     "income_records": ["record_id", "source", "amount", "income_date", "notes"],
-    "transfer_records": ["record_id", "source_account", "destination_account", "amount", "transfer_date", "notes"],
+    "transfer_records": [
+        "record_id",
+        "source_account",
+        "destination_account",
+        "amount",
+        "transfer_date",
+        "notes",
+    ],
 }
 
 
@@ -12,16 +50,57 @@ def select_tables(question: str) -> list[str]:
 
     tables = ["records"]
 
-    if any(word in text for word in ["spend", "spent", "expense", "buy", "bought", "merchant", "category", "purchase", "paid"]):
+    if any(
+        word in text
+        for word in [
+            "spend",
+            "spent",
+            "expense",
+            "buy",
+            "bought",
+            "merchant",
+            "category",
+            "purchase",
+            "paid",
+        ]
+    ):
         tables.append("expense_records")
 
-    if any(word in text for word in ["salary", "cashback", "income", "received", "earned", "refund"]):
+    if any(
+        word in text
+        for word in ["salary", "cashback", "income", "received", "earned", "refund"]
+    ):
         tables.append("income_records")
 
-    if any(word in text for word in ["lent", "borrowed", "owe", "owes", "owed", "debt", "outstanding", "repay", "balance", "due"]):
+    if any(word in text for word in ["balance", "account", "wallet", "cash", "bank"]):
+        tables.append("account_records")
+
+    if any(
+        word in text
+        for word in ["budget", "limit", "overspend", "remaining", "left for"]
+    ):
+        tables.append("budget_records")
+
+    if any(
+        word in text
+        for word in [
+            "lent",
+            "borrowed",
+            "owe",
+            "owes",
+            "owed",
+            "debt",
+            "outstanding",
+            "repay",
+            "balance",
+            "due",
+        ]
+    ):
         tables.append("lending_records")
 
-    if any(word in text for word in ["transfer", "transferred", "sent money", "account"]):
+    if any(
+        word in text for word in ["transfer", "transferred", "sent money", "account"]
+    ):
         tables.append("transfer_records")
 
     if "savings" in text or "save" in text:

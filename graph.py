@@ -12,6 +12,28 @@ from nodes.analytics_detector import analytics_detector, analytics_router
 from nodes.response_formatter import response_formatter
 from records.delete_last import delete_last_record
 
+from records.account.extractor import (
+    create_extractor as create_account_extractor,
+    update_extractor as update_account_extractor,
+    delete_extractor as delete_account_extractor,
+    query_extractor as account_query_extractor,
+)
+from records.account.saver import record_saver as account_saver
+from records.account.updater import record_updater as account_updater
+from records.account.deleter import record_deleter as account_deleter
+from records.account.query_executor import query_executor as account_query_executor
+
+from records.budget.extractor import (
+    create_extractor as create_budget_extractor,
+    update_extractor as update_budget_extractor,
+    delete_extractor as delete_budget_extractor,
+    query_extractor as budget_query_extractor,
+)
+from records.budget.saver import record_saver as budget_saver
+from records.budget.updater import record_updater as budget_updater
+from records.budget.deleter import record_deleter as budget_deleter
+from records.budget.query_executor import query_executor as budget_query_executor
+
 # Lending
 from records.lending.extractor import (
     create_extractor as create_lending_extractor,
@@ -92,6 +114,24 @@ graph.add_node(
     "delete_last_record",
     delete_last_record,
 )
+
+graph.add_node("create_account_extractor", create_account_extractor)
+graph.add_node("update_account_extractor", update_account_extractor)
+graph.add_node("delete_account_extractor", delete_account_extractor)
+graph.add_node("account_query_extractor", account_query_extractor)
+graph.add_node("account_saver", account_saver)
+graph.add_node("account_updater", account_updater)
+graph.add_node("account_deleter", account_deleter)
+graph.add_node("account_query_executor", account_query_executor)
+
+graph.add_node("create_budget_extractor", create_budget_extractor)
+graph.add_node("update_budget_extractor", update_budget_extractor)
+graph.add_node("delete_budget_extractor", delete_budget_extractor)
+graph.add_node("budget_query_extractor", budget_query_extractor)
+graph.add_node("budget_saver", budget_saver)
+graph.add_node("budget_updater", budget_updater)
+graph.add_node("budget_deleter", budget_deleter)
+graph.add_node("budget_query_executor", budget_query_executor)
 
 # --------------------------------------------------
 # Lending
@@ -324,8 +364,16 @@ graph.add_conditional_edges(
         "create_expense_extractor": "create_expense_extractor",
         "update_expense_extractor": "update_expense_extractor",
         "delete_expense_extractor": "delete_expense_extractor",
+        "create_account_extractor": "create_account_extractor",
+        "update_account_extractor": "update_account_extractor",
+        "delete_account_extractor": "delete_account_extractor",
+        "create_budget_extractor": "create_budget_extractor",
+        "update_budget_extractor": "update_budget_extractor",
+        "delete_budget_extractor": "delete_budget_extractor",
         "lending_query_extractor": "lending_query_extractor",
         "expense_query_extractor": "expense_query_extractor",
+        "account_query_extractor": "account_query_extractor",
+        "budget_query_extractor": "budget_query_extractor",
         "create_income_extractor": "create_income_extractor",
         "update_income_extractor": "update_income_extractor",
         "delete_income_extractor": "delete_income_extractor",
@@ -422,6 +470,24 @@ graph.add_edge(
     "expense_query_executor",
     "response_formatter",
 )
+
+graph.add_edge("create_account_extractor", "account_saver")
+graph.add_edge("update_account_extractor", "account_updater")
+graph.add_edge("delete_account_extractor", "account_deleter")
+graph.add_edge("account_query_extractor", "account_query_executor")
+graph.add_edge("account_saver", "response_formatter")
+graph.add_edge("account_updater", "response_formatter")
+graph.add_edge("account_deleter", "response_formatter")
+graph.add_edge("account_query_executor", "response_formatter")
+
+graph.add_edge("create_budget_extractor", "budget_saver")
+graph.add_edge("update_budget_extractor", "budget_updater")
+graph.add_edge("delete_budget_extractor", "budget_deleter")
+graph.add_edge("budget_query_extractor", "budget_query_executor")
+graph.add_edge("budget_saver", "response_formatter")
+graph.add_edge("budget_updater", "response_formatter")
+graph.add_edge("budget_deleter", "response_formatter")
+graph.add_edge("budget_query_executor", "response_formatter")
 
 
 # Income
@@ -527,12 +593,6 @@ graph.add_edge(
 compiled_graph = graph.compile()
 
 if __name__ == "__main__":
-    message = input("Enter your message: ")
+    from cli import main as cli_main
 
-    result = compiled_graph.invoke(
-        {
-            "raw_text": message,
-        }
-    )
-
-    pprint(result)
+    cli_main()

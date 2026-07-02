@@ -16,6 +16,8 @@ from sqlalchemy import (
 class RecordType(str, Enum):
     LENDING = "lending"
     EXPENSE = "expense"
+    ACCOUNT = "account"
+    BUDGET = "budget"
     TRANSFER = "transfer"
     INCOME = "income"
     REMINDER = "reminder"
@@ -44,6 +46,18 @@ class BaseRecord(Base):
     )
     expense: Mapped["ExpenseRecord"] = relationship(
         "ExpenseRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    account: Mapped["AccountRecord"] = relationship(
+        "AccountRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    budget: Mapped["BudgetRecord"] = relationship(
+        "BudgetRecord",
         back_populates="record",
         uselist=False,
         cascade="all, delete-orphan",
@@ -110,6 +124,45 @@ class ExpenseRecord(Base):
     record: Mapped["BaseRecord"] = relationship(
         "BaseRecord",
         back_populates="expense",
+        uselist=False,
+    )
+
+
+class AccountRecord(Base):
+    __tablename__ = "account_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    opening_balance: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    currency: Mapped[str] = mapped_column(String(16), nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="account",
+        uselist=False,
+    )
+
+
+class BudgetRecord(Base):
+    __tablename__ = "budget_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    category: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    period: Mapped[str] = mapped_column(String(32), nullable=False, default="monthly")
+    budget_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="budget",
         uselist=False,
     )
 

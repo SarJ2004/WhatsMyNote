@@ -19,7 +19,9 @@ def query_executor(state):
     db = SessionLocal()
 
     try:
-        records = resolve_records(db, accounts=extraction.accounts, filters=extraction.filters)
+        records = resolve_records(
+            db, accounts=extraction.accounts, filters=extraction.filters
+        )
         balances = [_record_view(db, record) for record in records]
 
         match extraction.operation:
@@ -28,19 +30,38 @@ def query_executor(state):
             case "count":
                 state.query_result = len(balances)
             case "sum":
-                state.query_result = sum(item["current_balance"] or 0 for item in balances)
+                state.query_result = sum(
+                    item["current_balance"] or 0 for item in balances
+                )
             case "average":
-                state.query_result = (sum(item["current_balance"] or 0 for item in balances) / len(balances)) if balances else 0
+                state.query_result = (
+                    (
+                        sum(item["current_balance"] or 0 for item in balances)
+                        / len(balances)
+                    )
+                    if balances
+                    else 0
+                )
             case "max":
-                state.query_result = max(balances, key=lambda item: item["current_balance"] or 0) if balances else None
+                state.query_result = (
+                    max(balances, key=lambda item: item["current_balance"] or 0)
+                    if balances
+                    else None
+                )
             case "min":
-                state.query_result = min(balances, key=lambda item: item["current_balance"] or 0) if balances else None
+                state.query_result = (
+                    min(balances, key=lambda item: item["current_balance"] or 0)
+                    if balances
+                    else None
+                )
             case "balance":
                 if extraction.accounts:
                     if len(balances) == 1:
                         state.query_result = balances[0]["current_balance"]
                     else:
-                        state.query_result = {item["name"]: item["current_balance"] for item in balances}
+                        state.query_result = {
+                            item["name"]: item["current_balance"] for item in balances
+                        }
                 else:
                     state.query_result = balances
             case _:

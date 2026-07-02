@@ -17,9 +17,13 @@ QUERY_PROMPT = Path("records/budget/prompts/query.md").read_text()
 def _extract(prompt: str, schema, user_input: str):
     today = date.today()
     yesterday = (today - timedelta(days=1)).isoformat()
-    date_context = f"Today's date is {today.isoformat()}. Yesterday was {yesterday}.\n\n"
+    date_context = (
+        f"Today's date is {today.isoformat()}. Yesterday was {yesterday}.\n\n"
+    )
 
-    result = extractor_llm.invoke([SystemMessage(content=date_context + prompt), HumanMessage(content=user_input)])
+    result = extractor_llm.invoke(
+        [SystemMessage(content=date_context + prompt), HumanMessage(content=user_input)]
+    )
     content = result.content.strip()
     match = re.search(r"\{.*\}", content, re.DOTALL)
     if match:

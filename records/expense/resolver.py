@@ -118,7 +118,9 @@ def resolve_records(
     if filters:
         expense_date = filters.get("expense_date")
         if expense_date:
-            query = query.filter(ExpenseRecord.expense_date == date.fromisoformat(expense_date))
+            query = query.filter(
+                ExpenseRecord.expense_date == date.fromisoformat(expense_date)
+            )
 
         today = filters.get("today")
         if today:
@@ -126,7 +128,9 @@ def resolve_records(
 
         yesterday = filters.get("yesterday")
         if yesterday:
-            query = query.filter(ExpenseRecord.expense_date == date.today() - timedelta(days=1))
+            query = query.filter(
+                ExpenseRecord.expense_date == date.today() - timedelta(days=1)
+            )
 
         week = filters.get("week")
         if week:
@@ -160,6 +164,8 @@ def resolve_records(
                 start, end = _month_bounds(single_date)
                 query = query.filter(ExpenseRecord.expense_date.between(start, end))
             else:
-                query = query.filter(ExpenseRecord.expense_date == date.fromisoformat(single_date))
+                query = query.filter(
+                    ExpenseRecord.expense_date == date.fromisoformat(single_date)
+                )
 
     return query.order_by(BaseRecord.created_at.desc()).all()

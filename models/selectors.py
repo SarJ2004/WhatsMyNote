@@ -8,6 +8,7 @@ class TargetRecord(str, Enum):
     PERSON = "person"
     ACCOUNT = "account"
     SOURCE = "source"
+    CATEGORY = "category"
 
 
 class RecordSelector(BaseModel):
@@ -15,3 +16,4 @@ class RecordSelector(BaseModel):
     person: Optional[str] = None  # used when target is PERSON
     account: Optional[str] = None  # used when target is ACCOUNT
     source: Optional[str] = None  # used when target is SOURCE
+    category: Optional[str] = None  # used when target is CATEGORY

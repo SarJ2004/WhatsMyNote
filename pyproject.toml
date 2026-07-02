@@ -13,5 +13,6 @@ dependencies = [
     "langgraph>=1.2.5",
     "pydantic>=2.13.4",
     "pymysql>=1.2.0",
+    "rich>=13.9.4",
     "sqlalchemy>=2.0.51",
 ]

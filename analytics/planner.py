@@ -32,7 +32,9 @@ def _parse_sql_payload(content: str) -> str:
 def plan_sql(question: str):
     schema_context = schema_context_for_question(question)
     messages = [
-        SystemMessage(content=ANALYTICS_PROMPT + "\n\nRelevant schema:\n" + schema_context),
+        SystemMessage(
+            content=ANALYTICS_PROMPT + "\n\nRelevant schema:\n" + schema_context
+        ),
         HumanMessage(content=question),
     ]
 

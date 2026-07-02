@@ -52,7 +52,9 @@ class DeleteBudget(BaseModel):
 
 
 class QueryBudget(BaseModel):
-    operation: Literal["sum", "count", "list", "average", "max", "min", "remaining", "variance"]
+    operation: Literal[
+        "sum", "count", "list", "average", "max", "min", "remaining", "variance"
+    ]
     metric: Literal["amount", "remaining", "variance"] = "remaining"
     categories: list[str] = Field(default_factory=list)
     filters: dict[str, str] = Field(default_factory=dict)
