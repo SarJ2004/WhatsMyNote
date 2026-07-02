@@ -42,6 +42,7 @@ class State(BaseModel):
     extraction: Extraction | None = None
     record_type: str | None = None
     saved_record_ids: list[int] = Field(default_factory=list)
+    analytics_mode: bool = False
     updated_record_id: int | None = None
     deleted_record_id: int | None = None
     query_result: object | None = None

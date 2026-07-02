@@ -8,7 +8,9 @@ from nodes.intent_classifier import (
     intent_router,
     record_type_router,
 )
+from nodes.analytics_detector import analytics_detector, analytics_router
 from nodes.response_formatter import response_formatter
+from records.delete_last import delete_last_record
 
 # Lending
 from records.lending.extractor import (
@@ -67,6 +69,8 @@ from records.transfer.query_executor import (
     query_executor as transfer_query_executor,
 )
 
+from analytics.executor import analytics_query_executor
+
 graph = StateGraph(State)
 
 # --------------------------------------------------
@@ -77,6 +81,16 @@ graph.add_node("intent_evaluator", intent_evaluator)
 graph.add_node(
     "record_type_evaluator",
     record_type_evaluator,
+)
+
+graph.add_node(
+    "analytics_detector",
+    analytics_detector,
+)
+
+graph.add_node(
+    "delete_last_record",
+    delete_last_record,
 )
 
 # --------------------------------------------------
@@ -254,6 +268,13 @@ graph.add_node(
     transfer_query_executor,
 )
 
+# Analytics
+
+graph.add_node(
+    "analytics_query_executor",
+    analytics_query_executor,
+)
+
 
 # --------------------------------------------------
 # Shared
@@ -278,7 +299,18 @@ graph.add_conditional_edges(
     intent_router,
     {
         "record_type_evaluator": "record_type_evaluator",
+        "analytics_detector": "analytics_detector",
+        "delete_last_record": "delete_last_record",
         "END": END,
+    },
+)
+
+graph.add_conditional_edges(
+    "analytics_detector",
+    analytics_router,
+    {
+        "analytics_query_executor": "analytics_query_executor",
+        "record_type_evaluator": "record_type_evaluator",
     },
 )
 
@@ -474,6 +506,16 @@ graph.add_edge(
 
 graph.add_edge(
     "transfer_query_executor",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "analytics_query_executor",
+    "response_formatter",
+)
+
+graph.add_edge(
+    "delete_last_record",
     "response_formatter",
 )
 

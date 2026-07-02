@@ -226,8 +226,32 @@ def intent_router(state):
     Route after intent classification.
     """
 
-    if state.intent in {"create", "update", "delete", "query"}:
+    if state.intent in {"create", "update", "delete"}:
+        if state.intent == "delete":
+            text = state.raw_text.lower()
+            has_record_type_hint = any(
+                keyword in text
+                for keyword in [
+                    "expense",
+                    "lending",
+                    "loan",
+                    "borrow",
+                    "income",
+                    "salary",
+                    "cashback",
+                    "transfer",
+                    "transferred",
+                    "sent",
+                ]
+            )
+
+            if not has_record_type_hint:
+                return "delete_last_record"
+
         return "record_type_evaluator"
+
+    if state.intent == "query":
+        return "analytics_detector"
 
     return "END"
 

@@ -1,4 +1,6 @@
 from pathlib import Path
+import json
+import re
 from datetime import date, timedelta
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -16,8 +18,6 @@ QUERY_PROMPT = Path("records/expense/prompts/query.md").read_text()
 
 
 def _extract(prompt: str, schema, user_input: str):
-    structured_llm = extractor_llm.with_structured_output(schema)
-
     today = date.today()
     yesterday = (today - timedelta(days=1)).isoformat()
 
@@ -32,7 +32,28 @@ def _extract(prompt: str, schema, user_input: str):
         HumanMessage(content=user_input),
     ]
 
-    return structured_llm.invoke(messages)
+    result = extractor_llm.invoke(messages)
+    content = result.content.strip()
+
+    match = re.search(r"\{.*\}", content, re.DOTALL)
+    if match:
+        content = match.group(0)
+
+    try:
+        payload = json.loads(content)
+        return schema.model_validate(payload)
+    except (json.JSONDecodeError, ValueError):
+        if schema is DeleteExpense:
+            return schema.model_validate(
+                {
+                    "action": "delete",
+                    "selector": {
+                        "target": "last",
+                    },
+                }
+            )
+
+        raise
 
 
 def create_extractor(state):
@@ -58,7 +79,7 @@ def update_extractor(state):
 def delete_extractor(state):
     return {
         "extraction": _extract(
-            QUERY_PROMPT,
+            DELETE_PROMPT,
             DeleteExpense,
             state.raw_text,
         )
