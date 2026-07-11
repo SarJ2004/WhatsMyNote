@@ -32,6 +32,8 @@ dependencies = [
     "platformdirs>=4.2.2",
     "supabase>=2.3.0",
     "requests>=2.31.0",
+    "fastapi[standard]>=0.139.0",
+    "uvicorn>=0.51.0",
 ]
 
 [project.urls]
