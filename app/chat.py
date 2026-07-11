@@ -51,6 +51,19 @@ def run_chat_loop() -> None:
             else:
                 console.print("[yellow]API Key update cancelled.[/yellow]")
             continue
+        elif msg_lower == "/logout":
+            from app.auth import get_supabase, SESSION_FILE
+            import os
+            try:
+                get_supabase().auth.sign_out()
+                if os.path.exists(SESSION_FILE):
+                    os.remove(SESSION_FILE)
+                if "CURRENT_USER_ID" in os.environ:
+                    del os.environ["CURRENT_USER_ID"]
+                console.print("[green]Logged out successfully.[/green]")
+            except Exception as e:
+                console.print(f"[red]Error logging out: {e}[/red]")
+            break
 
         state = _invoke(message)
 
@@ -88,5 +101,7 @@ def run_chat_loop() -> None:
 
 
 def main() -> None:
+    from app.auth import ensure_authenticated
+    ensure_authenticated()
     ensure_initial_setup()
     run_chat_loop()

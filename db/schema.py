@@ -1,4 +1,4 @@
-# models.py
+import os
 from datetime import datetime, date, timezone
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from enum import Enum
@@ -83,6 +83,7 @@ class BaseRecord(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     settled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, default=lambda: os.environ.get("CURRENT_USER_ID"))
 
 
 class LendingRecord(Base):

@@ -1,15 +1,8 @@
 """Checkpointer setup and state reset helpers."""
 
 import logging
-from langgraph.checkpoint.memory import InMemorySaver
-
 # Suppress noisy msgpack deserialization warnings from LangGraph
 logging.getLogger("langgraph.checkpoint.serde.jsonplus").setLevel(logging.ERROR)
-
-
-def create_checkpointer():
-    """Create an InMemorySaver checkpointer for short-term conversational memory."""
-    return InMemorySaver()
 
 
 def ephemeral_reset() -> dict:
