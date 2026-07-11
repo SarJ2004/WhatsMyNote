@@ -34,6 +34,7 @@ dependencies = [
     "requests>=2.31.0",
     "fastapi[standard]>=0.139.0",
     "uvicorn>=0.51.0",
+    "twine>=6.2.0",
 ]
 
 [project.urls]
@@ -42,3 +43,12 @@ Repository = "https://github.com/SarJ2004/WhatsMyNote"
 
 [project.scripts]
 whatsmynote = "whatsmynote.app.chat:main"
+
+[dependency-groups]
+dev = [
+    "langgraph>=0.2.6",
+    "langchain-groq>=0.2.1",
+    "sqlalchemy>=2.0.36",
+    "psycopg2-binary>=2.9.10",
+]
+
