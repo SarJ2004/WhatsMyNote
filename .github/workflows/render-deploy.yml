@@ -1,0 +1,30 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - deploy/backend-render
+
+jobs:
+  deploy:
+    name: Deploy to Render and Update GitHub Environments
+    runs-on: ubuntu-latest
+    
+    # Required permission to create a GitHub Deployment/Environment
+    permissions:
+      deployments: write 
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Render
+        # This action triggers the Render deploy and reports status to GitHub Deployments
+        uses: JorgeLNJunior/render-deploy@v1.5.0
+        with:
+          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+          api_key: ${{ secrets.RENDER_API_KEY }}
+          clear_cache: false
+          wait_deploy: true # Wait for the deploy to finish before reporting success/failure
+          github_deployment: true # Creates the deployment in the GitHub UI
+          deployment_environment: 'production' # Environment name in GitHub
