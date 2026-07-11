@@ -5,7 +5,7 @@ from pathlib import Path
 from platformdirs import user_data_dir
 
 # --- Replace these before publishing ---
-API_URL = "http://localhost:8000"
+API_URL = "https://whatsmynote.onrender.com"
 SUPABASE_URL = "https://emcdruetkqkrplrrxqbm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2RydWV0a3FrcnBscnJ4cWJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NjQ1NTksImV4cCI6MjA5OTM0MDU1OX0.-GRm3ZhaFGDGyy8ocDq0tAov0CxCOwCK9K9JeWPTCvY"
 # ---------------------------------------
