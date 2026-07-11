@@ -9,9 +9,9 @@ from pathlib import Path
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from llms import get_extractor_llm
-from records.models import MODEL_REGISTRY
-from records.search import search_recent_records
+from backend.llms import get_extractor_llm
+from backend.records.models import MODEL_REGISTRY
+from backend.records.search import search_recent_records
 
 
 def _load_prompt(intent: str, record_type: str) -> str:

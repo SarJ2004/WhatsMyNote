@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from db.config import SessionLocal
-from db.schema import (
+from backend.db.config import SessionLocal
+from backend.db.schema import (
     BaseRecord, ExpenseRecord, IncomeRecord, LendingRecord,
     TransferRecord, AccountRecord, BudgetRecord,
 )

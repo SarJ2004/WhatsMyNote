@@ -1,8 +1,8 @@
 """Intent and record type classifier — merged into a single module."""
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from llms import get_evaluator_llm
-from core.memory import ephemeral_reset
+from backend.llms import get_evaluator_llm
+from backend.core.memory import ephemeral_reset
 
 VALID_INTENTS = {"create", "update", "delete", "query"}
 

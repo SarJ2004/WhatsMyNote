@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from db.config import SessionLocal
-from db.schema import BaseRecord, RecordType
-from db.schema import (
+from backend.db.config import SessionLocal
+from backend.db.schema import BaseRecord, RecordType
+from backend.db.schema import (
     ExpenseRecord, IncomeRecord, LendingRecord,
     TransferRecord, AccountRecord, BudgetRecord,
 )
-from records.account_utils import get_default_account_name, sync_account_balances
-from records.normalization import normalize_label
-from budget.alerts import build_budget_alerts_for_expense
+from backend.records.account_utils import get_default_account_name, sync_account_balances
+from backend.records.normalization import normalize_label
+from backend.budget.alerts import build_budget_alerts_for_expense
 
 
 def _build_type_record(record_type: str, record_data: dict, default_account: str | None):
@@ -145,7 +145,7 @@ def record_saver(state):
         # Budget alerts for expenses
         alerts = []
         if record_type == "expense":
-            from db.schema import ExpenseRecord
+            from backend.db.schema import ExpenseRecord
             db.expire_all()
             for record_id in saved_ids:
                 expense = db.get(ExpenseRecord, record_id)

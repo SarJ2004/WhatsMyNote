@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from db.config import SessionLocal
-from records.account_utils import sync_account_balances
-from records.models.common import RecordSelector
-from records.resolver import resolve_record
+from backend.db.config import SessionLocal
+from backend.records.account_utils import sync_account_balances
+from backend.records.models.common import RecordSelector
+from backend.records.resolver import resolve_record
 
 
 def record_deleter(state):
@@ -37,7 +37,7 @@ def record_deleter(state):
 
     try:
         if target_ids:
-            from records.models.common import TargetRecord
+            from backend.records.models.common import TargetRecord
             deleted = []
             for rid in target_ids:
                 sel = RecordSelector(target=TargetRecord.ID, record_id=rid)

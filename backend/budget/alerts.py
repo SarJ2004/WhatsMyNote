@@ -7,8 +7,8 @@ from datetime import date
 
 from sqlalchemy import func
 
-from db.schema import BaseRecord, BudgetRecord, ExpenseRecord
-from records.normalization import normalize_label
+from backend.db.schema import BaseRecord, BudgetRecord, ExpenseRecord
+from backend.records.normalization import normalize_label
 
 ALERT_LEVELS = [0.25, 0.5, 0.75, 1.0]
 

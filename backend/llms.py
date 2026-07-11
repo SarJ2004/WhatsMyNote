@@ -1,7 +1,7 @@
 """LLM Factory functions."""
 
 from langchain_groq import ChatGroq
-from core.config import get_groq_api_key
+from backend.core.config import get_groq_api_key
 
 def get_evaluator_llm() -> ChatGroq:
     """Get the evaluator LLM for complex tasks (Llama 3.3 70B)."""

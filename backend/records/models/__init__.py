@@ -1,23 +1,23 @@
 """Record extraction models — central export point."""
 
-from records.models.common import RecordSelector, TargetRecord, UpdateOperation
+from backend.records.models.common import RecordSelector, TargetRecord, UpdateOperation
 
-from records.models.expense import (
+from backend.records.models.expense import (
     CreateExpense, UpdateExpense, DeleteExpense, QueryExpense,
 )
-from records.models.income import (
+from backend.records.models.income import (
     CreateIncome, UpdateIncome, DeleteIncome, QueryIncome,
 )
-from records.models.lending import (
+from backend.records.models.lending import (
     CreateLending, UpdateLending, DeleteLending, QueryLending,
 )
-from records.models.transfer import (
+from backend.records.models.transfer import (
     CreateTransfer, UpdateTransfer, DeleteTransfer, QueryTransfer,
 )
-from records.models.account import (
+from backend.records.models.account import (
     CreateAccount, UpdateAccount, DeleteAccount, QueryAccount,
 )
-from records.models.budget import (
+from backend.records.models.budget import (
     CreateBudget, UpdateBudget, DeleteBudget, QueryBudget,
 )
 

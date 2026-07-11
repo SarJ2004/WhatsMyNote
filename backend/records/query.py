@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from db.config import SessionLocal
-from records.resolver import resolve_records
+from backend.db.config import SessionLocal
+from backend.records.resolver import resolve_records
 
 
 def _extract_query_kwargs(record_type: str, extraction: dict) -> dict:

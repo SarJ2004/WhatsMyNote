@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
-from llms import get_evaluator_llm
+from backend.llms import get_evaluator_llm
 
 
 class AnalyticsReview(BaseModel):

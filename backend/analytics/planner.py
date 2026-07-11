@@ -4,9 +4,9 @@ from pathlib import Path
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from analytics.models import AnalyticsSQL
-from analytics.schema_context import schema_context_for_question, select_tables
-from llms import get_extractor_llm
+from backend.analytics.models import AnalyticsSQL
+from backend.analytics.schema_context import schema_context_for_question, select_tables
+from backend.llms import get_extractor_llm
 
 ANALYTICS_PROMPT = (Path(__file__).parent / "prompts" / "sql.md").read_text()
 
@@ -46,7 +46,7 @@ def plan_sql(question: str):
     chart_config = None
     if chart_config_dict:
         try:
-            from analytics.models import ChartConfig
+            from backend.analytics.models import ChartConfig
             chart_config = ChartConfig(**chart_config_dict)
         except Exception:
             pass

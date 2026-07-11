@@ -2,10 +2,10 @@ import re
 
 from sqlalchemy import text
 
-from analytics.planner import plan_sql
-from analytics.verifier import review_sql_result
-from analytics.validator import validate_sql
-from db.config import SessionLocal
+from backend.analytics.planner import plan_sql
+from backend.analytics.verifier import review_sql_result
+from backend.analytics.validator import validate_sql
+from backend.db.config import SessionLocal
 
 
 MAX_ANALYTICS_RETRIES = 3

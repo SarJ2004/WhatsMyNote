@@ -8,12 +8,12 @@ import re
 
 from sqlalchemy.orm import joinedload
 
-from db.schema import (
+from backend.db.schema import (
     BaseRecord, ExpenseRecord, IncomeRecord, LendingRecord,
     TransferRecord, AccountRecord, BudgetRecord,
 )
-from records.models.common import RecordSelector, TargetRecord
-from records.normalization import normalize_label, normalize_label_list
+from backend.records.models.common import RecordSelector, TargetRecord
+from backend.records.normalization import normalize_label, normalize_label_list
 
 
 # ── Date helpers ───────────────────────────────────────────────

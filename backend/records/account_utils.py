@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy import func
 
-from db.schema import (
+from backend.db.schema import (
     AccountRecord,
     ExpenseRecord,
     IncomeRecord,

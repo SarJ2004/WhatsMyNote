@@ -1,7 +1,7 @@
 from sqlalchemy import inspect, text
 
-from db.schema import Base
-from db.config import engine
+from backend.db.schema import Base
+from backend.db.config import engine
 
 
 def _ensure_column(table_name: str, column_name: str, column_sql: str) -> None:

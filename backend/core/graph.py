@@ -2,23 +2,23 @@
 
 from langgraph.graph import START, END, StateGraph
 
-from core.state import State
+from backend.core.state import State
 
-from agents.classifier import (
+from backend.agents.classifier import (
     intent_classifier,
     record_type_classifier,
     intent_router,
     record_type_router,
 )
-from agents.extractor import extractor, extractor_router
+from backend.agents.extractor import extractor, extractor_router
 
-from records.saver import record_saver
-from records.updater import record_updater
-from records.deleter import record_deleter
-from records.query import query_executor
+from backend.records.saver import record_saver
+from backend.records.updater import record_updater
+from backend.records.deleter import record_deleter
+from backend.records.query import query_executor
 
-from analytics.executor import analytics_query_executor
-from agents.analytics import analytics_detector, analytics_router
+from backend.analytics.executor import analytics_query_executor
+from backend.agents.analytics import analytics_detector, analytics_router
 
 
 # ── Confirmation nodes ─────────────────────────────────────────
@@ -35,7 +35,7 @@ def check_confirmation(state) -> str:
 
 def update_details_handler(state):
     """Handle raw text input for update details when the selector is already known."""
-    from agents.extractor import extractor
+    from backend.agents.extractor import extractor
     
     # Temporarily force the intent and record_type so extractor runs correctly on the raw text
     pending = state.get("pending_action", {})
@@ -141,15 +141,15 @@ def request_confirmation(state):
         extraction = {"action": intent}
         
     if state.get("selected_record_id"):
-        from records.models.common import RecordSelector, TargetRecord
+        from backend.records.models.common import RecordSelector, TargetRecord
         selector = RecordSelector(target=TargetRecord.ID, record_id=state.get("selected_record_id"))
         extraction["selector"] = selector.model_dump()
 
     if extraction.get("selector"):
-        from db.config import SessionLocal
-        from records.resolver import resolve_records_for_selector
-        from records.models.common import RecordSelector
-        from records.search import _record_to_display_dict
+        from backend.db.config import SessionLocal
+        from backend.records.resolver import resolve_records_for_selector
+        from backend.records.models.common import RecordSelector
+        from backend.records.search import _record_to_display_dict
         
         db = SessionLocal()
         try:

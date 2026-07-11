@@ -5,7 +5,7 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
-from records.models.common import RecordSelector, UpdateOperation
+from backend.records.models.common import RecordSelector, UpdateOperation
 
 
 class AccountInput(BaseModel):
