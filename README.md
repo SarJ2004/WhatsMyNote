@@ -1,6 +1,6 @@
 # WhatsMyNote
 
-WhatsMyNote is a natural-language personal finance assistant for logging and querying lending, expenses, income, and transfers. It uses advanced **Llama 3 LLMs** to extract structured data, store it in MySQL, and answer your complex queries accurately.
+WhatsMyNote is a natural-language personal finance assistant for logging and querying lending, expenses, income, and transfers. It uses advanced **Llama 3 LLMs** to extract structured data, store it in PostgreSQL (Supabase), and answer your complex queries accurately.
 
 ## 🚀 Bring Your Own Key (BYOK) Architecture
 WhatsMyNote now supports a secure **BYOK architecture**. You bring your own **Groq API key** to power the inference engine locally and securely. 
@@ -68,9 +68,9 @@ uv venv
 uv pip install -r requirements.txt
 ```
 
-Set up your database connection string in your `.env` (or let the app default to standard SQLite/MySQL connection):
+Set up your database connection string in your `.env` (we recommend a **Supabase PostgreSQL** instance):
 ```env
-DATABASE_URL=mysql+pymysql://user:password@localhost/database_name
+DATABASE_URL=postgresql+psycopg2://postgres:YOUR_PASSWORD@db.YOUR_SUPABASE_REF.supabase.co:5432/postgres
 ```
 
 Run the app. It will prompt you for your `GROQ_API_KEY` on the first launch!
@@ -85,7 +85,7 @@ python app/main.py
 - **Python** for core logic.
 - **LangGraph & LangChain** for robust stateful intent routing and HITL (Human-in-the-Loop) flows.
 - **Pydantic** for extraction validation.
-- **SQLAlchemy & MySQL** for data persistence.
+- **SQLAlchemy & PostgreSQL** for data persistence.
 - **Groq LLMs (Llama 3)** for lightning-fast, high-quality inference.
 
 ---
