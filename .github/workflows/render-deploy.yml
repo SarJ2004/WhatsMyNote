@@ -12,6 +12,7 @@ jobs:
     
     # Required permission to create a GitHub Deployment/Environment
     permissions:
+      contents: read
       deployments: write 
       
     steps:
