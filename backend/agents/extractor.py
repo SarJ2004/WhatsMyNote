@@ -16,12 +16,9 @@ from backend.records.search import search_recent_records
 
 def _load_prompt(intent: str, record_type: str) -> str:
     """Load the prompt file for a given intent and record type."""
-    prompt_path = Path(f"agents/prompts/{intent}/{record_type}.md")
+    prompt_path = Path(__file__).parent / "prompts" / intent / f"{record_type}.md"
     if not prompt_path.exists():
-        # Fallback to old location during migration
-        prompt_path = Path(f"records/{record_type}/prompts/{intent.replace('query', 'query')}.md")
-        if not prompt_path.exists():
-            return f"Extract the {intent} details for a {record_type} record. Return valid JSON."
+        return f"Extract the {intent} details for a {record_type} record. Return valid JSON."
     return prompt_path.read_text()
 
 
