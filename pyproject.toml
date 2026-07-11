@@ -1,9 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["whatsmynote*"]
+
 [project]
 name = "whatsmynote"
 version = "0.1.0"
-description = "Add your description here"
+description = "A CLI app for managing notes and finances using LLMs."
 readme = "README.md"
 requires-python = ">=3.11"
+authors = [
+    { name = "Author Name", email = "author@example.com" }
+]
+license = { text = "MIT" }
+keywords = ["cli", "llm", "finance", "notes"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
 dependencies = [
     "dotenv>=0.9.9",
     "grandalf>=0.8",
@@ -18,4 +37,16 @@ dependencies = [
     "rich>=13.9.4",
     "sqlalchemy>=2.0.51",
     "termcharts>=1.1.2",
+    "platformdirs>=4.2.2",
+    "supabase>=2.3.0",
+    "requests>=2.31.0",
+    "fastapi>=0.111.0",
+    "uvicorn>=0.30.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/whatsmynote"
+Repository = "https://github.com/yourusername/whatsmynote"
+
+[project.scripts]
+whatsmynote = "whatsmynote.app.chat:main"

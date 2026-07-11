@@ -9,7 +9,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 
 console = Console()
-SESSION_FILE = ".supabase_session.json"
+from whatsmynote.app.config import get_session_path, SUPABASE_URL, SUPABASE_KEY
+SESSION_FILE = get_session_path()
 
 def _save_session(session):
     if session:
@@ -46,8 +47,8 @@ _supabase: Client = None
 def get_supabase() -> Client:
     global _supabase
     if _supabase is None:
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_KEY")
+        url = SUPABASE_URL
+        key = SUPABASE_KEY
         if not url or not key:
             console.print("[red]Supabase URL and Key must be set in .env[/red]")
             exit(1)

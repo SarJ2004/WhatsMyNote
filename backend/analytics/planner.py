@@ -8,7 +8,7 @@ from analytics.models import AnalyticsSQL
 from analytics.schema_context import schema_context_for_question, select_tables
 from llms import get_extractor_llm
 
-ANALYTICS_PROMPT = Path("analytics/prompts/sql.md").read_text()
+ANALYTICS_PROMPT = (Path(__file__).parent / "prompts" / "sql.md").read_text()
 
 
 from typing import Optional

@@ -9,7 +9,7 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from app.chat import main
+from whatsmynote.app.chat import main
 
 if __name__ == "__main__":
     main()

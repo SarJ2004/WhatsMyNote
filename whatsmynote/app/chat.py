@@ -6,23 +6,45 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from core.graph import compiled_graph
-from app.render import render_result
-from app.setup import ensure_initial_setup
-from app.selector import display_search_results
+from whatsmynote.core.graph import compiled_graph
+from whatsmynote.app.render import render_result
+from whatsmynote.app.setup import ensure_initial_setup
+from whatsmynote.app.selector import display_search_results
 
 console = Console()
 
 # Global state to persist between turns
 app_state = {}
 
-def _invoke(message: str) -> dict:
-    """Invoke the stateless graph with the accumulated state."""
+def _send_state() -> dict:
     global app_state
-    app_state["raw_text"] = message
-    app_state = compiled_graph.invoke(app_state)
+    import requests
+    from whatsmynote.app.config import API_URL, get_groq_api_key
+    from whatsmynote.app.auth import get_supabase
+    
+    session = get_supabase().auth.get_session()
+    token = session.access_token if session else ""
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Groq-Api-Key": get_groq_api_key() or ""
+    }
+    payload = {"message": app_state.get("raw_text", ""), "state": app_state}
+    
+    try:
+        response = requests.post(f"{API_URL}/chat", json=payload, headers=headers)
+        response.raise_for_status()
+        app_state = response.json()["state"]
+    except Exception as e:
+        console.print(f"[red]Error communicating with backend: {e}[/red]")
+        
     return app_state
 
+def _invoke(message: str) -> dict:
+    """Invoke the stateless graph via backend API."""
+    global app_state
+    app_state["raw_text"] = message
+    return _send_state()
 def run_chat_loop() -> None:
     console.print(
         Panel.fit(
@@ -43,7 +65,7 @@ def run_chat_loop() -> None:
             console.clear()
             continue
         elif msg_lower == "/config":
-            from core.config import set_groq_api_key
+            from whatsmynote.core.config import set_groq_api_key
             new_key = Prompt.ask("Enter new Groq API Key", password=True)
             if new_key:
                 set_groq_api_key(new_key.strip())
@@ -52,7 +74,7 @@ def run_chat_loop() -> None:
                 console.print("[yellow]API Key update cancelled.[/yellow]")
             continue
         elif msg_lower == "/logout":
-            from app.auth import get_supabase, SESSION_FILE
+            from whatsmynote.app.auth import get_supabase, SESSION_FILE
             import os
             try:
                 get_supabase().auth.sign_out()
@@ -90,7 +112,7 @@ def run_chat_loop() -> None:
                     app_state["selected_record_id"] = selected_result
                     app_state["selected_record_ids"] = None
                 
-                state = compiled_graph.invoke(app_state)
+                state = _send_state()
                 app_state = state
                 render_result(state)
             else:
@@ -101,7 +123,10 @@ def run_chat_loop() -> None:
 
 
 def main() -> None:
-    from app.auth import ensure_authenticated
+    from whatsmynote.app.config import ensure_env_config
+    ensure_env_config()
+    from whatsmynote.app.auth import ensure_authenticated
     ensure_authenticated()
+    from whatsmynote.app.setup import ensure_initial_setup
     ensure_initial_setup()
     run_chat_loop()
