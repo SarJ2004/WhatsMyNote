@@ -1,0 +1,210 @@
+# models.py
+from datetime import datetime, date, timezone
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from enum import Enum
+from sqlalchemy import (
+    String,
+    Text,
+    Integer,
+    DateTime,
+    Date,
+    ForeignKey,
+    Enum as SqlEnum,
+)
+
+
+class RecordType(str, Enum):
+    LENDING = "lending"
+    EXPENSE = "expense"
+    ACCOUNT = "account"
+    BUDGET = "budget"
+    TRANSFER = "transfer"
+    INCOME = "income"
+    REMINDER = "reminder"
+    TASK = "task"
+
+
+class LendingDirection(str, Enum):
+    LENT = "lent"
+    BORROWED = "borrowed"
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class BaseRecord(Base):
+    __tablename__ = "records"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    record_type: Mapped[RecordType] = mapped_column(SqlEnum(RecordType), nullable=False)
+    lending: Mapped["LendingRecord"] = relationship(
+        "LendingRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    expense: Mapped["ExpenseRecord"] = relationship(
+        "ExpenseRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    account: Mapped["AccountRecord"] = relationship(
+        "AccountRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    budget: Mapped["BudgetRecord"] = relationship(
+        "BudgetRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    income: Mapped["IncomeRecord"] = relationship(
+        "IncomeRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    transfer: Mapped["TransferRecord"] = relationship(
+        "TransferRecord",
+        back_populates="record",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    settled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class LendingRecord(Base):
+    __tablename__ = "lending_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    person: Mapped[str] = mapped_column(String(255), nullable=False)
+    account: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    direction: Mapped[LendingDirection] = mapped_column(
+        SqlEnum(LendingDirection), nullable=False
+    )
+    expected_payback_by: Mapped[date | None] = mapped_column(Date, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="lending",
+        uselist=False,
+    )
+
+
+class ExpenseRecord(Base):
+    __tablename__ = "expense_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    category: Mapped[str] = mapped_column(String(255), nullable=False)
+    merchant: Mapped[str] = mapped_column(String(255), nullable=True)
+    payment_source: Mapped[str] = mapped_column(String(255), nullable=True)
+    expense_date: Mapped[date] = mapped_column(Date, nullable=False)
+    item: Mapped[str] = mapped_column(String(255), nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="expense",
+        uselist=False,
+    )
+
+
+class AccountRecord(Base):
+    __tablename__ = "account_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_default: Mapped[bool] = mapped_column(nullable=False, default=False)
+    opening_balance: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    current_balance: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    currency: Mapped[str] = mapped_column(String(16), nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="account",
+        uselist=False,
+    )
+
+
+class BudgetRecord(Base):
+    __tablename__ = "budget_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    category: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    period: Mapped[str] = mapped_column(String(32), nullable=False, default="monthly")
+    budget_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="budget",
+        uselist=False,
+    )
+
+
+class IncomeRecord(Base):
+    __tablename__ = "income_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    deposit_account: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    income_date: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="income",
+        uselist=False,
+    )
+
+
+class TransferRecord(Base):
+    __tablename__ = "transfer_records"
+
+    record_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("records.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    source_account: Mapped[str] = mapped_column(String(255), nullable=False)
+    destination_account: Mapped[str] = mapped_column(String(255), nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    transfer_date: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    record: Mapped["BaseRecord"] = relationship(
+        "BaseRecord",
+        back_populates="transfer",
+        uselist=False,
+    )
