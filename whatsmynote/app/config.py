@@ -6,8 +6,8 @@ from platformdirs import user_data_dir
 
 # --- Replace these before publishing ---
 API_URL = "http://localhost:8000"
-SUPABASE_URL = "INSERT_YOUR_SUPABASE_URL_HERE"
-SUPABASE_KEY = "INSERT_YOUR_SUPABASE_KEY_HERE"
+SUPABASE_URL = "https://emcdruetkqkrplrrxqbm.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2RydWV0a3FrcnBscnJ4cWJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NjQ1NTksImV4cCI6MjA5OTM0MDU1OX0.-GRm3ZhaFGDGyy8ocDq0tAov0CxCOwCK9K9JeWPTCvY"
 # ---------------------------------------
 
 APP_NAME = "whatsmynote"
@@ -30,6 +30,17 @@ def get_groq_api_key() -> str | None:
     from dotenv import load_dotenv
     load_dotenv(get_env_path())
     return os.environ.get("GROQ_API_KEY")
+
+def set_groq_api_key(api_key: str) -> None:
+    env_path = get_env_path()
+    content = ""
+    if env_path.exists():
+        content = env_path.read_text()
+    
+    lines = [line for line in content.splitlines() if not line.startswith("GROQ_API_KEY=")]
+    lines.append(f"GROQ_API_KEY={api_key}")
+    env_path.write_text("\n".join(lines) + "\n")
+    os.environ["GROQ_API_KEY"] = api_key
 
 def ensure_env_config() -> None:
     from dotenv import load_dotenv

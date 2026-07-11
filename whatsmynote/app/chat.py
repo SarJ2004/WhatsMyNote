@@ -6,7 +6,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from whatsmynote.core.graph import compiled_graph
 from whatsmynote.app.render import render_result
 from whatsmynote.app.setup import ensure_initial_setup
 from whatsmynote.app.selector import display_search_results
@@ -65,7 +64,7 @@ def run_chat_loop() -> None:
             console.clear()
             continue
         elif msg_lower == "/config":
-            from whatsmynote.core.config import set_groq_api_key
+            from whatsmynote.app.config import set_groq_api_key
             new_key = Prompt.ask("Enter new Groq API Key", password=True)
             if new_key:
                 set_groq_api_key(new_key.strip())
