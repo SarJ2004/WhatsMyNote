@@ -1,94 +1,122 @@
-# WhatsMyNote
+<br/>
+<div align="center">
+<a href="https://github.com/SarJ2004/WhatsMyNote">
+<img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/logo.png" alt="Logo" width="80" height="80">
+</a>
+<h3 align="center">WhatsMyNote</h3>
+<p align="center">
+An intelligent, fully conversational financial memory system. Control your lending, borrowing, expenses, income, and transfers through pure natural language via CLI.
+<br/>
+<br/>
+<a href="https://pypi.org/project/whatsmynote/">View on PyPI</a>
+·
+<a href="https://github.com/SarJ2004/WhatsMyNote/issues">Report Bug</a>
+·
+<a href="https://github.com/SarJ2004/WhatsMyNote/issues">Request Feature</a>
+</p>
 
-WhatsMyNote is a natural-language personal finance assistant for logging and querying lending, expenses, income, and transfers. It uses advanced **Llama 3 LLMs** to extract structured data, store it in PostgreSQL (Supabase), and answer your complex queries accurately.
-
-## 🚀 Bring Your Own Key (BYOK) Architecture
-WhatsMyNote now supports a secure **BYOK architecture**. You bring your own **Groq API key** to power the inference engine locally and securely. 
-
-On your first run, the app will prompt you for your `GROQ_API_KEY`. It is stored securely in a local `.env` file and is never exposed. The application uses state-of-the-art Groq models:
-- **`llama-3.3-70b-versatile`** for reasoning, intent classification, and SQL generation.
-- **`llama-3.1-8b-instant`** for fast and efficient data extraction.
-
----
-
-## 🛠 What It Supports & Examples
-
-### 📉 Expenses
-Track where your money is going.
-- Create expense records with amount, category, merchant, payment source, item, and notes.
-- **Example:** `I spent 320 on groceries at Walmart using HDFC`
-- **Example:** `Update my last grocery expense amount to 400`
-- **Example:** `Delete the Walmart expense`
-- **Example:** `Show my highest expenses this month`
-
-### 💰 Income
-Record earnings, cashback, or refunds.
-- **Example:** `I received 50000 as salary from Acme`
-- **Example:** `Update my salary entry notes to include the July bonus`
-- **Example:** `How much income did I receive from salary sources this year?`
-
-### 🤝 Lending & Borrowing
-Keep track of who owes you, and who you owe.
-- **Example:** `I lent Sumit 500 today`
-- **Example:** `Update Sumit's loan amount to 700`
-- **Example:** `How much money have I lent to Sumit?`
-
-### 🔁 Transfers
-Record money moving between your own accounts.
-- **Example:** `I transferred 3000 from HDFC to SBI`
-- **Example:** `Change the transfer destination to ICICI`
-- **Example:** `Show all transfers from HDFC this month`
-
-### 📊 Budgets and Balances
-Track your overall financial health.
-- Set opening balances for your accounts (e.g., cash, wallet, SBI).
-- Track category budgets (e.g., groceries, transport) or an `Overall` limit.
-- **Example:** `Set opening balance for SBI to 50000`
-- **Example:** `Set monthly budget for groceries to 10000`
-- **Example:** `What is my current balance in SBI?`
-- **Example:** `How much budget do I have left for groceries this month?`
-
-### 📈 Analytics (Read-Only)
-Run advanced queries without touching write access.
-- Safe SQL generation with automated validation.
-- Prefix queries with `sql:` for advanced read-only raw queries.
-- **Example:** `What is my total spending this month?`
-- **Example:** `Compare my income and expense totals for July`
-- **Example:** `What is my net worth estimate?`
+[![PyPI Version](https://img.shields.io/pypi/v/whatsmynote.svg)](https://pypi.org/project/whatsmynote/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Versions](https://img.shields.io/pypi/pyversions/whatsmynote.svg)](https://pypi.org/project/whatsmynote/)
+[![Forks](https://img.shields.io/github/forks/SarJ2004/WhatsMyNote.svg?style=social)](https://github.com/SarJ2004/WhatsMyNote/network/members)
+[![Stars](https://img.shields.io/github/stars/SarJ2004/WhatsMyNote.svg?style=social)](https://github.com/SarJ2004/WhatsMyNote/stargazers)
+</div>
 
 ---
 
-## ⚙️ Environment Setup
+## 📑 Table of Contents
+- [About The Project](#-about-the-project)
+  - [Built With](#-built-with)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#-usage)
+- [Local Development](#-local-development)
+- [Roadmap](#-roadmap)
+- [License](#-license)
 
-Install dependencies and start your virtual environment:
+---
+
+## 🌟 About The Project
+
+Tracking finances shouldn't require complex spreadsheets or clunky UIs. WhatsMyNote brings the power of state-of-the-art Large Language Models (LLMs) directly to your terminal. Just type what happened naturally, and the AI will extract the financial intent, validate it, and persist it to a database securely.
+
+### 🏗 Built With
+- **Python** for core logic
+- **LangGraph & LangChain** for robust stateful intent routing and HITL (Human-in-the-Loop) flows
+- **Pydantic** for extraction validation
+- **SQLAlchemy & PostgreSQL** for data persistence
+- **Groq LLMs (Llama 3)** for lightning-fast, high-quality inference
+- **Supabase** for secure Authentication
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+You need Python 3.11 or higher installed on your machine.
+
+### Installation
+
+The recommended way to install WhatsMyNote is directly from PyPI.
 
 ```bash
-uv venv
-.venv\Scripts\activate
-uv pip install -r requirements.txt
+pip install whatsmynote
 ```
 
-Set up your database connection string in your `.env` (we recommend a **Supabase PostgreSQL** instance):
-```env
-DATABASE_URL=postgresql+psycopg2://postgres:YOUR_PASSWORD@db.YOUR_SUPABASE_REF.supabase.co:5432/postgres
-```
+That's it!
 
-Run the app. It will prompt you for your `GROQ_API_KEY` on the first launch!
+---
+
+## 💡 Usage
+
+After installing, simply type `whatsmynote` in your terminal to start the conversational interface!
+
 ```bash
-python app/main.py
+whatsmynote
 ```
 
----
+On your very first run, it will automatically prompt you for your `GROQ_API_KEY` and securely save it. It will also help you set up your initial budgets and accounts.
 
-## 🏗 Tech Stack
-
-- **Python** for core logic.
-- **LangGraph & LangChain** for robust stateful intent routing and HITL (Human-in-the-Loop) flows.
-- **Pydantic** for extraction validation.
-- **SQLAlchemy & PostgreSQL** for data persistence.
-- **Groq LLMs (Llama 3)** for lightning-fast, high-quality inference.
+**Example Commands you can type:**
+- *"I spent $15 on coffee today"*
+- *"My friend John borrowed $50 from me"*
+- *"Show me my expenses for this month"*
+- *"Transfer $100 from Checking to Savings"*
 
 ---
 
-## 🚀 Vision
-WhatsMyNote aims to become a fully conversational financial memory system, helping you control your lending, borrowing, expenses, income, and transfers through pure natural language.
+## 🛠 Local Development (For Contributors)
+
+If you'd like to contribute to the codebase or run the backend completely locally, you'll need `uv` installed.
+
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/SarJ2004/WhatsMyNote.git
+   ```
+2. Set up your environment variables:
+   ```bash
+   cp .env.sample .env
+   ```
+   *Fill in your database and API keys in `.env`.*
+3. Install all dependencies (including backend AI and DB libraries):
+   ```bash
+   uv sync
+   ```
+4. Run the app:
+   ```bash
+   python whatsmynote/app/chat.py
+   ```
+
+---
+
+## 🗺 Roadmap
+
+See the [open issues](https://github.com/SarJ2004/WhatsMyNote/issues) for a list of proposed features and known issues.
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
