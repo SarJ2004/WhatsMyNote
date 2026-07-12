@@ -87,7 +87,47 @@ def ensure_authenticated():
                         self.send_response(200)
                         self.send_header("Content-type", "text/html")
                         self.end_headers()
-                        self.wfile.write(b"<html><body><h1>Authentication Successful!</h1><p>You can close this tab and return to the terminal.</p></body></html>")
+                        success_html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Successful</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 h-screen flex flex-col items-center justify-center font-sans selection:bg-green-500/30 relative">
+    
+    <div class="bg-gray-900 p-10 rounded-3xl shadow-2xl text-center max-w-md w-full border border-gray-800 transform transition-all hover:scale-105 duration-300 relative z-10">
+        
+        <!-- Logo loaded directly from your GitHub repo -->
+        <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/logo.png" alt="WhatsMyNote Logo" class="h-20 w-auto mx-auto mb-6 drop-shadow-2xl" onerror="this.style.display='none'">
+
+        <div class="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+            <div class="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/40">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+        </div>
+        
+        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">Access Granted!</h1>
+        <p class="text-gray-400 mb-8 text-md font-medium">You have successfully authenticated.</p>
+        
+        <div class="bg-gray-950/50 rounded-2xl p-5 mb-8 border border-green-900/30 shadow-inner">
+            <p class="text-green-400 font-bold text-lg tracking-wider uppercase mb-1">Safe to close</p>
+            <p class="text-gray-500 text-sm">You can now close this tab and return to the terminal.</p>
+        </div>
+
+        <p class="text-gray-300 font-semibold text-lg">Thank you for using WhatsMyNote!</p>
+    </div>
+
+    <!-- Branding Footer -->
+    <div class="absolute bottom-8 text-center opacity-40">
+        <p class="text-gray-400 text-xs tracking-[0.3em] uppercase font-bold">WhatsMyNote Open Source</p>
+    </div>
+</body>
+</html>
+"""
+                        self.wfile.write(success_html.encode('utf-8'))
                     else:
                         self.send_response(400)
                         self.send_header("Content-type", "text/html")

@@ -4,8 +4,15 @@ import os
 from pathlib import Path
 from platformdirs import user_data_dir
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # --- Replace these before publishing ---
-API_URL = "https://whatsmynote.onrender.com"
+if os.environ.get("ENV") == "dev":
+    API_URL = "http://127.0.0.1:8000"
+else:
+    API_URL = "https://whatsmynote.onrender.com"
+
 SUPABASE_URL = "https://emcdruetkqkrplrrxqbm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2RydWV0a3FrcnBscnJ4cWJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NjQ1NTksImV4cCI6MjA5OTM0MDU1OX0.-GRm3ZhaFGDGyy8ocDq0tAov0CxCOwCK9K9JeWPTCvY"
 # ---------------------------------------
