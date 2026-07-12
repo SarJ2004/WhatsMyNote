@@ -19,6 +19,8 @@ Control your lending, borrowing, expenses, income, and transfers through pure na
 [![PyPI Version](https://img.shields.io/pypi/v/whatsmynote.svg?color=blue)](https://pypi.org/project/whatsmynote/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/whatsmynote.svg)](https://pypi.org/project/whatsmynote/)
+[![Forks](https://img.shields.io/github/forks/SarJ2004/WhatsMyNote.svg?style=social)](https://github.com/SarJ2004/WhatsMyNote/network/members)
+[![Stars](https://img.shields.io/github/stars/SarJ2004/WhatsMyNote.svg?style=social)](https://github.com/SarJ2004/WhatsMyNote/stargazers)
 </div>
 
 ---
