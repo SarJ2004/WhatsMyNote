@@ -1,35 +1,75 @@
-# Core Concepts
+# Core Concepts & Architecture
 
-WhatsMyNote is built around a powerful Natural Language Processing engine using Large Language Models (LLMs) to classify and extract your financial intents.
+**WhatsMyNote** is not just a wrapper around an LLM. It is a robust, stateful Multi-Agent System designed specifically for parsing, validating, and persisting highly unstructured financial data from natural language.
 
-## The 4 Primary Intents
+## System Architecture
 
-Every message you send is classified into exactly one of four intents:
+The core of WhatsMyNote is powered by **LangGraph**. Instead of relying on a single monolithic LLM prompt to do everything, the system is divided into specialized AI Agents. 
 
-1. **Create**: Recording a *new* financial event (e.g., "Spent 500 on pizza", "Received salary").
-2. **Update**: Modifying an *existing* record (e.g., "Actually it was 600", "Change the category to Groceries").
-3. **Delete**: Removing a record permanently (e.g., "Delete the last expense", "Remove that loan").
-4. **Query**: Asking for analytics or historical data (e.g., "Show my expenses", "How much do I owe Rahul?").
+```mermaid
+graph TD
+    User([User CLI Input]) --> Supervisor[Supervisor Agent]
+    
+    Supervisor -->|Routing| Classifier[Classifier Agent]
+    Classifier -->|Classified Intent| SpecialistAgents
+    
+    subgraph SpecialistAgents[Specialist Agents]
+        AccountAgent[Account Agent]
+        BudgetAgent[Budget Agent]
+        ExpenseAgent[Expense Agent]
+        IncomeAgent[Income Agent]
+        LendingAgent[Lending Agent]
+        TransferAgent[Transfer Agent]
+    end
+    
+    SpecialistAgents --> Validate{Human-in-the-Loop Validation}
+    
+    Validate -->|Requires Details| Clarify[Ask User for Details]
+    Clarify --> User
+    
+    Validate -->|Confirmed| DB[(PostgreSQL Database)]
+    
+    Supervisor -->|Analytics Query| SQLAgent[Text-to-SQL Agent]
+    SQLAgent --> DB
+    DB --> SQLAgent
+    SQLAgent --> Output([CLI Rich Chart / Table])
+    
+    DB --> Output([Success Message])
+```
 
-## Record Types
+## The Multi-Agent Workflow
 
-Independent of the intent, the engine determines *what* type of record you are talking about. The 6 supported records are:
-`expense`, `income`, `transfer`, `lending`, `budget`, and `account`.
+When you type a message like *"I spent $15 on coffee today"*, here is exactly what happens under the hood:
 
-## Context Awareness (Memory)
+### 1. The Supervisor
+The Supervisor acts as the orchestrator. It receives your raw text and determines if you are:
+- Asking an analytical question (*"How much did I spend this month?"*)
+- Giving a financial command (*"I spent $15"*)
 
-WhatsMyNote has a short-term memory of the conversation. This allows you to use pronouns (`it`, `that`, `this`) in follow-up messages!
+### 2. The Classifier
+If it's a financial command, the Supervisor hands the text to the **Classifier Agent**. The Classifier's only job is to categorize the intent into one of six rigid buckets: `ACCOUNT`, `BUDGET`, `EXPENSE`, `INCOME`, `LENDING`, or `TRANSFER`. 
 
-**Example:**
-> **You:** Spent 500 on pizza  
-> *CLI:* Created Expense record  
-> **You:** Actually it was 600  
-> *CLI:* Updated the amount to 600  
-> **You:** Delete it  
-> *CLI:* Deleted the record  
+### 3. Specialist Extraction (Pydantic)
+Once classified (e.g., as an `EXPENSE`), the text is routed to the **Expense Specialist Agent**. This agent uses strict **Pydantic** schemas combined with LangChain's structured output tools to aggressively extract the exact variables needed:
+- Amount: `15.00`
+- Category: `Food/Coffee`
+- Account: `Default`
+- Date: `Today`
 
-## Human-in-the-Loop Interaction
+### 4. Human-in-the-Loop (HITL) Validation
+**This is the most critical safety feature of WhatsMyNote.**
+LLMs can hallucinate, and you don't want hallucinations mutating your financial database. 
 
-The system prioritizes safety. If you ask to `delete` or `update` a record, but the AI is unsure exactly *which* record you mean (e.g., "Delete my expense"), it will NOT guess.
+Before *any* data is committed to the database, the system enters a validation state. If the extraction looks dangerous, incomplete, or ambiguous, the AI halts execution and asks you a clarifying question in the CLI. 
 
-Instead, it searches your recent history and presents an **Interactive Checklist** right in the terminal! You can use your arrow keys and the Spacebar to safely select the correct record to modify or delete.
+If the extraction is perfect, it will still output a summary of what it understood, and wait for your implicit or explicit approval before persisting it.
+
+### 5. Persistence
+Once validated, the data is mapped to SQLAlchemy ORM models and securely committed to your PostgreSQL database hosted on Supabase, guarded by Row Level Security (RLS) tied to your OAuth User ID.
+
+## Global Memory & State
+
+WhatsMyNote maintains a "Global State" during your chat session. 
+If you say *"I bought coffee for $5"*, and then follow up with *"And a sandwich for $10"*, the system's Short-Term Memory understands the context that the $10 is also an expense.
+
+Furthermore, it queries your database for Long-Term Context. It knows what accounts you have, what categories you usually spend in, and what your default fallback account is, meaning you don't have to redundantly specify details.

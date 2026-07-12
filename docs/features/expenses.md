@@ -1,45 +1,34 @@
 # Expense Tracking
 
-WhatsMyNote allows you to effortlessly log and track your expenses using natural language.
+Expense tracking is the most common action in WhatsMyNote. By parsing your natural language, the AI automatically maps your spending to the correct category and deducts it from the appropriate account.
 
-## Supported Fields
+## How it Works
 
-When logging an expense, the AI attempts to extract the following information:
-- **Amount** *(Required)*: The total cost.
-- **Category** *(Optional)*: e.g., Food, Transport, Rent, Entertainment. If none is provided, it defaults to "General".
-- **Payment Source / Account** *(Optional)*: e.g., SBI, HDFC, Cash. If none is provided, it falls back to your Default Account.
-- **Date** *(Optional)*: Defaults to today's date if not explicitly mentioned (e.g., "yesterday", "on Monday").
-- **Description** *(Optional)*: Any extra context (e.g., "at DMart", "for the party").
+When you log an expense, the **Expense Agent** extracts:
+- `amount`: The exact numerical value (e.g., $15.00).
+- `category`: The type of expense (e.g., Food, Transport). If you have budgets set up, the AI attempts to map it to one of your existing budgets.
+- `account`: Where the money came from. If omitted, it automatically uses your **Default Account**.
+- `expense_date`: When it happened (defaults to today).
+- `notes`: Any context you provided.
 
----
+## Example Interactions
 
-## Examples
+### 1. Simple Expense (Uses Default Account)
+> **You:** "I spent $15 on coffee today."
+>
+> **AI:** "I will log an expense of $15.00 for 'Coffee' from your Default account (SBI). Is this correct? [y/N]"
 
-### Creating an Expense
+### 2. Specifying an Account
+> **You:** "I bought a $1200 laptop using my HDFC Credit Card."
+>
+> **AI:** "I will log an expense of $1200.00 for 'Electronics/Laptop' from your 'HDFC Credit Card' account. Is this correct? [y/N]"
 
-> **You**: Spent 500 on pizza yesterday  
-> *Result*: Creates an expense of 500 under the "Food" category, dated yesterday.
+### 3. Retroactive Expenses
+> **You:** "Yesterday I spent $45 on gas."
+>
+> **AI:** "I will log an expense of $45.00 for 'Gas' from your Default account (SBI) dated for yesterday. Is this correct? [y/N]"
 
-> **You**: Paid 2000 for electricity bill from HDFC  
-> *Result*: Creates an expense of 2000 under "Utilities" or "Bills", paid from the "HDFC" account.
+## Edge Cases & Error Handling
 
-### Updating an Expense
-
-> **You**: Actually, that pizza was 600  
-> *Result*: Updates the amount of the last expense to 600.
-
-> **You**: Change the category of the electricity bill to Home  
-> *Result*: Updates the category to "Home".
-
-### Deleting an Expense
-
-> **You**: Delete the pizza expense  
-> *Result*: Removes the record. If ambiguous, the CLI will present a checklist of recent expenses for you to select from.
-
-### Querying Expenses
-
-> **You**: How much did I spend this month?  
-> *Result*: Calculates the total sum of expenses for the current month.
-
-> **You**: Show all my food expenses  
-> *Result*: Lists all records categorized as Food.
+- **Missing Data:** If you say *"I bought coffee"*, the AI knows the amount is missing. The Human-in-the-Loop system will intervene and say: *"I understand you bought coffee, but how much did it cost?"*
+- **Currency:** The system currently standardizes on your default currency, though future updates will support multi-currency parsing.

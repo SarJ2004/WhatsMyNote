@@ -1,42 +1,37 @@
 # Income Tracking
 
-Keep track of your earnings, salaries, refunds, and side-hustle revenue.
+Income tracking allows you to log money coming *into* your accounts. This could be your monthly salary, freelance earnings, or a random cash gift.
 
-## Supported Fields
+When you log an income event, the **Income Agent** ensures the specified amount is *added* to the balance of the designated account.
 
-When logging income, the AI attempts to extract the following information:
-- **Amount** *(Required)*: The total money received.
-- **Source** *(Optional)*: e.g., Salary, Freelance, Refund, Alice. Defaults to "General".
-- **Deposit Account** *(Optional)*: e.g., SBI, HDFC, Wallet. Where the money was deposited. If omitted, defaults to your Default Account.
-- **Date** *(Optional)*: Defaults to today's date if not specified.
-- **Description** *(Optional)*: Any extra context.
+## How it Works
 
----
+The Income Agent extracts:
+- `amount`: The exact numerical value (e.g., $5000.00).
+- `source`: Where the money came from (e.g., Employer, Freelance Client).
+- `account`: Where the money was deposited. If omitted, it automatically goes into your **Default Account**.
+- `income_date`: When you received it (defaults to today).
+- `notes`: Any context you provided.
 
-## Examples
+## Example Interactions
 
-### Logging Income
+### 1. Simple Income (Uses Default Account)
+> **You:** "I just got paid my $5000 salary."
+>
+> **AI:** "I will log an income of $5000.00 from 'Salary' into your Default account (SBI). Is this correct? [y/N]"
 
-> **You**: Got my 50000 salary deposited in HDFC  
-> *Result*: Creates an income record of 50000 from "Salary", deposited into the "HDFC" account.
+### 2. Specifying a Source and Account
+> **You:** "My freelance client paid me $800 directly into my PayPal account."
+>
+> **AI:** "I will log an income of $800.00 from 'Freelance Client' into your 'PayPal' account. Is this correct? [y/N]"
 
-> **You**: Received 500 as a refund from Amazon  
-> *Result*: Creates an income record of 500 from "Amazon".
+### 3. Combining Entities
+> **You:** "Grandma gave me $50 cash for my birthday."
+>
+> **AI:** "I will log an income of $50.00 from 'Grandma' into your 'Cash' account, with the note 'Birthday'. Is this correct? [y/N]"
 
-### Updating Income
+## Analytics
 
-> **You**: Actually my salary was 55000  
-> *Result*: Updates the amount of the salary record to 55000.
-
-### Deleting Income
-
-> **You**: Delete the Amazon refund  
-> *Result*: Safely removes the record.
-
-### Querying Income
-
-> **You**: How much did I earn this year?  
-> *Result*: Sums up all your income records for the current year.
-
-> **You**: Show my freelance income  
-> *Result*: Lists all income records where the source is categorized as "Freelance".
+You can easily query your income using the text-to-SQL analytics engine:
+- *"How much did I make from freelance work this year?"*
+- *"Show me my total income vs total expenses for last month."*
