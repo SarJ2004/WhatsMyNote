@@ -13,7 +13,7 @@ ANALYTICS_PROMPT = (Path(__file__).parent / "prompts" / "sql.md").read_text()
 
 from typing import Optional
 
-def _parse_sql_payload(content: str) -> tuple[str, Optional[dict]]:
+def _parse_sql_payload(content: str) -> tuple[str | None, Optional[dict], Optional[str]]:
     text = content.strip()
 
     match = re.search(r"\{.*\}", text, re.DOTALL)
@@ -23,12 +23,15 @@ def _parse_sql_payload(content: str) -> tuple[str, Optional[dict]]:
     try:
         payload = json.loads(text)
     except json.JSONDecodeError:
-        return content.strip(), None
+        return content.strip(), None, None
 
-    if isinstance(payload, dict) and "sql" in payload:
-        return str(payload["sql"]), payload.get("chart_config")
+    if isinstance(payload, dict):
+        if payload.get("error"):
+            return None, None, payload.get("error")
+        if payload.get("sql"):
+            return str(payload["sql"]), payload.get("chart_config"), None
 
-    return content.strip(), None
+    return content.strip(), None, None
 
 
 def plan_sql(question: str):
@@ -41,8 +44,14 @@ def plan_sql(question: str):
     ]
 
     result = get_extractor_llm().invoke(messages)
-    sql, chart_config_dict = _parse_sql_payload(result.content)
+    sql, chart_config_dict, error = _parse_sql_payload(result.content)
     
+    if error:
+        raise ValueError(error)
+        
+    if not sql:
+        raise ValueError("Could not generate a valid SQL query.")
+        
     chart_config = None
     if chart_config_dict:
         try:

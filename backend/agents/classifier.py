@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from backend.llms import get_evaluator_llm
 from backend.core.memory import ephemeral_reset
 
-VALID_INTENTS = {"create", "update", "delete", "query"}
+VALID_INTENTS = {"create", "update", "delete", "query", "unknown"}
 
 VALID_RECORD_TYPES = {"lending", "expense", "account", "budget", "income", "transfer"}
 
@@ -17,6 +17,7 @@ create
 update
 delete
 query
+unknown
 
 Definitions
 
@@ -31,6 +32,9 @@ Examples: Delete the last expense, Remove Rahul's loan
 
 query — The user is asking for information.
 Examples: How much did I spend?, Show my expenses, Who owes me money?
+
+unknown — The user is asking something unrelated to personal finance or this app's capabilities.
+Examples: Who is the president?, Write a poem, What is the weather?, How do I code in Python?
 
 If the user is using pronouns (that, it, this), refer to the Context below:
 {context}
@@ -127,6 +131,10 @@ def intent_classifier(state):
     # Reset all ephemeral fields at the start of every new turn
     updates = ephemeral_reset()
     updates["intent"] = intent
+    
+    if intent == "unknown":
+        updates["error"] = "I am a financial assistant and can only help you with managing your finances."
+        
     return updates
 
 
