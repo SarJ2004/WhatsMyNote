@@ -5,7 +5,14 @@ from __future__ import annotations
 from backend.db.config import SessionLocal
 from backend.records.account_utils import sync_account_balances
 from backend.records.models.common import RecordSelector, UpdateOperation
+from backend.records.normalization import normalize_label, normalize_currency, normalize_period
 from backend.records.resolver import resolve_record
+
+NORMALIZED_FIELDS = {
+    "category", "merchant", "payment_source", "item", 
+    "source", "deposit_account", "person", "account", 
+    "source_account", "destination_account", "name"
+}
 
 
 def record_updater(state):
@@ -57,6 +64,13 @@ def record_updater(state):
 
             match operation:
                 case "set" | UpdateOperation.SET:
+                    if field in NORMALIZED_FIELDS and isinstance(value, str):
+                        value = normalize_label(value)
+                    elif field == "currency" and isinstance(value, str):
+                        value = normalize_currency(value)
+                    elif field == "period" and isinstance(value, str):
+                        value = normalize_period(value)
+                        
                     setattr(record, field, value)
                 case "add" | UpdateOperation.ADD:
                     setattr(record, field, current_value + value)
