@@ -79,7 +79,7 @@ def record_updater(state):
                 case "multiply" | UpdateOperation.MULTIPLY:
                     setattr(record, field, current_value * value)
 
-        db.commit()
+        db.flush()
         db.refresh(record)
         sync_account_balances(db)
         db.commit()

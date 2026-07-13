@@ -148,7 +148,7 @@ def record_saver(state):
             db.flush()
             saved_ids.append(base_record.id)
 
-        db.commit()
+        db.flush()
 
         # Budget alerts for expenses
         alerts = []
