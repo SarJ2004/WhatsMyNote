@@ -5,10 +5,10 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
-from backend.records.models.common import RecordSelector, UpdateOperation
+from backend.records.models.common import RecordSelector, UpdateOperation, CleanStringModel
 
 
-class AccountInput(BaseModel):
+class AccountInput(CleanStringModel):
     name: str
     is_default: bool = False
     opening_balance: int = 0

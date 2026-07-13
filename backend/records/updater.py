@@ -70,7 +70,11 @@ def record_updater(state):
         sync_account_balances(db)
         db.commit()
 
-        return {"updated_record_id": record.record_id}
+        return {
+            "updated_record_id": record.record_id,
+            "selected_record_id": None,
+            "selected_record_ids": None
+        }
 
     except Exception as e:
         db.rollback()

@@ -51,7 +51,11 @@ def record_deleter(state):
                 
             sync_account_balances(db)
             db.commit()
-            return {"deleted_record_ids": deleted}
+            return {
+                "deleted_record_ids": deleted,
+                "selected_record_id": None,
+                "selected_record_ids": None
+            }
             
         else:
             record = resolve_record(db, record_type, selector)
@@ -66,7 +70,11 @@ def record_deleter(state):
             sync_account_balances(db)
             db.commit()
 
-            return {"deleted_record_id": record_id}
+            return {
+                "deleted_record_id": record_id,
+                "selected_record_id": None,
+                "selected_record_ids": None
+            }
 
     except Exception as e:
         db.rollback()
