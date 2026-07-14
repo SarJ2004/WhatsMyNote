@@ -1,7 +1,7 @@
 """Primary router and classifier for WhatsMyNote."""
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from backend.llms import get_evaluator_llm
+from backend.llms import get_extractor_llm
 from backend.core.memory import ephemeral_reset
 from pydantic import BaseModel, Field
 import json
@@ -55,7 +55,7 @@ def primary_classifier(state):
     context_str = _build_context_string(state)
     prompt = PRIMARY_PROMPT.format(context=context_str)
 
-    llm = get_evaluator_llm().with_structured_output(ClassificationResult)
+    llm = get_extractor_llm().with_structured_output(ClassificationResult)
     
     try:
         result: ClassificationResult = llm.invoke([
