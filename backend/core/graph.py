@@ -5,10 +5,8 @@ from langgraph.graph import START, END, StateGraph
 from backend.core.state import State
 
 from backend.agents.classifier import (
-    intent_classifier,
-    record_type_classifier,
-    intent_router,
-    record_type_router,
+    primary_classifier,
+    primary_router,
 )
 from backend.agents.extractor import extractor, extractor_router
 
@@ -18,7 +16,6 @@ from backend.records.deleter import record_deleter
 from backend.records.query import query_executor
 
 from backend.analytics.executor import analytics_query_executor
-from backend.agents.analytics import analytics_detector, analytics_router
 
 
 # ── Confirmation nodes ─────────────────────────────────────────
@@ -31,7 +28,7 @@ def check_confirmation(state) -> str:
         return "confirmation_handler"
     if state.get("selected_record_id") is not None or state.get("selected_record_ids") is not None:
         return "request_confirmation"
-    return "intent_classifier"
+    return "primary_classifier"
 
 def update_details_handler(state):
     """Handle raw text input for update details when the selector is already known."""
@@ -230,9 +227,7 @@ def response_formatter(state):
 graph = StateGraph(State)
 
 # Nodes
-graph.add_node("intent_classifier", intent_classifier)
-graph.add_node("record_type_classifier", record_type_classifier)
-graph.add_node("analytics_detector", analytics_detector)
+graph.add_node("primary_classifier", primary_classifier)
 graph.add_node("extractor", extractor)
 graph.add_node("record_saver", record_saver)
 graph.add_node("record_updater", record_updater)
@@ -248,24 +243,14 @@ graph.add_node("response_formatter", response_formatter)
 graph.add_conditional_edges(START, check_confirmation, {
     "confirmation_handler": "confirmation_handler",
     "update_details_handler": "update_details_handler",
-    "intent_classifier": "intent_classifier",
+    "primary_classifier": "primary_classifier",
     "request_confirmation": "request_confirmation",
 })
 
-graph.add_conditional_edges("intent_classifier", intent_router, {
-    "record_type_classifier": "record_type_classifier",
-    "analytics_detector": "analytics_detector",
-    "response_formatter": "response_formatter",
-})
-
-graph.add_conditional_edges("record_type_classifier", record_type_router, {
+graph.add_conditional_edges("primary_classifier", primary_router, {
     "extractor": "extractor",
-    "response_formatter": "response_formatter",
-})
-
-graph.add_conditional_edges("analytics_detector", analytics_router, {
     "analytics_query_executor": "analytics_query_executor",
-    "record_type_classifier": "record_type_classifier",
+    "response_formatter": "response_formatter",
 })
 
 graph.add_conditional_edges("extractor", extractor_router, {

@@ -7,10 +7,24 @@ from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
-from backend.core.config import setup_backend_env
+def setup_backend_env():
+    # Setup config loads env vars first
+    from backend.core.config import setup_backend_env as _setup_env
+    _setup_env()
+
 setup_backend_env()
 
+# Initialize global Supabase client once
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+if url and key:
+    _supabase_client: Client = create_client(url, key)
+else:
+    _supabase_client = None
+
 def verify_token(authorization: str = Header(None), x_groq_api_key: str = Header(None)) -> str:
+    if _supabase_client is None:
+        raise HTTPException(status_code=500, detail="Backend missing Supabase config")
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid token")
     token = authorization.split(" ")[1]
@@ -18,13 +32,7 @@ def verify_token(authorization: str = Header(None), x_groq_api_key: str = Header
     if x_groq_api_key:
         os.environ["GROQ_API_KEY"] = x_groq_api_key
         
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_KEY")
-    if not url or not key:
-        raise HTTPException(status_code=500, detail="Backend missing Supabase config")
-        
-    supabase: Client = create_client(url, key)
-    res = supabase.auth.get_user(token)
+    res = _supabase_client.auth.get_user(token)
     if not res or not res.user:
         raise HTTPException(status_code=401, detail="Invalid token")
         
