@@ -27,10 +27,10 @@ def check_confirmation(state) -> str:
     """Entry router: check if we're waiting for a confirmation response."""
     if state.get("awaiting_update_details", False):
         return "update_details_handler"
-    if state.get("selected_record_id") is not None or state.get("selected_record_ids") is not None:
-        return "request_confirmation"
     if state.get("awaiting_confirmation", False):
         return "confirmation_handler"
+    if state.get("selected_record_id") is not None or state.get("selected_record_ids") is not None:
+        return "request_confirmation"
     return "intent_classifier"
 
 def update_details_handler(state):
@@ -38,10 +38,7 @@ def update_details_handler(state):
     from backend.agents.extractor import extractor
     
     # Temporarily force the intent and record_type so extractor runs correctly on the raw text
-    pending = state.get("pending_action", {})
     state_copy = state.copy()
-    state_copy["intent"] = pending.get("intent")
-    state_copy["record_type"] = pending.get("record_type")
     state_copy["raw_text"] = 'Target is selected, assume selector is {"target": "id", "record_id": 0}. Extract updates: ' + state.get("raw_text", "")
     
     result = extractor(state_copy)
@@ -50,7 +47,7 @@ def update_details_handler(state):
         return {"error": result["error"], "awaiting_update_details": False}
         
     new_extraction = result.get("extraction", {})
-    old_extraction = pending.get("extraction", {})
+    old_extraction = state.get("extraction", {})
     
     merged_extraction = {
         "action": "update",
@@ -58,11 +55,9 @@ def update_details_handler(state):
         "updates": new_extraction.get("updates", [])
     }
     
-    # We trigger request_confirmation again by setting selected_record_id
     return {
         "extraction": merged_extraction,
-        "awaiting_update_details": False,
-        "selected_record_id": merged_extraction.get("selector", {}).get("record_id")
+        "awaiting_update_details": False
     }
 
 
@@ -70,13 +65,8 @@ def confirmation_handler(state):
     """Handle y/n confirmation responses."""
     text = state.get("raw_text", "").strip().lower()
     if text in {"y", "yes", "sure", "ok", "confirm"}:
-        pending = state.get("pending_action") or {}
         return {
             "awaiting_confirmation": False,
-            "intent": pending.get("intent"),
-            "record_type": pending.get("record_type"),
-            "extraction": pending.get("extraction"),
-            "pending_action": None,
             # Clear ephemeral
             "saved_record_ids": [],
             "updated_record_id": None,
@@ -86,13 +76,10 @@ def confirmation_handler(state):
             "error": None,
             "answer": None,
             "record_preview": None,
-            "selected_record_id": pending.get("selected_record_id"),
-            "selected_record_ids": pending.get("selected_record_ids"),
         }
     else:
         return {
             "awaiting_confirmation": False,
-            "pending_action": None,
             "intent": None,
             "record_type": None,
             "extraction": None,
@@ -187,13 +174,7 @@ def request_confirmation(state):
     if intent == "update" and not extraction.get("updates"):
         return {
             "awaiting_update_details": True,
-            "pending_action": {
-                "intent": intent,
-                "record_type": record_type,
-                "extraction": extraction,
-            },
             "extraction": extraction,
-            "selected_record_id": None,
             "answer": f"What would you like to update? (e.g. 'change amount to 500' or 'set category to Food')"
         }
 
@@ -211,16 +192,7 @@ def request_confirmation(state):
 
     return {
         "awaiting_confirmation": True,
-        "pending_action": {
-            "intent": intent,
-            "record_type": record_type,
-            "extraction": extraction,
-            "selected_record_ids": state.get("selected_record_ids"),
-            "selected_record_id": state.get("selected_record_id"),
-        },
         "extraction": extraction,  # Propagate the updated extraction
-        "selected_record_id": None,  # Clear this so we don't loop back here!
-        "selected_record_ids": None,
         "answer": f"Are you sure you want to {intent} this {record_type}?{preview_str}{updates_str} (y/n)",
     }
 

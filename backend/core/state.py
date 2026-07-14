@@ -27,7 +27,6 @@ class State(TypedDict):
 
     # ── Confirmation flow (short-term memory) ───────────────────
     awaiting_confirmation: Annotated[bool, replace]
-    pending_action: Annotated[Optional[dict], replace]   # Stores {intent, record_type, extraction}
 
     # ── HITL fuzzy search ───────────────────────────────────────
     search_results: Annotated[list[dict], replace]

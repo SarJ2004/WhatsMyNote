@@ -221,6 +221,9 @@ __marimo__/
 # Supabase Auth Session
 .supabase_session.json
 
+#Antigravity rules
+.agents/
 
 #Reference files:
 TODO.md
+RESOLVED_ISSUES.md
