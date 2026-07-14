@@ -5,6 +5,8 @@ from __future__ import annotations
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+import time
+import os
 
 from whatsmynote.app.render import render_result
 from whatsmynote.app.setup import ensure_initial_setup
@@ -74,7 +76,6 @@ def run_chat_loop() -> None:
             continue
         elif msg_lower == "/logout":
             from whatsmynote.app.auth import get_supabase, SESSION_FILE
-            import os
             try:
                 get_supabase().auth.sign_out()
                 if os.path.exists(SESSION_FILE):
@@ -86,7 +87,12 @@ def run_chat_loop() -> None:
                 console.print(f"[red]Error logging out: {e}[/red]")
             break
 
+        start_time = time.time()
         state = _invoke(message)
+        end_time = time.time()
+        
+        if os.environ.get("ENV") == "dev":
+            console.print(f"[dim yellow]DEBUG: Response time: {end_time - start_time:.2f}s[/dim yellow]")
 
         # HITL: If the system needs the user to select a record
         if state.get("awaiting_selection") and state.get("search_results"):

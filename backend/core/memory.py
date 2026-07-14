@@ -21,7 +21,6 @@ def ephemeral_reset() -> dict:
         "error": None,
         "extraction": None,
         "record_type": None,
-        "pending_action": None,
         "search_results": [],
         "awaiting_selection": False,
         "selected_record_id": None,
