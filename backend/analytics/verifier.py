@@ -25,6 +25,10 @@ class AnalyticsReview(BaseModel):
         default=None,
         description="Short note for why revised SQL was suggested.",
     )
+    revised_chart_config: dict | None = Field(
+        default=None,
+        description="Provide a completely revised chart config (matching ChartConfig schema) if the original is missing, invalid, or inappropriate for the user's request. Keep it null if the original chart config is fine."
+    )
 
 
 def _preview_rows(rows: Any, limit: int = 5) -> str:
@@ -42,7 +46,10 @@ def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = No
     
     chart_text = ""
     if chart_config:
-        chart_text = f"Proposed Chart Configuration:\n{chart_config.model_dump_json(indent=2)}\n\n"
+        if hasattr(chart_config, "model_dump_json"):
+            chart_text = f"Proposed Chart Configuration:\n{chart_config.model_dump_json(indent=2)}\n\n"
+        else:
+            chart_text = f"Proposed Chart Configuration:\n{json.dumps(chart_config, indent=2)}\n\n"
         
     messages = [
         SystemMessage(
@@ -50,6 +57,7 @@ def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = No
                 "You review read-only SQL answers and their proposed charting configurations. "
                 "Decide whether SQL answers user question well and if the chart_config makes sense for the result shape. "
                 "If result looks wrong or chart_config is invalid for the columns returned, provide revised_sql and rationale. "
+                "If the chart_config is missing when the user explicitly asked for a chart, or if the x_axis/y_axis do not perfectly match the SQL result keys, you MUST provide a revised_chart_config. "
                 "Return concise judgment only."
             )
         ),

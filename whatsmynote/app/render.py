@@ -66,7 +66,7 @@ def _render_analytics_chart(rows: list[dict[str, Any]], chart_config: dict[str, 
                 data[k] = v
             
             if chart_type == "donut":
-                chart_obj = termcharts.donut(data, title=title)
+                chart_obj = termcharts.doughnut(data, title=title)
             else:
                 chart_obj = termcharts.pie(data, title=title)
                 

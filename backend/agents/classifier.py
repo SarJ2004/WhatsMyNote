@@ -21,7 +21,7 @@ unknown
 
 Definitions
 
-create — The user is recording a NEW financial event.
+create — The user is recording a PAST, COMPLETED financial event.
 Examples: Lent Rahul 500, Spent 200 on pizza, Received salary, Transferred 500, Set budget of groceries to 1000
 
 update — The user is modifying an existing record.
@@ -33,8 +33,8 @@ Examples: Delete the last expense, Remove Rahul's loan
 query — The user is asking for information.
 Examples: How much did I spend?, Show my expenses, Who owes me money?
 
-unknown — The user is asking something unrelated to personal finance or this app's capabilities.
-Examples: Who is the president?, Write a poem, What is the weather?, How do I code in Python?
+unknown — The user is asking something unrelated, stating a future desire or unfulfilled need (not a completed event), or typing gibberish.
+Examples: I need a bottle of beer, I want to buy a laptop, Write a poem, What is the weather?
 
 If the user is using pronouns (that, it, this), refer to the Context below:
 {context}

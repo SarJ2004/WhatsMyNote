@@ -15,6 +15,7 @@ Generate exactly one safe PostgreSQL query for the user's question.
 - Prefer aggregations, `GROUP BY`, `ORDER BY`, and `LIMIT` for analytics.
 - **PostgreSQL Dialect**: Use PostgreSQL date functions (e.g., `CURRENT_DATE`, `CURRENT_DATE - INTERVAL '1 month'`).
 - **GIBBERISH GUARD**: If the user's question is gibberish, highly ambiguous, or cannot be answered using the provided schema, you MUST return `"sql": null` and provide an `"error"` field explaining why.
+- **CHARTS**: If the user explicitly asks for a chart type (e.g., 'pie chart'), you MUST provide a `chart_config` with that exact `chart_type`. The `x_axis` and `y_axis` values MUST EXACTLY MATCH the column aliases in your SELECT statement.
 
 ## Schema Reference and Join Keys
 

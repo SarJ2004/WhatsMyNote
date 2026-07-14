@@ -58,7 +58,8 @@ def plan_sql(question: str):
             from backend.analytics.models import ChartConfig
             chart_config = ChartConfig(**chart_config_dict)
         except Exception:
-            pass
+            chart_config = chart_config_dict
 
-    AnalyticsSQL(sql=sql, chart_config=chart_config)
+    # We skip strict AnalyticsSQL validation here because we want to pass
+    # potentially invalid chart configs down to the verifier for auto-correction.
     return sql, chart_config, select_tables(question)
