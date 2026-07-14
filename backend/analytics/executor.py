@@ -70,6 +70,13 @@ def analytics_query_executor(state):
             final_sql = sql
             final_review = note
 
+            if review.revised_chart_config:
+                from backend.analytics.models import ChartConfig
+                try:
+                    chart_config = ChartConfig(**review.revised_chart_config)
+                except Exception:
+                    chart_config = review.revised_chart_config
+
             if review.approved:
                 break
 
@@ -84,7 +91,10 @@ def analytics_query_executor(state):
         # Convert chart_config to dict for state
         chart_config_dict = None
         if chart_config:
-            chart_config_dict = chart_config.model_dump()
+            if hasattr(chart_config, "model_dump"):
+                chart_config_dict = chart_config.model_dump()
+            else:
+                chart_config_dict = chart_config
 
         return {
             "query_result": final_query_result,

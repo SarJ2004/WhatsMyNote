@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from backend.llms import get_evaluator_llm
 from backend.core.memory import ephemeral_reset
 
-VALID_INTENTS = {"create", "update", "delete", "query"}
+VALID_INTENTS = {"create", "update", "delete", "query", "unknown"}
 
 VALID_RECORD_TYPES = {"lending", "expense", "account", "budget", "income", "transfer"}
 
@@ -17,10 +17,11 @@ create
 update
 delete
 query
+unknown
 
 Definitions
 
-create — The user is recording a NEW financial event.
+create — The user is recording a PAST, COMPLETED financial event.
 Examples: Lent Rahul 500, Spent 200 on pizza, Received salary, Transferred 500, Set budget of groceries to 1000
 
 update — The user is modifying an existing record.
@@ -31,6 +32,9 @@ Examples: Delete the last expense, Remove Rahul's loan
 
 query — The user is asking for information.
 Examples: How much did I spend?, Show my expenses, Who owes me money?
+
+unknown — The user is asking something unrelated, stating a future desire or unfulfilled need (not a completed event), or typing gibberish.
+Examples: I need a bottle of beer, I want to buy a laptop, Write a poem, What is the weather?
 
 If the user is using pronouns (that, it, this), refer to the Context below:
 {context}
@@ -127,6 +131,10 @@ def intent_classifier(state):
     # Reset all ephemeral fields at the start of every new turn
     updates = ephemeral_reset()
     updates["intent"] = intent
+    
+    if intent == "unknown":
+        updates["error"] = "I am a financial assistant and can only help you with managing your finances."
+        
     return updates
 
 

@@ -1,41 +1,86 @@
 # Getting Started
 
-Welcome to **WhatsMyNote**! This guide will help you install the application, log in, and perform the initial setup.
+Welcome to **WhatsMyNote**! This guide will walk you through the absolute easiest way to get the CLI installed, authenticated, and configured for your first financial message.
 
-## Installation
+## 1. Installation
 
-WhatsMyNote is distributed via PyPI. You can install it globally using `uv` (recommended for speed) or `pip`.
+WhatsMyNote is distributed securely via PyPI.
 
 ```bash
-# Using uv (Recommended)
+# We highly recommend using uv for lightning-fast installation!
 uv tool install whatsmynote
 
-# Using pip
+# Or standard pip:
 pip install whatsmynote
 ```
 
-## Authentication
+## 2. Authentication
 
-When you run `whatsmynote` for the first time, you will be prompted to authenticate. 
+When you run `whatsmynote` for the very first time, the system needs to securely identify you so your financial data is completely isolated.
 
-1. A browser window will automatically open pointing to Supabase.
-2. Sign in using your preferred OAuth provider (e.g., Google or GitHub).
-3. Once successful, you will be redirected back to the CLI automatically. 
-4. The CLI securely stores your session token locally, meaning you only have to log in once!
+Run the CLI:
+```bash
+whatsmynote
+```
 
-## Initial Setup
+You will see the following prompt:
+```text
+WhatsMyNote - Supabase Authentication
+Do you want to (L)og in, (S)ign up, or (O)Auth [Google/GitHub]? [l/s/o/q] (l): o
+Which provider? [google/github] (google): google
+Opening browser to authenticate with Google...
+```
 
-Upon successful login, WhatsMyNote will detect if you have any existing accounts. If you don't, it will guide you through an interactive setup:
+1. A browser window will automatically pop open.
+2. Sign in using your Google or GitHub account.
+3. You will see a beautiful **"Access Granted"** success page.
+4. You can safely close the tab, and the terminal will say:
+   `Successfully authenticated via Google!`
 
-1. **Default Account**: You will be asked to create a default bank account or wallet (e.g., `SBI`, `HDFC`, `Cash`). This acts as the default fallback for all transactions if you do not specify an account name in your messages.
-2. **Budgets**: You can optionally set up monthly spending limits for various categories (e.g., Food, Transport, Rent). 
+> **Security Note:** The CLI securely stores your session token locally on your machine. You will only ever have to log in once!
 
-Once completed, you will enter the main chat interface!
+## 3. Initial Setup Wizard
 
-## Basic Usage
+Upon your very first successful login, WhatsMyNote will realize your database is empty. It will automatically launch an interactive setup wizard to get your baseline finances configured.
 
-The CLI operates exactly like a chat window. Type your financial events in natural English, and the AI will parse them and update your database automatically.
+### Setting up your Accounts
+First, it will ask you what bank accounts or wallets you want to track:
+```text
+Let's set up your accounts.
+Account Name (e.g., SBI, Cash, HDFC): HDFC
+Opening Balance (0.0): 1500
+Currency (INR, USD, etc.): USD
+```
+
+Next, it will ask you to select a **Default Account**. 
+*Why?* If you type *"I bought a coffee for $5"*, the AI will automatically deduct it from your Default Account so you don't have to specify "from HDFC" every single time!
+
+### Setting up your Budgets
+Next, it will ask if you want to configure monthly spending limits:
+```text
+Category Name (e.g., Food, Travel, Rent): Food
+Monthly Budget Amount: 500
+```
+*(You can easily skip this by pressing Enter if you don't want to track budgets).*
+
+## 4. You are ready!
+
+Once the setup wizard finishes, you will see the main chat interface:
+
+```text
+╭──────────────────────────────────────────────────╮
+│ WhatsMyNote CLI                                  │
+│ Type finance messages. Use exit or quit to stop. │
+╰──────────────────────────────────────────────────╯
+You: 
+```
+
+**Try typing your first message!**
+> *"I just grabbed a $5 coffee"*
+> *"My employer deposited my $5000 salary into HDFC"*
+> *"My friend Alex borrowed $50 from me"*
 
 **Built-in Commands:**
 - `clear`: Clears the terminal screen.
+- `/logout`: Logs you out and clears your session token.
 - `exit` or `quit`: Closes the application.

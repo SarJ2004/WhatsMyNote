@@ -3,7 +3,19 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+
+
+class CleanStringModel(BaseModel):
+    @model_validator(mode='before')
+    @classmethod
+    def clean_null_strings(cls, data: dict) -> dict:
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, str):
+                    if value.strip().lower() in ["null", "none", "n/a", ""]:
+                        data[key] = None
+        return data
 
 
 class TargetRecord(str, Enum):

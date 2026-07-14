@@ -1,39 +1,38 @@
-# Budgets Management
+# Budget Tracking
 
-WhatsMyNote allows you to set up recurring spending limits for specific categories, helping you track your expenses over a specific period.
+Budgets in WhatsMyNote act as financial guardrails. You can establish monthly (or weekly) spending limits for specific categories, and the AI will automatically track your expenses against them.
 
-## Supported Fields
+When you log an expense, the AI will intelligently categorize it. If it falls under a category you have a budget for, it will deduct it from your remaining budget.
 
-- **Category** *(Required)*: The category to budget for (e.g., Food, General, Overall). "Overall" applies to all expenses combined.
-- **Limit Amount** *(Required)*: The maximum amount you want to spend.
-- **Period** *(Optional)*: E.g., Monthly, Weekly, Yearly. Defaults to Monthly.
-- **Notes** *(Optional)*: Any extra context for the budget.
+## Example Interactions
 
----
+Here are some ways you can interact with the Budget Agent:
 
-## Examples
+### 1. Creating a Budget
+> **You:** "Set a monthly budget of $400 for groceries."
+>
+> **AI:** "I will create a new budget for 'Groceries' with a limit of $400.00 per month. Is this correct? [y/N]"
 
-### Setting up a Budget
+### 2. Updating a Budget
+> **You:** "Increase my Food budget to $600."
+>
+> **AI:** "I will update your 'Food' budget from $500.00 to $600.00. Is this correct? [y/N]"
 
-> **You**: Set a monthly budget of 5000 for Food  
-> *Result*: Creates a budget record for the "Food" category with a 5000 limit per month.
+### 3. Checking Remaining Budgets
+> **You:** "How am I doing on my budgets this month?"
+>
+> **AI:** 
+> ```text
+> ╭──────────────── Budget Status ─────────────────╮
+> │                                                │
+> │  Groceries: $150.00 remaining (of $400.00)     │
+> │  Food: $50.00 remaining (of $600.00)           │
+> │  Entertainment: $20.00 OVER BUDGET             │
+> │                                                │
+> ╰────────────────────────────────────────────────╯
+> ```
 
-> **You**: Limit my overall expenses to 20000 this month  
-> *Result*: Creates an "Overall" budget of 20000.
+## Edge Cases & Error Handling
 
-### Tracking your Budget
-
-To see how much you have spent against your budgets, simply query it! WhatsMyNote's analytics engine will automatically calculate your current spending for the month in that category and compare it to the limit.
-
-> **You**: Show my budgets  
-> *Result*: Lists your active budgets, alongside a visualization of how much of the limit you've consumed!
-
-### Updating a Budget
-
-> **You**: Increase my Food budget to 6000  
-> *Result*: Updates the limit amount to 6000.
-
-### Deleting a Budget
-
-> **You**: Delete the food budget  
-> *Result*: Removes the budget limit completely.
+- **Ambiguous Categories:** If you set a budget for "Food", but later say *"I spent $50 at the supermarket"*, the AI is smart enough to realize "supermarket" falls under your "Food" (or "Groceries") budget. 
+- **Exceeding Budget:** While the AI will not stop you from logging an expense that exceeds your budget, it can warn you if you ask for a status update.
