@@ -6,10 +6,10 @@ from typing import Literal, List, Union
 
 from pydantic import BaseModel, Field
 
-from backend.records.models.common import RecordSelector, UpdateOperation
+from backend.records.models.common import RecordSelector, UpdateOperation, CleanStringModel
 
 
-class ExpenseInput(BaseModel):
+class ExpenseInput(CleanStringModel):
     amount: int
     category: str | None = None
     merchant: str | None = None

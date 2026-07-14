@@ -6,10 +6,10 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, Field
 
-from backend.records.models.common import RecordSelector, UpdateOperation
+from backend.records.models.common import RecordSelector, UpdateOperation, CleanStringModel
 
 
-class TransferInput(BaseModel):
+class TransferInput(CleanStringModel):
     source_account: str | None = None
     destination_account: str
     amount: int

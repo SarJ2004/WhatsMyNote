@@ -220,3 +220,7 @@ __marimo__/
 
 # Supabase Auth Session
 .supabase_session.json
+
+
+#Reference files:
+TODO.md

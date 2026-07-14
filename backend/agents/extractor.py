@@ -22,14 +22,53 @@ def _load_prompt(intent: str, record_type: str) -> str:
     return prompt_path.read_text()
 
 
-def _date_context() -> str:
+def _dynamic_context() -> str:
+    from backend.db.config import SessionLocal
+    from backend.db.schema import AccountRecord, ExpenseRecord, BudgetRecord, IncomeRecord
+    from sqlalchemy import func
+    
+    accounts, categories, income_sources = [], [], []
+    try:
+        db = SessionLocal()
+        accounts = [a.name for a in db.query(AccountRecord).all() if a.name]
+        
+        expense_cats = [
+            row[0] for row in db.query(ExpenseRecord.category)
+            .group_by(ExpenseRecord.category)
+            .order_by(func.count(ExpenseRecord.category).desc())
+            .limit(10).all() if row[0]
+        ]
+        budget_cats = [row[0] for row in db.query(BudgetRecord.category).distinct().all() if row[0]]
+        categories = list(set(expense_cats + budget_cats))
+        
+        income_sources = [
+            row[0] for row in db.query(IncomeRecord.source)
+            .group_by(IncomeRecord.source)
+            .order_by(func.count(IncomeRecord.source).desc())
+            .limit(10).all() if row[0]
+        ]
+    except Exception:
+        pass
+    finally:
+        db.close()
+        
     today = date.today()
     yesterday = (today - timedelta(days=1)).isoformat()
-    return (
+    
+    context = (
         f"Today's date is {today.isoformat()}. "
         f"Yesterday was {yesterday}. "
         "If no date is mentioned by the user, do not set a date field.\n\n"
     )
+    
+    if accounts:
+        context += f"Valid existing accounts: {', '.join(accounts)}\n"
+    if categories:
+        context += f"Valid existing categories: {', '.join(categories)}\n"
+    if income_sources:
+        context += f"Valid existing income sources: {', '.join(income_sources)}\n"
+        
+    return context + "\n"
 
 
 def extractor(state):
@@ -47,7 +86,7 @@ def extractor(state):
     prompt = _load_prompt(intent, record_type)
 
     messages = [
-        SystemMessage(content=_date_context() + prompt),
+        SystemMessage(content=_dynamic_context() + prompt),
         HumanMessage(content=state.get("raw_text")),
     ]
 
