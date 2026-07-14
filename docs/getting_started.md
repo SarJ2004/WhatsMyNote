@@ -26,7 +26,7 @@ whatsmynote
 You will see the following prompt:
 ```text
 WhatsMyNote - Supabase Authentication
-Do you want to (L)og in, (S)ign up, or (O)Auth [Google/GitHub]? [l/s/o/q] (l): o
+Do you want to (L)og in, (S)ign up, (F)orgot Password, or (O)Auth [Google/GitHub]? [l/s/f/o/q] (l): o
 Which provider? [google/github] (google): google
 Opening browser to authenticate with Google...
 ```
@@ -38,6 +38,8 @@ Opening browser to authenticate with Google...
    `Successfully authenticated via Google!`
 
 > **Security Note:** The CLI securely stores your session token locally on your machine. You will only ever have to log in once!
+>
+> **Password Reset:** If you signed up with an email/password, you can use the `(F)orgot Password` flow right from the CLI. It will email you a secure link, and once you authenticate, it will prompt you for a new password seamlessly.
 
 ## 3. Initial Setup Wizard
 

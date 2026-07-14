@@ -155,7 +155,8 @@ If you'd like to contribute to the codebase or run the backend completely locall
    ```bash
    cp .env.sample .env
    ```
-   *You will need to provide your own `GROQ_API_KEY` in the `.env` file.*
+   *You will need to provide your own `GROQ_API_KEY` and Supabase keys in the `.env` file.*
+   > **Important:** For `DATABASE_URL`, use the Supabase **Direct connection** (Port 5432 or Session mode). Do NOT use the Transaction Pooler (Port 6543), as it breaks SQLAlchemy schema migrations during initial setup.
 
 3. **Install Dependencies:**
    ```bash
