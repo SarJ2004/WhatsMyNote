@@ -61,12 +61,26 @@ def _dynamic_context() -> str:
         "If no date is mentioned by the user, do not set a date field.\n\n"
     )
     
+    STANDARD_EXPENSE_CATEGORIES = [
+        "Housing", "Food & Dining", "Groceries", "Utilities", "Transportation", 
+        "Healthcare", "Personal Care", "Entertainment", "Education", "Shopping", 
+        "Travel", "Debt & Loans", "Savings & Investments", "Gifts & Donations", "Others"
+    ]
+    
+    STANDARD_INCOME_SOURCES = [
+        "Salary", "Freelance & Business", "Dividends & Investments", "Interest", 
+        "Refunds", "Gifts", "Others"
+    ]
+    
+    context += f"STANDARD EXPENSE/BUDGET CATEGORIES: {', '.join(STANDARD_EXPENSE_CATEGORIES)}\n"
+    context += f"STANDARD INCOME SOURCES: {', '.join(STANDARD_INCOME_SOURCES)}\n\n"
+    
     if accounts:
-        context += f"Valid existing accounts: {', '.join(accounts)}\n"
+        context += f"User's Existing Accounts: {', '.join(accounts)}\n"
     if categories:
-        context += f"Valid existing categories: {', '.join(categories)}\n"
+        context += f"User's Custom Categories: {', '.join(categories)}\n"
     if income_sources:
-        context += f"Valid existing income sources: {', '.join(income_sources)}\n"
+        context += f"User's Custom Income Sources: {', '.join(income_sources)}\n"
         
     return context + "\n"
 
