@@ -72,8 +72,13 @@ def _dynamic_context() -> str:
         "Refunds", "Gifts", "Others"
     ]
     
+    STANDARD_ACCOUNTS = [
+        "Cash", "Bank Account", "Credit Card", "Digital Wallet"
+    ]
+    
     context += f"STANDARD EXPENSE/BUDGET CATEGORIES: {', '.join(STANDARD_EXPENSE_CATEGORIES)}\n"
-    context += f"STANDARD INCOME SOURCES: {', '.join(STANDARD_INCOME_SOURCES)}\n\n"
+    context += f"STANDARD INCOME SOURCES: {', '.join(STANDARD_INCOME_SOURCES)}\n"
+    context += f"STANDARD ACCOUNTS: {', '.join(STANDARD_ACCOUNTS)}\n\n"
     
     if accounts:
         context += f"User's Existing Accounts: {', '.join(accounts)}\n"
