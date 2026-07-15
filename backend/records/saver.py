@@ -13,14 +13,21 @@ from backend.records.normalization import normalize_label
 from backend.budget.alerts import build_budget_alerts_for_expense
 
 
-def _resolve_account(account_name: str | None, default_account: str | None, valid_accounts: set[str]) -> str | None:
+def _resolve_account(account_name: str | None, default_account: str | None, valid_accounts: set[str], new_accounts: set[str]) -> str | None:
     norm = normalize_label(account_name)
-    if norm and norm in valid_accounts:
+    if not norm:
+        return default_account
+    if norm in valid_accounts:
         return norm
-    return default_account
+    
+    # Auto-create explicitly specified accounts that do not exist
+    if norm.lower() != "unknown":
+        new_accounts.add(norm)
+        valid_accounts.add(norm)
+    return norm
 
 
-def _build_type_record(record_type: str, record_data: dict, default_account: str | None, valid_accounts: set[str]):
+def _build_type_record(record_type: str, record_data: dict, default_account: str | None, valid_accounts: set[str], new_accounts: set[str]):
     """Build the type-specific ORM record from extraction data."""
     match record_type:
         case "expense":
@@ -28,7 +35,7 @@ def _build_type_record(record_type: str, record_data: dict, default_account: str
                 amount=record_data["amount"],
                 category=normalize_label(record_data.get("category")),
                 merchant=normalize_label(record_data.get("merchant")),
-                payment_source=_resolve_account(record_data.get("payment_source"), default_account, valid_accounts),
+                payment_source=_resolve_account(record_data.get("payment_source"), default_account, valid_accounts, new_accounts),
                 item=normalize_label(record_data.get("item")),
                 expense_date=record_data.get("expense_date"),
                 notes=record_data.get("notes"),
@@ -37,22 +44,22 @@ def _build_type_record(record_type: str, record_data: dict, default_account: str
             return IncomeRecord(
                 amount=record_data["amount"],
                 source=normalize_label(record_data.get("source")) or "Unknown",
-                deposit_account=_resolve_account(record_data.get("deposit_account"), default_account, valid_accounts),
+                deposit_account=_resolve_account(record_data.get("deposit_account"), default_account, valid_accounts, new_accounts),
                 income_date=record_data.get("income_date"),
                 notes=record_data.get("notes"),
             )
         case "lending":
             return LendingRecord(
                 person=normalize_label(record_data.get("person")) or "Unknown",
-                account=_resolve_account(record_data.get("account"), default_account, valid_accounts),
+                account=_resolve_account(record_data.get("account"), default_account, valid_accounts, new_accounts),
                 amount=record_data["amount"],
                 direction=record_data.get("direction", "lent"),
                 expected_payback_by=record_data.get("expected_payback_by"),
             )
         case "transfer":
             return TransferRecord(
-                source_account=_resolve_account(record_data.get("source_account"), default_account, valid_accounts),
-                destination_account=_resolve_account(record_data.get("destination_account"), "Unknown", valid_accounts),
+                source_account=_resolve_account(record_data.get("source_account"), default_account, valid_accounts, new_accounts),
+                destination_account=_resolve_account(record_data.get("destination_account"), "Unknown", valid_accounts, new_accounts),
                 amount=record_data["amount"],
                 transfer_date=record_data.get("transfer_date"),
                 notes=record_data.get("notes"),
@@ -115,6 +122,7 @@ def record_saver(state):
     try:
         default_account = get_default_account_name(db)
         valid_accounts = {a.name for a in db.query(AccountRecord).all() if a.name}
+        new_accounts = set()
 
         for record_data in records_data:
             if isinstance(record_data, dict):
@@ -126,7 +134,7 @@ def record_saver(state):
                 record_type=_RECORD_TYPE_ENUM[record_type],
                 raw_text=state.get("raw_text"),
             )
-            type_record = _build_type_record(record_type, data, default_account, valid_accounts)
+            type_record = _build_type_record(record_type, data, default_account, valid_accounts, new_accounts)
             setattr(base_record, _TYPE_RELATIONSHIP[record_type], type_record)
 
             if record_type == "budget":
@@ -147,6 +155,23 @@ def record_saver(state):
             db.add(base_record)
             db.flush()
             saved_ids.append(base_record.id)
+
+        # Create any auto-discovered missing accounts
+        for acc_name in new_accounts:
+            new_acc_record = BaseRecord(
+                record_type=RecordType.ACCOUNT,
+                raw_text=f"Auto-created during {record_type} tracking",
+            )
+            new_acc_record.account = AccountRecord(
+                name=acc_name,
+                is_default=False,
+                opening_balance=0,
+                current_balance=0,
+            )
+            db.add(new_acc_record)
+            db.flush()
+            # We don't necessarily append to saved_ids here because saved_ids is mainly 
+            # for the primary records of the current batch, but we could.
 
         db.flush()
 
