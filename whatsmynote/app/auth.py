@@ -61,6 +61,17 @@ def signup_with_password(email, password):
     res = supabase.auth.sign_up({"email": email, "password": password})
     return res.user
 
+def logout():
+    supabase = get_supabase()
+    supabase.auth.sign_out()
+    if os.path.exists(SESSION_FILE):
+        try:
+            os.remove(SESSION_FILE)
+        except Exception:
+            pass
+    if "CURRENT_USER_ID" in os.environ:
+        del os.environ["CURRENT_USER_ID"]
+
 def start_oauth(provider):
     supabase = get_supabase()
     res = supabase.auth.sign_in_with_oauth({

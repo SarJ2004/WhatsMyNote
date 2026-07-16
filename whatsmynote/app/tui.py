@@ -2,7 +2,8 @@ import webbrowser
 from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual.widgets import Input, Label, RichLog
-from textual.containers import Container, Horizontal
+from textual.containers import Container, Horizontal, Center, Vertical
+from textual.binding import Binding
 from textual import work
 from rich.text import Text
 from rich.table import Table
@@ -13,8 +14,9 @@ from whatsmynote.app.auth import (
     login_with_password, signup_with_password, 
     start_oauth, wait_for_auth_code,
     reset_password_for_email, update_password,
-    load_session
+    load_session, logout
 )
+from whatsmynote.app.config import get_groq_api_key, set_groq_api_key
 
 LOGO = """
 █   █ █   █ █[dim]▀▀▀[/dim]█ [dim]▀▀[/dim]█[dim]▀▀[/dim] █[dim]▀▀▀▀[/dim] █[dim]▀[/dim]█[dim]▀[/dim]█ █   █ █[dim]▀▀▀[/dim]█ █[dim]▀▀▀[/dim]█ [dim]▀▀[/dim]█[dim]▀▀[/dim] █[dim]▀▀▀▀[/dim]
@@ -28,11 +30,30 @@ class CustomFooter(Container):
             yield Label("whatsmynote v0.1.3  ~", id="footer-left")
             yield Label("tab | [reverse] SWITCH MODE [/reverse]", id="footer-right", markup=True)
 
+class HistoryInput(Input):
+    BINDINGS = [
+        Binding("up", "history_up", "Previous command", show=False),
+        Binding("down", "history_down", "Next command", show=False),
+    ]
+
+    def action_history_up(self):
+        # We find the parent MainScreen and trigger its history handler
+        for node in self.ancestors:
+            if isinstance(node, MainScreen):
+                node.history_up()
+                break
+
+    def action_history_down(self):
+        for node in self.ancestors:
+            if isinstance(node, MainScreen):
+                node.history_down()
+                break
+
 class InputArea(Container):
     def compose(self) -> ComposeResult:
         with Horizontal(id="input-row"):
             yield Label(">", id="input-prompt")
-            yield Input(id="main-input")
+            yield HistoryInput(id="main-input")
         with Horizontal(id="input-hints"):
             yield Label("[bold]enter[/bold] send", id="hint-left", markup=True)
             yield Label("WhatsMyNote AI Assistant", id="hint-right")
@@ -45,7 +66,7 @@ def get_startup_renderable():
     
     commands = [
         ("/login", "login to account", "ctrl+x l"),
-        # ("/signup", "create account", "ctrl+x s"),
+        ("/signup", "create account", "ctrl+x s"),
         ("/config", "set api key", "ctrl+x c"),
         ("/logout", "log out", "ctrl+x o"),
     ]
@@ -143,6 +164,8 @@ class MainScreen(Screen):
         super().__init__()
         self.state = "IDLE"
         self.temp_email = ""
+        self.history = []
+        self.history_index = 0
 
     def compose(self) -> ComposeResult:
         yield RichLog(id="chat-log", markup=True, highlight=True, wrap=True)
@@ -165,16 +188,37 @@ class MainScreen(Screen):
             self.update_hints("[bold]enter[/bold] submit password  [bold]q[/bold] cancel", "Auth Mode")
         elif new_state == "AUTH_OAUTH_PROVIDER":
             self.update_hints("[bold]google[/bold] or [bold]github[/bold]  [bold]q[/bold] cancel", "Auth Mode")
+        elif new_state == "CONFIG_API_KEY":
+            self.update_hints("[bold]enter[/bold] save api key  [bold]q[/bold] cancel", "Config Mode")
+
+    def history_up(self):
+        inp = self.query_one("#main-input", Input)
+        if self.history and self.history_index > 0:
+            self.history_index -= 1
+            inp.value = self.history[self.history_index]
+            inp.cursor_position = len(inp.value)
+
+    def history_down(self):
+        inp = self.query_one("#main-input", Input)
+        if self.history and self.history_index < len(self.history) - 1:
+            self.history_index += 1
+            inp.value = self.history[self.history_index]
+            inp.cursor_position = len(inp.value)
+        elif self.history_index == len(self.history) - 1:
+            self.history_index = len(self.history)
+            inp.value = ""
 
     def on_mount(self) -> None:
         self.query_one("#main-input").focus()
         log = self.query_one("#chat-log", RichLog)
         log.write(get_startup_renderable())
         
-        # Check if already logged in
         user = load_session()
         if user:
             log.write(f"\n[#888888]restored session for {user.email}[/#888888]")
+            
+        if not get_groq_api_key():
+            log.write("\n[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         val = event.value.strip()
@@ -185,6 +229,10 @@ class MainScreen(Screen):
         if not val:
             return
             
+        if self.state == "IDLE":
+            self.history.append(val)
+            self.history_index = len(self.history)
+            
         if val.lower() == 'q' and self.state != "IDLE":
             log.write(f"[#888888]> {val}[/#888888]")
             log.write("[#888888]cancelled.[/#888888]")
@@ -193,7 +241,6 @@ class MainScreen(Screen):
             return
 
         if self.state != "IDLE":
-            # Only mask if it's a password field
             display_val = "***" if inp.password else val
             log.write(f"[#888888]> {display_val}[/#888888]")
 
@@ -202,11 +249,38 @@ class MainScreen(Screen):
     def handle_state(self, val: str, log: RichLog, inp: Input) -> None:
         if self.state == "IDLE":
             log.write(f"[#888888]> {val}[/#888888]")
-            if val == "/login":
-                self.set_state("AUTH_MODE_SELECT")
-                inp.password = False
+            if val.startswith("/"):
+                if val in ["/login", "/signup"]:
+                    log.write("Do you want to (L)og in, (S)ign up, (F)orgot Password, or (O)Auth [Google/GitHub]?")
+                    self.set_state("AUTH_MODE_SELECT")
+                    inp.password = False
+                elif val == "/logout":
+                    log.write("[#888888]logging out...[/#888888]")
+                    self.do_logout()
+                elif val == "/clear":
+                    log.clear()
+                    log.write(get_startup_renderable())
+                elif val == "/config":
+                    log.write("Enter your GROQ API Key:")
+                    self.set_state("CONFIG_API_KEY")
+                    inp.password = True
+                else:
+                    log.write("[#ffaa55]unknown command. try /login, /config, or /clear[/#ffaa55]")
             else:
-                log.write("[#ffaa55]unknown command. try /login[/#ffaa55]")
+                user = load_session()
+                if not user:
+                    log.write("[#ffaa55]you must be logged in to chat. use /login or /signup[/#ffaa55]")
+                    return
+                if not get_groq_api_key():
+                    log.write("[#ffaa55]groq api key missing. use /config to set it up.[/#ffaa55]")
+                    return
+                log.write(f"[#dddddd]Sending message: {val}[/#dddddd]")
+
+        elif self.state == "CONFIG_API_KEY":
+            set_groq_api_key(val)
+            log.write("[#dddddd]groq api key saved successfully![/#dddddd]")
+            inp.password = False
+            self.set_state("IDLE")
 
         elif self.state == "AUTH_MODE_SELECT":
             action = val.lower()
@@ -323,6 +397,15 @@ class MainScreen(Screen):
             self.app.call_from_thread(log.write, "[#dddddd]password updated successfully! you are now logged in.[/#dddddd]")
         except Exception as e:
             self.app.call_from_thread(log.write, f"[#ffaa55]password update failed: {str(e)}[/#ffaa55]")
+            
+    @work(thread=True)
+    def do_logout(self):
+        log = self.query_one("#chat-log", RichLog)
+        try:
+            logout()
+            self.app.call_from_thread(log.write, "[#dddddd]logged out successfully.[/#dddddd]")
+        except Exception as e:
+            self.app.call_from_thread(log.write, f"[#ffaa55]logout failed: {str(e)}[/#ffaa55]")
 
 class WhatsMyNoteApp(App):
     def on_mount(self) -> None:
