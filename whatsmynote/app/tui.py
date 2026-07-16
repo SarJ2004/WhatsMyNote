@@ -1,22 +1,26 @@
+import os
+import requests
 import webbrowser
 from textual.app import App, ComposeResult
 from textual.screen import Screen
-from textual.widgets import Input, Label, RichLog
-from textual.containers import Container, Horizontal, Center, Vertical
+from textual.widgets import Input, Label, RichLog, Static
+from textual.containers import Container, Horizontal
 from textual.binding import Binding
 from textual import work
 from rich.text import Text
 from rich.table import Table
+from rich import box
 from rich.align import Align
 from rich.console import Group
+import random
 
 from whatsmynote.app.auth import (
     login_with_password, signup_with_password, 
     start_oauth, wait_for_auth_code,
     reset_password_for_email, update_password,
-    load_session, logout
+    load_session, logout, get_supabase
 )
-from whatsmynote.app.config import get_groq_api_key, set_groq_api_key
+from whatsmynote.app.config import get_groq_api_key, set_groq_api_key, API_URL
 
 LOGO = """
 █   █ █   █ █[dim]▀▀▀[/dim]█ [dim]▀▀[/dim]█[dim]▀▀[/dim] █[dim]▀▀▀▀[/dim] █[dim]▀[/dim]█[dim]▀[/dim]█ █   █ █[dim]▀▀▀[/dim]█ █[dim]▀▀▀[/dim]█ [dim]▀▀[/dim]█[dim]▀▀[/dim] █[dim]▀▀▀▀[/dim]
@@ -37,7 +41,6 @@ class HistoryInput(Input):
     ]
 
     def action_history_up(self):
-        # We find the parent MainScreen and trigger its history handler
         for node in self.ancestors:
             if isinstance(node, MainScreen):
                 node.history_up()
@@ -58,7 +61,7 @@ class InputArea(Container):
             yield Label("[bold]enter[/bold] send", id="hint-left", markup=True)
             yield Label("WhatsMyNote AI Assistant", id="hint-right")
 
-def get_startup_renderable():
+def get_commands_table():
     table = Table(show_header=False, box=None, padding=(0, 2))
     table.add_column(style="#ffaa55")
     table.add_column(style="#dddddd")
@@ -72,15 +75,63 @@ def get_startup_renderable():
     ]
     for cmd, desc, key in commands:
         table.add_row(cmd, desc, key)
-    
-    logo_text = Text.from_markup(LOGO.strip('\n'))
-    group = Group(
-        Text("\n\n\n\n"),
-        Align.center(logo_text), 
-        Text("\n"),
-        Align.center(table)
-    )
-    return group
+    return table
+
+QUIRKY_PHRASES = [
+    "Crunching your numbers...",
+    "Looking for spare change...",
+    "Consulting the finance oracle...",
+    "Digging through receipts...",
+    "Balancing the ledger...",
+    "Tracking down that last coffee...",
+    "Auditing your wallet...",
+]
+
+DOLLAR_FRAMES = [
+    "[ $       ]",
+    "[  $      ]",
+    "[   $     ]",
+    "[    $    ]",
+    "[     $   ]",
+    "[      $  ]",
+    "[       $ ]",
+    "[        $]",
+    "[       $ ]",
+    "[      $  ]",
+    "[     $   ]",
+    "[    $    ]",
+    "[   $     ]",
+    "[  $      ]",
+]
+
+class ThinkingIndicator(Static):
+    def on_mount(self):
+        self.frame_idx = 0
+        self.phrase = random.choice(QUIRKY_PHRASES)
+        self.animation_timer = self.set_interval(0.2, self.update_animation)
+        self.display = False
+        
+    def start(self):
+        self.phrase = random.choice(QUIRKY_PHRASES)
+        self.display = True
+        self.update_animation()
+        
+    def stop(self):
+        self.display = False
+
+    def update_animation(self):
+        if not self.display:
+            return
+        self.frame_idx = (self.frame_idx + 1) % len(DOLLAR_FRAMES)
+        frame = DOLLAR_FRAMES[self.frame_idx]
+        from rich.text import Text
+        from rich.align import Align
+        from rich.console import Group
+        
+        top = Align.center(Text.from_markup(f"[#ffaa55]{frame}[/#ffaa55]"))
+        bottom = Align.center(Text.from_markup(f"[#888888]{self.phrase}[/#888888]"))
+        
+        self.update(Group(top, bottom))
 
 class MainScreen(Screen):
     CSS = """
@@ -93,11 +144,24 @@ class MainScreen(Screen):
         scrollbar-size: 0 0;
     }
 
+    .startup-logo {
+        width: auto;
+        content-align: center middle;
+    }
+    .startup-table {
+        width: auto;
+        content-align: center middle;
+    }
+    #startup-messages {
+        width: auto;
+        content-align: center middle;
+    }
     #chat-log {
         height: 1fr;
         background: transparent;
         border: none;
         padding: 0 4;
+        display: none;
     }
 
     InputArea {
@@ -125,6 +189,33 @@ class MainScreen(Screen):
     
     #main-input:focus {
         border: none;
+    }
+
+    #header-user {
+        dock: top;
+        width: 100%;
+        content-align: right middle;
+        color: #888888;
+        padding: 0 1;
+        height: 1;
+        background: transparent;
+    }
+
+    #header-user {
+        dock: top;
+        width: 100%;
+        content-align: right middle;
+        color: #888888;
+        padding: 0 1;
+        height: 1;
+        background: transparent;
+    }
+
+    #thinking-indicator {
+        width: auto;
+        height: 3;
+        content-align: center middle;
+        display: none;
     }
 
     #input-hints {
@@ -166,11 +257,36 @@ class MainScreen(Screen):
         self.temp_email = ""
         self.history = []
         self.history_index = 0
+        self.app_state = {}
+        self.current_search_results = []
 
     def compose(self) -> ComposeResult:
-        yield RichLog(id="chat-log", markup=True, highlight=True, wrap=True)
+        yield Label("not logged in", id="header-user")
+        
+        from textual.containers import Vertical, Center
+        with Vertical(id="startup-container"):
+            yield Static("\n\n\n")
+            with Center():
+                yield Static(LOGO.strip(), classes="startup-logo")
+            yield Static("\n")
+            with Center():
+                yield Static(get_commands_table(), classes="startup-table")
+            yield Static("\n")
+            with Center():
+                yield Static("", id="startup-messages")
+                
+        yield RichLog(id="chat-log", markup=True, highlight=False, wrap=True)
+        yield Center(ThinkingIndicator(id="thinking-indicator"))
         yield InputArea()
         yield CustomFooter()
+
+    def update_user_label(self):
+        user = load_session()
+        lbl = self.query_one("#header-user", Label)
+        if user:
+            lbl.update(user.email)
+        else:
+            lbl.update("not logged in")
 
     def update_hints(self, left: str, right: str = "WhatsMyNote AI Assistant"):
         self.query_one("#hint-left", Label).update(left)
@@ -190,6 +306,8 @@ class MainScreen(Screen):
             self.update_hints("[bold]google[/bold] or [bold]github[/bold]  [bold]q[/bold] cancel", "Auth Mode")
         elif new_state == "CONFIG_API_KEY":
             self.update_hints("[bold]enter[/bold] save api key  [bold]q[/bold] cancel", "Config Mode")
+        elif new_state == "AWAITING_SELECTION":
+            self.update_hints("[bold]enter[/bold] select option  [bold]q[/bold] cancel", "Selection Mode")
 
     def history_up(self):
         inp = self.query_one("#main-input", Input)
@@ -210,17 +328,35 @@ class MainScreen(Screen):
 
     def on_mount(self) -> None:
         self.query_one("#main-input").focus()
-        log = self.query_one("#chat-log", RichLog)
-        log.write(get_startup_renderable())
+        self._chat_started = False
+        self.update_user_label()
         
+        messages = []
         user = load_session()
         if user:
-            log.write(f"\n[#888888]restored session for {user.email}[/#888888]")
+            messages.append(f"[#888888]restored session for {user.email}[/#888888]")
             
+        from whatsmynote.app.config import get_groq_api_key
         if not get_groq_api_key():
-            log.write("\n[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
+            messages.append("[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
+            
+        if messages:
+            self.query_one("#startup-messages", Static).update("\n".join(messages))
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        if not getattr(self, "_chat_started", False):
+            self._chat_started = True
+            self.query_one("#startup-container").display = False
+            log = self.query_one("#chat-log", RichLog)
+            log.display = True
+            
+            user = load_session()
+            if user:
+                log.write(f"[#888888]restored session for {user.email}[/#888888]")
+            from whatsmynote.app.config import get_groq_api_key
+            if not get_groq_api_key():
+                log.write("[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
+            
         val = event.value.strip()
         inp = event.input
         inp.value = ""
@@ -229,26 +365,26 @@ class MainScreen(Screen):
         if not val:
             return
             
-        if self.state == "IDLE":
+        if self.state in ["IDLE", "AWAITING_SELECTION"]:
             self.history.append(val)
             self.history_index = len(self.history)
             
-        if val.lower() == 'q' and self.state != "IDLE":
-            log.write(f"[#888888]> {val}[/#888888]")
+        if val.lower() == 'q' and self.state not in ["IDLE", "AWAITING_SELECTION"]:
+            log.write(f"\n[#ffaa55]> {val}[/#ffaa55]")
             log.write("[#888888]cancelled.[/#888888]")
             self.set_state("IDLE")
             inp.password = False
             return
 
-        if self.state != "IDLE":
+        if self.state not in ["IDLE", "AWAITING_SELECTION"]:
             display_val = "***" if inp.password else val
-            log.write(f"[#888888]> {display_val}[/#888888]")
+            log.write(f"\n[#ffaa55]> {display_val}[/#ffaa55]")
 
         self.handle_state(val, log, inp)
 
     def handle_state(self, val: str, log: RichLog, inp: Input) -> None:
         if self.state == "IDLE":
-            log.write(f"[#888888]> {val}[/#888888]")
+            log.write(f"\n[#ffaa55]> {val}[/#ffaa55]")
             if val.startswith("/"):
                 if val in ["/login", "/signup"]:
                     log.write("Do you want to (L)og in, (S)ign up, (F)orgot Password, or (O)Auth [Google/GitHub]?")
@@ -259,11 +395,15 @@ class MainScreen(Screen):
                     self.do_logout()
                 elif val == "/clear":
                     log.clear()
-                    log.write(get_startup_renderable())
+                    self._chat_started = False
+                    log.display = False
+                    self.query_one("#startup-container").display = True
                 elif val == "/config":
                     log.write("Enter your GROQ API Key:")
                     self.set_state("CONFIG_API_KEY")
                     inp.password = True
+                elif val in ["/quit", "/exit"]:
+                    self.app.exit()
                 else:
                     log.write("[#ffaa55]unknown command. try /login, /config, or /clear[/#ffaa55]")
             else:
@@ -274,7 +414,12 @@ class MainScreen(Screen):
                 if not get_groq_api_key():
                     log.write("[#ffaa55]groq api key missing. use /config to set it up.[/#ffaa55]")
                     return
-                log.write(f"[#dddddd]Sending message: {val}[/#dddddd]")
+                self.do_chat(val)
+
+        elif self.state == "AWAITING_SELECTION":
+            log.write(f"\n[#ffaa55]> {val}[/#ffaa55]")
+            self.set_state("IDLE")
+            self.do_chat(val, is_selection=True)
 
         elif self.state == "CONFIG_API_KEY":
             set_groq_api_key(val)
@@ -335,11 +480,125 @@ class MainScreen(Screen):
                 log.write("[#ffaa55]invalid provider. try google or github.[/#ffaa55]")
 
     @work(thread=True)
+    def do_chat(self, message: str, is_selection: bool = False):
+        log = self.query_one("#chat-log", RichLog)
+        
+        if is_selection:
+            try:
+                idx = int(message) - 1
+                if 0 <= idx < len(self.current_search_results):
+                    result = self.current_search_results[idx]
+                    result_id = result.get("id")
+                    if result_id is not None:
+                        self.app_state["awaiting_selection"] = False
+                        self.app_state["raw_text"] = f"select {result_id}"
+                        self.app_state["selected_record_id"] = result_id
+                        self.app_state["selected_record_ids"] = None
+                    else:
+                        self.app_state["raw_text"] = message
+                else:
+                    self.app_state["raw_text"] = message
+            except ValueError:
+                self.app_state["raw_text"] = message
+        else:
+            self.app_state["raw_text"] = message
+
+        session = get_supabase().auth.get_session()
+        token = session.access_token if session else ""
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "X-Groq-Api-Key": get_groq_api_key() or ""
+        }
+        payload = {"message": self.app_state.get("raw_text", ""), "state": self.app_state}
+
+        indicator = self.query_one("#thinking-indicator", ThinkingIndicator)
+        self.app.call_from_thread(indicator.start)
+
+        try:
+            response = requests.post(f"{API_URL}/chat", json=payload, headers=headers)
+            response.raise_for_status()
+            self.app_state = response.json().get("state", {})
+            self.app.call_from_thread(indicator.stop)
+            self.app.call_from_thread(self.render_backend_response, self.app_state)
+        except Exception as e:
+            self.app.call_from_thread(indicator.stop)
+            self.app.call_from_thread(log.write, f"[#ffaa55]backend error: {e}[/#ffaa55]")
+
+    def render_backend_response(self, state: dict):
+        log = self.query_one("#chat-log", RichLog)
+        
+        if state.get("error"):
+            log.write(f"[#ffaa55]Error: {state['error']}[/#ffaa55]")
+            return
+
+        answer = state.get("answer")
+        query_result = state.get("query_result")
+        budget_alerts = state.get("budget_alerts") or []
+        chart_config = state.get("chart_config")
+
+        if budget_alerts:
+            for alert in budget_alerts:
+                log.write(f"[#ffaa55]! Alert: {alert}[/#ffaa55]")
+
+        if query_result is not None:
+            if isinstance(query_result, list) and query_result:
+                if chart_config:
+                    chart = self._render_analytics_chart(query_result, chart_config)
+                    if chart:
+                        chart_type = chart_config.get("chart_type")
+                        if chart_type in ["pie", "donut"]:
+                            log.write(f"\n[#dddddd bold]Chart: {chart_config.get('title', '')}[/#dddddd bold]")
+                            log.write(Text.from_ansi(chart))
+                        else:
+                            log.write(f"\n[#dddddd bold]Chart: {chart_config.get('title', '')}[/#dddddd bold]")
+                            log.write(Text(chart, style="#888888"))
+                
+                headers = list(query_result[0].keys())
+                table = Table(box=box.SIMPLE, show_edge=False, header_style="#dddddd bold", border_style="#888888")
+                for h in headers:
+                    table.add_column(str(h), style="#888888")
+                for row in query_result:
+                    table.add_row(*[str(row.get(h, "")) for h in headers])
+                log.write(table)
+            elif isinstance(query_result, dict):
+                for k, v in query_result.items():
+                    log.write(f"[#888888]{k}: {v}[/#888888]")
+            else:
+                log.write(f"[#888888]{query_result}[/#888888]")
+
+        if answer:
+            log.write(f"[#dddddd]{answer}[/#dddddd]")
+
+        if state.get("saved_record_ids"):
+            count = len(state["saved_record_ids"])
+            log.write(f"[#dddddd]successfully created {count} record(s).[/#dddddd]")
+            return
+
+        if state.get("updated_record_id"):
+            log.write(f"[#dddddd]record #{state['updated_record_id']} updated successfully.[/#dddddd]")
+            return
+
+        if state.get("deleted_record_id"):
+            log.write(f"[#dddddd]record #{state['deleted_record_id']} deleted successfully.[/#dddddd]")
+            return
+
+        # HITL
+        if state.get("awaiting_selection") and state.get("search_results"):
+            self.current_search_results = state["search_results"]
+            log.write("\n[#dddddd]Please select an option by typing its number:[/#dddddd]")
+            for i, res in enumerate(self.current_search_results, 1):
+                # We show the title or string representation
+                display_str = res.get("title") or res.get("name") or str(res)
+                log.write(f"[#888888][{i}] {display_str}[/#888888]")
+            self.set_state("AWAITING_SELECTION")
+
+    @work(thread=True)
     def do_login(self, email, password):
         log = self.query_one("#chat-log", RichLog)
         try:
             user = login_with_password(email, password)
             self.app.call_from_thread(log.write, f"[#dddddd]logged in successfully as {user.email}[/#dddddd]")
+            self.app.call_from_thread(self.update_user_label)
         except Exception as e:
             self.app.call_from_thread(log.write, f"[#ffaa55]login failed: {str(e)}[/#ffaa55]")
 
@@ -362,6 +621,7 @@ class MainScreen(Screen):
             user = wait_for_auth_code()
             if user:
                 self.app.call_from_thread(log.write, f"[#dddddd]successfully authenticated as {user.email}![/#dddddd]")
+                self.app.call_from_thread(self.update_user_label)
             else:
                 self.app.call_from_thread(log.write, "[#ffaa55]authentication failed: no code received.[/#ffaa55]")
         except Exception as e:
@@ -395,6 +655,7 @@ class MainScreen(Screen):
         try:
             update_password(new_password)
             self.app.call_from_thread(log.write, "[#dddddd]password updated successfully! you are now logged in.[/#dddddd]")
+            self.app.call_from_thread(self.update_user_label)
         except Exception as e:
             self.app.call_from_thread(log.write, f"[#ffaa55]password update failed: {str(e)}[/#ffaa55]")
             
@@ -404,9 +665,73 @@ class MainScreen(Screen):
         try:
             logout()
             self.app.call_from_thread(log.write, "[#dddddd]logged out successfully.[/#dddddd]")
+            self.app.call_from_thread(self.update_user_label)
         except Exception as e:
             self.app.call_from_thread(log.write, f"[#ffaa55]logout failed: {str(e)}[/#ffaa55]")
 
+    def _render_analytics_chart(self, rows: list[dict], chart_config: dict) -> str | None:
+        chart_type = chart_config.get("chart_type")
+        if not chart_type or chart_type == "none":
+            return None
+
+        x_col = chart_config.get("x_axis")
+        y_col = chart_config.get("y_axis")
+        if not x_col or not y_col:
+            return None
+            
+        title = chart_config.get("title") or "Analytics Chart"
+
+        if chart_type in ["pie", "donut"]:
+            try:
+                import termcharts
+                data = {}
+                for row in rows:
+                    k = str(row.get(x_col, ""))
+                    v = float(row.get(y_col) or 0)
+                    data[k] = v
+                
+                if chart_type == "donut":
+                    chart_obj = termcharts.doughnut(data, title=title)
+                else:
+                    chart_obj = termcharts.pie(data, title=title)
+                    
+                return str(chart_obj)
+            except Exception:
+                chart_type = "bar"
+
+        import plotext as plt
+        plt.clf()
+
+        if chart_type == "line":
+            plt.date_form("Y-m-d")
+            sorted_rows = sorted(rows, key=lambda row: str(row.get(x_col, "")))
+            labels = [str(row.get(x_col, "")) for row in sorted_rows]
+            values = [float(row.get(y_col) or 0) for row in sorted_rows]
+            plt.plot(labels, values, marker="dot")
+        else:
+            top_rows = sorted(rows, key=lambda row: float(row.get(y_col) or 0), reverse=True)[:15]
+            labels = [str(row.get(x_col, "")) for row in top_rows]
+            values = [float(row.get(y_col) or 0) for row in top_rows]
+            
+            if chart_type == "scatter":
+                plt.scatter(labels, values)
+            else:
+                plt.bar(labels, values, orientation="horizontal")
+                
+        plt.title(title)
+        plt.plotsize(60, 20)
+        plt.theme("clear")
+        
+        try:
+            return plt.build()
+        except Exception:
+            plt.theme("pro")
+            return plt.build()
+
 class WhatsMyNoteApp(App):
+    BINDINGS = [
+        Binding("ctrl+q", "", "Unbound", show=False)
+    ]
+
     def on_mount(self) -> None:
         self.push_screen(MainScreen())
