@@ -1,6 +1,5 @@
 import sys
-from textual import events
-from whatsmynote.app.tui import WhatsMyNoteApp
+from whatsmynote.app.ui.app import WhatsMyNoteApp
 
 def main():
     if sys.platform == "win32":

@@ -4,7 +4,6 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from backend.llms import get_extractor_llm
 from backend.core.memory import ephemeral_reset
 from pydantic import BaseModel, Field
-import json
 
 VALID_INTENTS = {"create", "update", "delete", "query", "unknown"}
 VALID_RECORD_TYPES = {"lending", "expense", "account", "budget", "income", "transfer", "unknown"}
@@ -17,17 +16,17 @@ Analyze the user's message and determine two things:
 2. The RECORD TYPE the message is referring to.
 
 ## Intent Definitions
-- create: Recording a PAST, COMPLETED financial event. (e.g. Lent Rahul 500, Spent 200, Received salary, Transferred 500)
-- update: Modifying an existing record. (e.g. Actually it was 600, Mark it as paid)
+- create: Recording a PAST, COMPLETED financial event. (e.g. Lent Rahul 500, Spent 200, Received salary, Transferred 500, Sumit paid me back 31)
+- update: Modifying an existing record. (e.g. Actually it was 600, Change the category, Fix the amount)
 - delete: Removing a record. (e.g. Delete the last expense)
 - query: Asking for information or analytics. (e.g. How much did I spend?, Show pie chart, Trend of expenses)
 - unknown: Asking something unrelated, stating a future desire/unfulfilled need (e.g. "I need a beer", "I want to buy a laptop"), or gibberish.
 
 ## Record Type Definitions
-- lending: Borrowing or lending money (Lent Rahul 500, Who owes me?)
-- expense: Spending money on goods/services (Spent 200, Bought a laptop)
-- income: Receiving money (Got salary)
-- transfer: Moving money between own accounts (Transferred to SBI)
+- lending: Borrowing, lending, or paying back money (e.g. Lent Rahul 500, Sumit paid me 31, Who owes me?, Rahul returned the money)
+- expense: Spending money on goods/services (e.g. Spent 200, Bought a laptop)
+- income: Receiving money from standard sources like salary or business (e.g. Got salary, Made a sale)
+- transfer: Moving money between own accounts (e.g. Transferred to SBI)
 - budget: Setting limits (Set budget for groceries)
 - account: Managing bank accounts/balances (Add account SBI)
 - unknown: If the record type is unclear or not one of the above.
@@ -63,7 +62,18 @@ def primary_classifier(state):
             HumanMessage(content=state.get("raw_text", "")),
         ])
     except Exception as e:
-        return {"error": f"Failed to parse LLM output: {str(e)}"}
+        error_str = str(e)
+        import re
+        import json
+        match = re.search(r"\{.*\}", error_str, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group(0))
+                result = ClassificationResult(**data)
+            except Exception:
+                return {"error": f"Failed to parse LLM output: {error_str}"}
+        else:
+            return {"error": f"Failed to parse LLM output: {error_str}"}
 
     intent = result.intent.strip().lower()
     record_type = result.record_type.strip().lower()

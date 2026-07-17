@@ -49,17 +49,18 @@ def analytics_query_executor(state):
         final_review = None
 
         for attempt in range(1, MAX_ANALYTICS_RETRIES + 1):
+            query_error = None
+            query_result = None
             try:
                 validate_sql(sql, allowed_tables, db=db)
-            except ValueError as exc:
-                return {"error": f"Could not generate a valid query: {exc}"}
-
-            try:
                 query_result = _execute_sql(db, sql)
             except Exception as exc:
-                return {"error": f"Query execution failed: {exc}"}
+                query_error = f"Error: {exc}"
 
-            review = review_sql_result(question, sql, query_result, chart_config=chart_config)
+            if query_error:
+                review = review_sql_result(question, sql, query_error, chart_config=chart_config)
+            else:
+                review = review_sql_result(question, sql, query_result, chart_config=chart_config)
 
             note = f"Attempt {attempt}: {review.reason} (confidence {review.confidence}%)"
             if review.rationale:
@@ -96,12 +97,17 @@ def analytics_query_executor(state):
             else:
                 chart_config_dict = chart_config
 
-        return {
+        state_update = {
             "query_result": final_query_result,
             "analytics_sql": final_sql,
             "analytics_review": final_review,
             "chart_config": chart_config_dict,
         }
+
+        if final_query_result is None:
+            state_update["error"] = "Failed to generate a valid SQL query after maximum retries."
+
+        return state_update
 
     except Exception as exc:
         return {"error": f"Analytics query failed: {exc}"}

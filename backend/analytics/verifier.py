@@ -71,4 +71,21 @@ def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = No
         ),
     ]
 
-    return structured_llm.invoke(messages)
+    try:
+        return structured_llm.invoke(messages)
+    except Exception as e:
+        error_str = str(e)
+        import re
+        match = re.search(r"\{.*\}", error_str, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group(0))
+                return AnalyticsReview(**data)
+            except Exception:
+                pass
+                
+        return AnalyticsReview(
+            approved=False,
+            confidence=0,
+            reason=f"Verifier failed to parse LLM output: {error_str}"
+        )

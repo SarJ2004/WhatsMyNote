@@ -13,8 +13,8 @@ if os.environ.get("ENV") == "dev":
 else:
     API_URL = "https://whatsmynote.onrender.com"
 
-SUPABASE_URL = "https://emcdruetkqkrplrrxqbm.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2RydWV0a3FrcnBscnJ4cWJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NjQ1NTksImV4cCI6MjA5OTM0MDU1OX0.-GRm3ZhaFGDGyy8ocDq0tAov0CxCOwCK9K9JeWPTCvY"
+SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4bmlocXNsbWxqYmlkYm9ydHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNjk1ODksImV4cCI6MjA5OTg0NTU4OX0.qpJV9rQhWZ38hLlwihEewwDEtwVSX-H_e-VCkR1EiyU"
 # ---------------------------------------
 
 APP_NAME = "whatsmynote"

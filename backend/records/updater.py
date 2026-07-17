@@ -84,10 +84,27 @@ def record_updater(state):
         sync_account_balances(db)
         db.commit()
 
+        alerts = []
+        if record_type == "expense":
+            from backend.db.schema import ExpenseRecord
+            from backend.budget.alerts import build_budget_alerts_for_expense
+            db.expire_all()
+            expense = db.get(ExpenseRecord, record.record_id)
+            if expense:
+                alerts.extend(build_budget_alerts_for_expense(db, expense))
+        elif record_type == "budget":
+            from backend.db.schema import BudgetRecord
+            from backend.budget.alerts import build_budget_alerts_for_budget
+            db.expire_all()
+            budget = db.get(BudgetRecord, record.record_id)
+            if budget:
+                alerts.extend(build_budget_alerts_for_budget(db, budget))
+
         return {
             "updated_record_id": record.record_id,
             "selected_record_id": None,
-            "selected_record_ids": None
+            "selected_record_ids": None,
+            "budget_alerts": sorted(set(alerts)) if alerts else [],
         }
 
     except Exception as e:

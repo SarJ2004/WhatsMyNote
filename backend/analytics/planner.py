@@ -1,17 +1,14 @@
+from typing import Optional
 import json
 import re
 from pathlib import Path
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from backend.analytics.models import AnalyticsSQL
 from backend.analytics.schema_context import schema_context_for_question, select_tables
 from backend.llms import get_extractor_llm
 
 ANALYTICS_PROMPT = (Path(__file__).parent / "prompts" / "sql.md").read_text()
-
-
-from typing import Optional
 
 def _parse_sql_payload(content: str) -> tuple[str | None, Optional[dict], Optional[str]]:
     text = content.strip()

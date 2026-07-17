@@ -1,6 +1,5 @@
 import os
 import json
-import webbrowser
 from urllib.parse import urlparse, parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from supabase import create_client, Client

@@ -1,4 +1,4 @@
-"""Simplified LangGraph orchestration — ~120 lines instead of 630."""
+"""Simplified LangGraph orchestration."""
 
 from langgraph.graph import START, END, StateGraph
 
@@ -118,80 +118,86 @@ def request_confirmation(state):
     extraction = state.get("extraction")
     
     # Try to resolve the record to show a preview
-    preview_str = ""
     
     # Initialize extraction if it was None (e.g. if extractor failed and we used HITL)
     if not extraction:
         extraction = {"action": intent}
         
-    if state.get("selected_record_id"):
-        from backend.records.models.common import RecordSelector, TargetRecord
-        selector = RecordSelector(target=TargetRecord.ID, record_id=state.get("selected_record_id"))
-        extraction["selector"] = selector.model_dump()
-
-    if extraction.get("selector"):
-        from backend.db.config import SessionLocal
-        from backend.records.resolver import resolve_records_for_selector
-        from backend.records.models.common import RecordSelector
-        from backend.records.search import _record_to_display_dict
-        
-        db = SessionLocal()
-        try:
+    preview_records = []
+    from backend.db.config import SessionLocal
+    from backend.records.resolver import resolve_records_for_selector, resolve_record
+    from backend.records.models.common import RecordSelector, TargetRecord
+    from backend.records.search import _record_to_display_dict
+    
+    db = SessionLocal()
+    try:
+        if state.get("selected_record_id"):
+            r = resolve_record(db, record_type, RecordSelector(target=TargetRecord.ID, record_id=state.get("selected_record_id")))
+            if r:
+                fields = {k: v for k, v in vars(r).items() if not k.startswith("_") and k != "record"}
+                preview_records = [fields]
+        elif state.get("selected_record_ids"):
+            for rid in state.get("selected_record_ids"):
+                r = resolve_record(db, record_type, RecordSelector(target=TargetRecord.ID, record_id=rid))
+                if r:
+                    fields = {k: v for k, v in vars(r).items() if not k.startswith("_") and k != "record"}
+                    preview_records.append(fields)
+        elif extraction.get("selector"):
             selector_data = extraction.get("selector")
             selector = RecordSelector.model_validate(selector_data)
+            records = resolve_records_for_selector(db, record_type, selector)
+            if not records:
+                return {"error": "Could not find a matching record to modify.", "selected_record_id": None}
             
-            # If hitl provided selections, we don't need to query for ambiguity
-            if state.get("selected_record_id") or state.get("selected_record_ids"):
-                if state.get("selected_record_ids"):
-                    preview_str = f"\nTarget: {len(state.get('selected_record_ids'))} records selected.\n"
-                else:
-                    record = resolve_records_for_selector(db, record_type, selector)[0]
-                    fields = {k: v for k, v in vars(record).items() if not k.startswith("_") and k != "record"}
-                    preview_str = f"\nTarget: {fields}\n"
+            if len(records) > 1:
+                return {
+                    "search_results": [_record_to_display_dict(record_type, r) for r in records],
+                    "awaiting_selection": True,
+                    "answer": f"Multiple {record_type} records found. Please select which one(s) to modify."
+                }
             else:
-                records = resolve_records_for_selector(db, record_type, selector)
-                if not records:
-                    return {"error": "Could not find a matching record to modify.", "selected_record_id": None}
-                
-                if len(records) > 1:
-                    return {
-                        "search_results": [_record_to_display_dict(record_type, r) for r in records],
-                        "awaiting_selection": True,
-                        "answer": f"Multiple {record_type} records found. Please select which one(s) to modify."
-                    }
-                else:
-                    record = records[0]
-                    fields = {k: v for k, v in vars(record).items() if not k.startswith("_") and k != "record"}
-                    preview_str = f"\nTarget: {fields}\n"
-        except Exception:
-            pass
-        finally:
-            db.close()
+                record = records[0]
+                fields = {k: v for k, v in vars(record).items() if not k.startswith("_") and k != "record"}
+                preview_records = [fields]
+    except Exception:
+        preview_records = []
+    finally:
+        db.close()
 
     if intent == "update" and not extraction.get("updates"):
-        return {
+        ret = {
             "awaiting_update_details": True,
             "extraction": extraction,
-            "answer": f"What would you like to update? (e.g. 'change amount to 500' or 'set category to Food')"
+            "answer": "What would you like to update? (e.g. 'change amount to 500' or 'set category to Food')"
         }
+        if preview_records:
+            ret["query_result"] = preview_records
+        return ret
 
     # Format the updates if any exist
-    updates_str = ""
+    updates_parts = []
     if intent == "update" and extraction.get("updates"):
         updates_list = extraction.get("updates", [])
         if updates_list:
-            updates_str = "\nUpdates to apply:\n"
             for up in updates_list:
                 field = up.get("field") if isinstance(up, dict) else up.field
-                op = up.get("operation") if isinstance(up, dict) else up.operation
                 val = up.get("value") if isinstance(up, dict) else up.value
-                updates_str += f" - {field}: {op} -> {val}\n"
+                updates_parts.append(f"[#ffaa55]{field}[/#ffaa55] to [#ffaa55]{val}[/#ffaa55]")
 
-    return {
+    is_multi = bool(state.get("selected_record_ids") and len(state.get("selected_record_ids")) > 1)
+    if intent == "update" and updates_parts:
+        prompt = f"Are you sure you want to update {', and '.join(updates_parts)}?"
+    else:
+        prompt = f"Are you sure you want to {intent} these {len(state.get('selected_record_ids'))} {record_type}s?" if is_multi else f"Are you sure you want to {intent} this {record_type}?"
+
+    ret = {
         "awaiting_confirmation": True,
         "extraction": extraction,  # Propagate the updated extraction
-        "answer": f"Are you sure you want to {intent} this {record_type}?{preview_str}{updates_str} (y/n)",
+        "answer": f"{prompt} (y/n)",
     }
+    if preview_records:
+        ret["query_result"] = preview_records
+    return ret
 
 
 def response_formatter(state):
