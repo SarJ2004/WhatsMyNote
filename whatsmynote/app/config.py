@@ -13,8 +13,8 @@ if os.environ.get("ENV") == "dev":
 else:
     API_URL = "https://whatsmynote.onrender.com"
 
-SUPABASE_URL = "https://emcdruetkqkrplrrxqbm.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2RydWV0a3FrcnBscnJ4cWJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3NjQ1NTksImV4cCI6MjA5OTM0MDU1OX0.-GRm3ZhaFGDGyy8ocDq0tAov0CxCOwCK9K9JeWPTCvY"
+SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4bmlocXNsbWxqYmlkYm9ydHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNjk1ODksImV4cCI6MjA5OTg0NTU4OX0.qpJV9rQhWZ38hLlwihEewwDEtwVSX-H_e-VCkR1EiyU"
 # ---------------------------------------
 
 APP_NAME = "whatsmynote"
@@ -48,30 +48,3 @@ def set_groq_api_key(api_key: str) -> None:
     lines.append(f"GROQ_API_KEY={api_key}")
     env_path.write_text("\n".join(lines) + "\n")
     os.environ["GROQ_API_KEY"] = api_key
-
-def ensure_env_config() -> None:
-    from dotenv import load_dotenv
-    from rich.console import Console
-    from rich.prompt import Prompt
-    
-    env_path = get_env_path()
-    console = Console()
-    
-    if not env_path.exists():
-        env_path.touch(mode=0o600, exist_ok=True)
-        
-    load_dotenv(env_path)
-    
-    if not os.environ.get("GROQ_API_KEY"):
-        console.print("[bold yellow]First time setup: Missing required configuration[/bold yellow]")
-        val = Prompt.ask("Enter GROQ_API_KEY", password=True)
-        if not val:
-            console.print("[red]GROQ_API_KEY is required. Exiting.[/red]")
-            exit(1)
-            
-        content = env_path.read_text()
-        lines = [line for line in content.splitlines() if not line.startswith("GROQ_API_KEY=")]
-        lines.append(f"GROQ_API_KEY={val}")
-        env_path.write_text("\n".join(lines) + "\n")
-        os.environ["GROQ_API_KEY"] = val
-        console.print("[green]Configuration saved successfully.[/green]")

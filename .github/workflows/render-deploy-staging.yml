@@ -1,13 +1,13 @@
-name: Production deploy to Render 
+name: Deploy Staging to Render
 
 on:
   push:
     branches:
-      - main
+      - deploy/backend-render
 
 jobs:
   deploy:
-    name: Deploy to Render and Update GitHub Environments
+    name: Deploy Staging to Render and Update GitHub Environments
     runs-on: ubuntu-latest
     
     # Required permission to create a GitHub Deployment/Environment
@@ -23,10 +23,10 @@ jobs:
         # This action triggers the Render deploy and reports status to GitHub Deployments
         uses: JorgeLNJunior/render-deploy@v1.5.0
         with:
-          service_id: ${{ secrets.RENDER_SERVICE_ID }}
+          service_id: ${{ secrets.STAGING_RENDER_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           clear_cache: false
           wait_deploy: true # Wait for the deploy to finish before reporting success/failure
           github_deployment: true # Creates the deployment in the GitHub UI
-          deployment_environment: 'production' # Environment name in GitHub
+          deployment_environment: 'staging' # Environment name in GitHub

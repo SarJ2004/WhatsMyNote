@@ -1,15 +1,14 @@
-"""WhatsMyNote CLI — single entry point."""
 import sys
-import os
+from whatsmynote.app.ui.app import WhatsMyNoteApp
 
-if sys.platform == "win32":
-    # Force UTF-8 encoding for rich/plotext on Windows legacy terminals
-    try:
-        sys.stdout.reconfigure(encoding='utf-8')
-    except Exception:
-        pass
+def main():
+    if sys.platform == "win32":
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-from whatsmynote.app.chat import main
+    app = WhatsMyNoteApp()
+    app.run()
 
 if __name__ == "__main__":
     main()

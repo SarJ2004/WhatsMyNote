@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional
 from supabase import create_client, Client
 from fastapi.encoders import jsonable_encoder
 
@@ -78,6 +78,7 @@ def setup(req: SetupRequest, user_id: str = Depends(verify_token)):
                 name=item["name"],
                 is_default=(idx == req.default_account_index),
                 opening_balance=item.get("opening_balance", 0),
+                current_balance=item.get("opening_balance", 0),
                 currency=item.get("currency"),
                 notes=item.get("notes"),
             )

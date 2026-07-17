@@ -17,6 +17,8 @@ You must extract the user's input into the following JSON schema:
 - "I borrowed 500 from X" -> direction: `borrowed`. Increases your `account` balance.
 - "X owes me 500" -> direction: `lent`.
 - "I owe X 500" -> direction: `borrowed`.
+- "X paid me back 500" or "X returned 500" -> direction: `borrowed`. (This offsets a previous `lent` amount and increases your account balance).
+- "I paid X back 500" -> direction: `lent`. (This offsets a previous `borrowed` amount and decreases your account balance).
 - Today's date is provided at the top of this prompt. Use it to resolve relative terms like "in 2 weeks", "next month", etc.
 
 ## Output Schema

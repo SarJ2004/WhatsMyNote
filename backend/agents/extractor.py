@@ -62,7 +62,7 @@ def _dynamic_context() -> str:
     )
     
     STANDARD_EXPENSE_CATEGORIES = [
-        "Housing", "Food & Dining", "Groceries", "Utilities", "Transportation", 
+        "Overall", "Housing", "Food & Dining", "Groceries", "Utilities", "Transportation", 
         "Healthcare", "Personal Care", "Entertainment", "Education", "Shopping", 
         "Travel", "Debt & Loans", "Savings & Investments", "Gifts & Donations", "Others"
     ]
@@ -86,6 +86,13 @@ def _dynamic_context() -> str:
         context += f"User's Custom Categories: {', '.join(categories)}\n"
     if income_sources:
         context += f"User's Custom Income Sources: {', '.join(income_sources)}\n"
+        
+    context += (
+        "\nIMPORTANT EXTRACTION RULES:\n"
+        "1. Prioritize 'User's Custom Categories' and 'User's Custom Income Sources' over STANDARD categories.\n"
+        "2. If a user's expense or budget semantically matches a custom category (e.g., user has 'Food' and standard is 'Food & Dining'), you MUST output the exact name of the custom category.\n"
+        "3. Only use standard categories or invent new ones if NO custom category is a good match.\n"
+    )
         
     return context + "\n"
 
@@ -135,6 +142,8 @@ def extractor(state):
                     "awaiting_selection": True,
                     "answer": f"I couldn't determine which {record_type} to {intent}. Please select from the list below.",
                 }
+            else:
+                return {"error": f"You don't have any {record_type} records to {intent}."}
         return {"error": f"Failed to extract details: {e}"}
 
 

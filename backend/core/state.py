@@ -1,6 +1,5 @@
 """Unified State model for the LangGraph expense tracker."""
 
-import operator
 from typing import TypedDict, Annotated, Optional, Any
 
 

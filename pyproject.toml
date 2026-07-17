@@ -42,7 +42,7 @@ Homepage = "https://github.com/SarJ2004/WhatsMyNote"
 Repository = "https://github.com/SarJ2004/WhatsMyNote"
 
 [project.scripts]
-whatsmynote = "whatsmynote.app.chat:main"
+whatsmynote = "whatsmynote.app.main:main"
 
 [dependency-groups]
 dev = [
