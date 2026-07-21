@@ -52,8 +52,16 @@ def chat(req: ChatRequest, user_id: str = Depends(verify_token)):
     
     try:
         new_state = compiled_graph.invoke(app_state)
+        
+        if os.environ.get("ENV") != "dev":
+            new_state.pop("analytics_sql", None)
+            new_state.pop("analytics_review", None)
+            
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        if os.environ.get("ENV") == "dev":
+            raise HTTPException(status_code=500, detail=str(e))
+        else:
+            raise HTTPException(status_code=500, detail="Internal Server Error")
         
     return {"state": jsonable_encoder(new_state)}
 
@@ -105,7 +113,10 @@ def setup(req: SetupRequest, user_id: str = Depends(verify_token)):
             
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        if os.environ.get("ENV") == "dev":
+            raise HTTPException(status_code=500, detail=str(e))
+        else:
+            raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         db.close()
         
