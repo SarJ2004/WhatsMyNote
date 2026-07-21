@@ -1,3 +1,4 @@
+import os
 import requests
 from textual import work
 from textual.widgets import RichLog
@@ -38,7 +39,10 @@ class ChatMixin:
             self.app.call_from_thread(self.render_backend_response, self.app_state)
         except Exception as e:
             self.app.call_from_thread(indicator.stop)
-            self.app.call_from_thread(log.write, f"[#ffaa55]backend error: {e}[/#ffaa55]")
+            if os.environ.get("ENV") == "dev":
+                self.app.call_from_thread(log.write, f"[#ffaa55]backend error: {e}[/#ffaa55]")
+            else:
+                self.app.call_from_thread(log.write, "[#ffaa55]We're sorry, but the server encountered an unexpected error. Please try again later.[/#ffaa55]")
 
     def render_backend_response(self, state: dict):
         log = self.query_one("#chat-log", RichLog)
@@ -50,10 +54,12 @@ class ChatMixin:
         analytics_sql = state.get("analytics_sql")
         analytics_review = state.get("analytics_review")
 
-        if analytics_sql:
+        is_dev = os.environ.get("ENV") == "dev"
+
+        if is_dev and analytics_sql:
             log.write(Panel.fit(analytics_sql, title="SQL", border_style="dim"))
 
-        if analytics_review:
+        if is_dev and analytics_review:
             log.write(Panel.fit(str(analytics_review), title="SQL Review", border_style="cyan"))
 
         if state.get("error"):
