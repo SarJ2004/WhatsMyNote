@@ -14,6 +14,8 @@ elif os.environ.get("ENV")== "stage":
     API_URL = "https://whatsmynote-staging.onrender.com"
 elif os.environ.get("ENV")== "prod":
     API_URL = "https://whatsmynote.onrender.com"
+else:
+    API_URL = "https://whatsmynote.onrender.com"
 
 SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4bmlocXNsbWxqYmlkYm9ydHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNjk1ODksImV4cCI6MjA5OTg0NTU4OX0.qpJV9rQhWZ38hLlwihEewwDEtwVSX-H_e-VCkR1EiyU"
