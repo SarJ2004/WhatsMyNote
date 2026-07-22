@@ -13,7 +13,7 @@ class CustomFooter(Container):
     def compose(self) -> ComposeResult:
         with Horizontal():
             yield Label("whatsmynote v0.1.3  ~", id="footer-left")
-            yield Label("tab | [reverse] SWITCH MODE [/reverse]", id="footer-right", markup=True)
+            yield Label("ctrl+c | [reverse] QUIT [/reverse]", id="footer-right", markup=True)
 
 class HistoryInput(Input):
     BINDINGS = [

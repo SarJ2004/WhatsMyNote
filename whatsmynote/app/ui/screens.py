@@ -162,7 +162,10 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         user = load_session()
         lbl = self.query_one("#header-user", Label)
         if user:
-            lbl.update(user.email)
+            metadata = user.user_metadata or {}
+            full_name = metadata.get("full_name") or metadata.get("name") or ""
+            name = full_name.split(" ")[0] if full_name else user.email.split("@")[0]
+            lbl.update(name)
         else:
             lbl.update("not logged in")
 
@@ -174,6 +177,10 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         self.state = new_state
         if new_state == "IDLE":
             self.update_hints("[bold]enter[/bold] send  [bold]/[/bold] focus  /login  /logout  /config  /clear")
+        elif new_state == "AWAITING_CONFIRMATION":
+            self.update_hints("[bold]y/n[/bold] confirm  [bold]esc[/bold] cancel", "Confirmation Required")
+        elif new_state == "AWAITING_UPDATE_DETAILS":
+            self.update_hints("[bold]enter[/bold] submit  [bold]esc[/bold] cancel", "Awaiting Update Details")
         elif new_state == "AUTH_MODE_SELECT":
             self.update_hints("[bold]l[/bold] login  [bold]s[/bold] signup  [bold]f[/bold] forgot  [bold]o[/bold] oauth  [bold]q[/bold] cancel", "Auth Mode")
         elif new_state in ["AUTH_EMAIL", "AUTH_FORGOT_EMAIL"]:
@@ -234,7 +241,10 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         messages = []
         user = load_session()
         if user:
-            messages.append(f"[#888888]restored session for {user.email}[/#888888]")
+            metadata = user.user_metadata or {}
+            full_name = metadata.get("full_name") or metadata.get("name") or ""
+            name = full_name.split(" ")[0] if full_name else user.email.split("@")[0]
+            messages.append(f"[#888888]Welcome back, {name}! Let's talk money 💸[/#888888]")
             self.check_onboarding_status()
             
         if not get_groq_api_key():
@@ -252,7 +262,10 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
             
             user = load_session()
             if user:
-                log.write(f"[#888888]restored session for {user.email}[/#888888]")
+                metadata = user.user_metadata or {}
+                full_name = metadata.get("full_name") or metadata.get("name") or ""
+                name = full_name.split(" ")[0] if full_name else user.email.split("@")[0]
+                log.write(f"[#888888]Session restored for {name}. Let's go! 🚀[/#888888]")
             if not get_groq_api_key():
                 log.write("[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
             

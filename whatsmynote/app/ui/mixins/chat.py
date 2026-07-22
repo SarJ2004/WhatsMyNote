@@ -98,6 +98,13 @@ class ChatMixin:
 
         if answer:
             log.write(f"[#dddddd]{answer}[/#dddddd]")
+            
+        if state.get("awaiting_confirmation"):
+            self.set_state("AWAITING_CONFIRMATION")
+        elif state.get("awaiting_update_details"):
+            self.set_state("AWAITING_UPDATE_DETAILS")
+        elif not state.get("awaiting_selection"):
+            self.set_state("IDLE")
 
         # HITL
         if state.get("awaiting_selection") and state.get("search_results"):

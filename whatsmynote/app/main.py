@@ -5,7 +5,6 @@ import os
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 import logging
-from dotenv import load_dotenv
 
 def main():
     # Hardcoded public DSN for PyPI distribution
