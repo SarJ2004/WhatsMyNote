@@ -5,7 +5,8 @@ from whatsmynote.app.ui.screens import MainScreen
 
 class WhatsMyNoteApp(App):
     BINDINGS = [
-        Binding("ctrl+q", "", "Unbound", show=False)
+        Binding("ctrl+c", "quit", "Quit", show=False, priority=True),
+        Binding("ctrl+q", "quit", "Quit", show=False, priority=True)
     ]
 
     def on_mount(self) -> None:
