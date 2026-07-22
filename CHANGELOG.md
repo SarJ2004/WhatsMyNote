@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/SarJ2004/WhatsMyNote/compare/v0.1.3...v0.2.0) (2026-07-22)
+
+
+### Features
+
+* add a TUI interface for login/singnup flow ([0c6392f](https://github.com/SarJ2004/WhatsMyNote/commit/0c6392ff7aef7c4f2cde3ebccb8a2a96df92bb2d))
+* add logout support to the TUI ([7d1590c](https://github.com/SarJ2004/WhatsMyNote/commit/7d1590ce09c7b2a97a29a4398026ac14e3588c49))
+* add sentry for monitoring and observability support ([09dea77](https://github.com/SarJ2004/WhatsMyNote/commit/09dea77d9b59d67245c934e59ca8929784134765))
+* add sentry for monitoring and observability support ([a973296](https://github.com/SarJ2004/WhatsMyNote/commit/a97329621d37338ca9a5f9b5483398f56c37c0b1))
+* add sentry support in the cli frontend ([87ab433](https://github.com/SarJ2004/WhatsMyNote/commit/87ab433eb374787cce1ace485bf36f0764c3d577))
+* add sentry support in the cli frontend and added logging in both be and fe ([c9dc0bb](https://github.com/SarJ2004/WhatsMyNote/commit/c9dc0bb441242a73826b2fa3c48b4b140eea1d3b))
+* added support for the staging env ([a862da5](https://github.com/SarJ2004/WhatsMyNote/commit/a862da59481b4623d14112489547f22cc0706e43))
+* finished the first iteration of the textual TUI ([52d30f9](https://github.com/SarJ2004/WhatsMyNote/commit/52d30f9f8483e8a156263ac74d834995cf61c095))
+* updated the TUI to add more UI features ([7190c26](https://github.com/SarJ2004/WhatsMyNote/commit/7190c2649e24f888c6f11d50c04c25711e595fda))
+
+
+### Bug Fixes
+
+* add tags for frontend and backend sentry events ([8d9dbdb](https://github.com/SarJ2004/WhatsMyNote/commit/8d9dbdb955fdebe5bb4b79ea52603a615a0ec1fe))
+* add tags for frontend and backend sentry events ([8d2cd3c](https://github.com/SarJ2004/WhatsMyNote/commit/8d2cd3cda13d9ed52bc33ca65d78f6b1325c846b))
+* added commands at each step of the entire application, and modify the ui a bit ([a2aec0b](https://github.com/SarJ2004/WhatsMyNote/commit/a2aec0b5683c3085662683dae090d8a341b6b807))
+* added commands at each step of the entire application, and modify the ui a bit ([ea76acc](https://github.com/SarJ2004/WhatsMyNote/commit/ea76accfed9fe2b58dee277deed44a4ff1d39cb1))
+* improved the guardrails to make the app more robust ([bec5f37](https://github.com/SarJ2004/WhatsMyNote/commit/bec5f3775453e8f6016ce8ccdb06227d1544d918))
+* improved the guardrails to make the app more robust ([9d25913](https://github.com/SarJ2004/WhatsMyNote/commit/9d25913117f04740d1c5643c65061fa9cf59f482))
+* made the transfer rules stricter, and added Cash support to accounts ([a20259b](https://github.com/SarJ2004/WhatsMyNote/commit/a20259bffd19d81f5a710e963db318c180c2e738))
+* update readme, docs and fixed a bug regarding rendering of charts ([e614422](https://github.com/SarJ2004/WhatsMyNote/commit/e614422c33a57c0d9c7aca92e021e34da455b3d3))
+
 ## [0.1.3](https://github.com/SarJ2004/WhatsMyNote/compare/v0.1.2...v0.1.3) (2026-07-14)
 
 
