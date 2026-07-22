@@ -11,7 +11,7 @@ include = ["whatsmynote*"]
 
 [project]
 name = "whatsmynote"
-version = "0.2.2"
+version = "0.2.3"
 description = "A CLI app for managing notes and finances using LLMs."
 readme = "README.md"
 requires-python = ">=3.11"
