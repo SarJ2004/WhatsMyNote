@@ -3,7 +3,7 @@
 from langchain_core.messages import HumanMessage, SystemMessage
 from backend.llms import get_extractor_llm
 from backend.core.memory import ephemeral_reset
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 
 VALID_INTENTS = {"create", "update", "delete", "query", "unknown"}
 VALID_RECORD_TYPES = {"lending", "expense", "account", "budget", "income", "transfer", "unknown"}
@@ -18,7 +18,7 @@ Analyze the user's message and determine two things:
 ## Intent Definitions
 - create: Recording a PAST, COMPLETED financial event. (e.g. Lent Rahul 500, Spent 200, Received salary, Transferred 500, Sumit paid me back 31)
 - update: Modifying an existing record. (e.g. Actually it was 600, Change the category, Fix the amount)
-- delete: Removing a record. (e.g. Delete the last expense)
+- delete: Removing a record. (e.g. Delete the last expense, Delete my lending records, Remove the account)
 - query: Asking for information or analytics. (e.g. How much did I spend?, Show pie chart, Trend of expenses)
 - unknown: Asking something unrelated, stating a future desire/unfulfilled need (e.g. "I need a beer", "I want to buy a laptop"), or gibberish.
 
@@ -34,12 +34,18 @@ Analyze the user's message and determine two things:
 If the user uses pronouns (that, it, this), refer to the Context below:
 {context}
 
-Respond ONLY with a valid JSON object matching the requested schema.
+Respond ONLY with a valid JSON object matching the requested schema. Use exactly these keys: "intent" and "record_type".
+Example:
+{{"intent": "create", "record_type": "expense"}}
 """
 
 class ClassificationResult(BaseModel):
     intent: str = Field(description="create, update, delete, query, or unknown")
-    record_type: str = Field(description="expense, income, lending, transfer, budget, account, or unknown")
+    record_type: str = Field(
+        alias="recordType", 
+        validation_alias=AliasChoices('record_type', 'recordType'),
+        description="expense, income, lending, transfer, budget, account, or unknown"
+    )
 
 def _build_context_string(state) -> str:
     intent = state.get("intent")
@@ -54,7 +60,7 @@ def primary_classifier(state):
     context_str = _build_context_string(state)
     prompt = PRIMARY_PROMPT.format(context=context_str)
 
-    llm = get_extractor_llm().with_structured_output(ClassificationResult)
+    llm = get_extractor_llm().with_structured_output(ClassificationResult, method="json_mode")
     
     try:
         result: ClassificationResult = llm.invoke([
