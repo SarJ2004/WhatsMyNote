@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3](https://github.com/SarJ2004/WhatsMyNote/compare/v0.2.2...v0.2.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* trigger 0.2.3 release for CSS bundling ([f2141c0](https://github.com/SarJ2004/WhatsMyNote/commit/f2141c09bd2e40b21b9032ba86f18923c2804821))
+
 ## [0.2.2](https://github.com/SarJ2004/WhatsMyNote/compare/v0.2.1...v0.2.2) (2026-07-22)
 
 
