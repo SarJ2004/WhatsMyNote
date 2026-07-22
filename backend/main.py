@@ -26,6 +26,7 @@ if sentry_dsn:
         enable_logs=True,
         traces_sample_rate=1.0,
     )
+    sentry_sdk.set_tag("component", "backend")
 
 
 # Initialize global Supabase client once
