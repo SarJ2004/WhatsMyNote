@@ -17,7 +17,7 @@ def main():
     )
     sentry_sdk.init(
         dsn=sentry_dsn,
-        environment="prod", # Hardcoded to prod for end-users
+        environment=os.environ.get("ENV", "prod"), # Reads dev/stage locally, defaults to prod for PyPI users
         integrations=[sentry_logging],
         traces_sample_rate=0.1,
     )

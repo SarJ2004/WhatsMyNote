@@ -24,8 +24,15 @@ class ChartConfig(BaseModel):
 
 
 class AnalyticsSQL(BaseModel):
-    sql: str = Field(description="Safe read-only SQL query.")
+    sql: Optional[str] = Field(
+        default=None, 
+        description="Safe read-only SQL query."
+    )
     chart_config: Optional[ChartConfig] = Field(
         default=None,
         description="Optional chart configuration if the data warrants visualization."
+    )
+    error: Optional[str] = Field(
+        default=None,
+        description="If the question is gibberish or unanswerable, provide an explanation here."
     )

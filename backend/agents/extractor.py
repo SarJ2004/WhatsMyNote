@@ -117,18 +117,9 @@ def extractor(state):
     ]
 
     try:
-        result = get_extractor_llm().invoke(messages)
-        content = result.content.strip()
-
-        # Extract JSON from response
-        match = re.search(r"\{.*\}", content, re.DOTALL)
-        if match:
-            content = match.group(0)
-
-        payload = json.loads(content)
-
-        # Validate against the Pydantic model
-        validated = model_cls.model_validate(payload)
+        # Use native LangChain guardrails to enforce the schema on the LLM level
+        llm_with_tools = get_extractor_llm().with_structured_output(model_cls, method="json_mode")
+        validated = llm_with_tools.invoke(messages)
 
         return {"extraction": validated.model_dump(mode="json")}
 
