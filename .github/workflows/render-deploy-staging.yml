@@ -27,6 +27,6 @@ jobs:
           api_key: ${{ secrets.RENDER_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           clear_cache: false
-          wait_deploy: true # Wait for the deploy to finish before reporting success/failure
+          wait_deploy: false # Set to false to avoid 'Can't find the triggered deploy' Render API bug
           github_deployment: true # Creates the deployment in the GitHub UI
           deployment_environment: 'staging' # Environment name in GitHub
