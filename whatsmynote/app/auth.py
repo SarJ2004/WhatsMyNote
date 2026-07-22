@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from supabase import create_client, Client
 
 from whatsmynote.app.config import get_session_path, SUPABASE_URL, SUPABASE_KEY
+import sentry_sdk
 
 SESSION_FILE = get_session_path()
 _supabase: Client = None
@@ -42,6 +43,7 @@ def load_session():
                 )
                 if res.user:
                     os.environ["CURRENT_USER_ID"] = res.user.id
+                    sentry_sdk.set_user({"id": res.user.id})
                     return res.user
         except Exception:
             pass
@@ -53,11 +55,14 @@ def login_with_password(email, password):
     if res.user:
         _save_session(supabase.auth.get_session())
         os.environ["CURRENT_USER_ID"] = res.user.id
+        sentry_sdk.set_user({"id": res.user.id})
     return res.user
 
 def signup_with_password(email, password):
     supabase = get_supabase()
     res = supabase.auth.sign_up({"email": email, "password": password})
+    if res.user:
+        sentry_sdk.set_user({"id": res.user.id})
     return res.user
 
 def logout():
@@ -70,6 +75,7 @@ def logout():
             pass
     if "CURRENT_USER_ID" in os.environ:
         del os.environ["CURRENT_USER_ID"]
+    sentry_sdk.set_user(None)
 
 def start_oauth(provider):
     supabase = get_supabase()
@@ -176,6 +182,7 @@ def wait_for_auth_code(port=8080):
         _save_session(session)
         if session and session.user:
             os.environ["CURRENT_USER_ID"] = session.user.id
+            sentry_sdk.set_user({"id": session.user.id})
             return session.user
         return None
     finally:
