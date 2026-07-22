@@ -4,10 +4,15 @@ SelectionModal {
 }
 #selection-container {
     width: 80%;
+    max-width: 120;
     height: 80%;
     background: #111111;
     border: solid #888888;
     padding: 1 2;
+}
+#selection-label {
+    width: 100%;
+    margin-bottom: 1;
 }
 #selection-search {
     border: none;

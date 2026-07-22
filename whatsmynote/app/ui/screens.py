@@ -27,7 +27,7 @@ class SelectionModal(ModalScreen[list[int]]):
     def compose(self) -> ComposeResult:
         hint = "[dim]up/down: navigate, enter: confirm, esc: cancel[/dim]" if self.mode == "single" else "[dim]up/down: navigate, space: select, ctrl+a: select all, enter: confirm, esc: cancel[/dim]"
         with Container(id="selection-container"):
-            yield Label(f"Search and select ({self.mode} mode) - {hint}", markup=True)
+            yield Label(f"Search and select ({self.mode} mode)\n{hint}", markup=True, id="selection-label")
             yield Input(placeholder="Fuzzy search...", id="selection-search")
             yield SelectionList(id="selection-list")
 

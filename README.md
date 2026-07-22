@@ -44,6 +44,18 @@ Tracking finances shouldn't require complex spreadsheets, clunky UIs, or manual 
 
 Just type what happened naturally. The AI will instantly parse your intent, validate the transaction using a Human-in-the-Loop mechanism (if it's complex), and persist it securely to your database. 
 
+### 📸 Features Showcase
+
+<div align="center">
+  <img src="docs/assets/splash-menu.png" alt="Splash Screen" width="48%">
+  <img src="docs/assets/listing-expenses.png" alt="Listing Expenses" width="48%">
+</div>
+<br/>
+<div align="center">
+  <img src="docs/assets/showing-analytics.png" alt="Analytics Charts" width="48%">
+  <img src="docs/assets/fuzzy-menu.png" alt="Fuzzy Search Modal" width="48%">
+</div>
+
 **Say goodbye to manual tracking:**
 > *"I spent $15 on coffee today using my HDFC account."*  
 > *"My friend John borrowed $50 from me for lunch."*  
@@ -89,7 +101,7 @@ graph TD
 - **Data Validation:** Pydantic
 - **Database & Persistence:** SQLAlchemy & PostgreSQL (hosted on Render/Supabase)
 - **Authentication:** Supabase OAuth (Google/GitHub)
-- **CLI UI:** Rich
+- **CLI UI:** Textual (with native Rich rendering)
 
 > **Deep Dive:** Check out the [Core Concepts & Architecture](docs/core_concepts.md) page for a full breakdown of the multi-agent system.
 
