@@ -35,6 +35,8 @@ dependencies = [
     "fastapi[standard]>=0.139.0",
     "uvicorn>=0.51.0",
     "twine>=6.2.0",
+    "langsmith>=0.10.2",
+    "sentry-sdk[fastapi]>=2.11.0",
 ]
 
 [project.urls]
