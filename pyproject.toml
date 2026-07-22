@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["whatsmynote*"]
 
+[tool.setuptools.package-data]
+"*" = ["*.tcss", "*.css"]
+
 [project]
 name = "whatsmynote"
 version = "0.2.1"
