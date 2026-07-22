@@ -14,6 +14,20 @@ def setup_backend_env():
 
 setup_backend_env()
 
+# Initialize Sentry Error Monitoring
+import sentry_sdk
+sentry_dsn = os.environ.get("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        environment=os.environ.get("ENV", "dev"),
+        send_default_pii=True,
+        # Enable sending logs to Sentry
+        enable_logs=True,
+        traces_sample_rate=1.0,
+    )
+
+
 # Initialize global Supabase client once
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
