@@ -21,6 +21,7 @@ def main():
         integrations=[sentry_logging],
         traces_sample_rate=0.1,
     )
+    sentry_sdk.set_tag("component", "frontend")
     if sys.platform == "win32":
         import io
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
