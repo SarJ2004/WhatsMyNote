@@ -42,7 +42,7 @@ def _preview_rows(rows: Any, limit: int = 5) -> str:
 
 
 def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = None) -> AnalyticsReview:
-    structured_llm = get_evaluator_llm().with_structured_output(AnalyticsReview)
+    structured_llm = get_evaluator_llm().with_structured_output(AnalyticsReview, method="json_mode")
     
     chart_text = ""
     if chart_config:
@@ -51,6 +51,9 @@ def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = No
         else:
             chart_text = f"Proposed Chart Configuration:\n{json.dumps(chart_config, indent=2)}\n\n"
         
+    from backend.analytics.schema_context import schema_context_for_question
+    schema_context = schema_context_for_question(question)
+    
     messages = [
         SystemMessage(
             content=(
@@ -58,7 +61,9 @@ def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = No
                 "Decide whether SQL answers user question well and if the chart_config makes sense for the result shape. "
                 "If result looks wrong or chart_config is invalid for the columns returned, provide revised_sql and rationale. "
                 "If the chart_config is missing when the user explicitly asked for a chart, or if the x_axis/y_axis do not perfectly match the SQL result keys, you MUST provide a revised_chart_config. "
-                "Return concise judgment only."
+                "Return a concise JSON judgment only, using exactly these snake_case keys:\n"
+                "{\"approved\": false, \"confidence\": 90, \"reason\": \"...\", \"revised_sql\": \"...\", \"rationale\": \"...\", \"revised_chart_config\": null}\n\n"
+                f"Relevant schema:\n{schema_context}"
             )
         ),
         HumanMessage(
@@ -71,4 +76,21 @@ def review_sql_result(question: str, sql: str, rows: Any, chart_config: Any = No
         ),
     ]
 
-    return structured_llm.invoke(messages)
+    try:
+        return structured_llm.invoke(messages)
+    except Exception as e:
+        error_str = str(e)
+        import re
+        match = re.search(r"\{.*\}", error_str, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group(0))
+                return AnalyticsReview(**data)
+            except Exception:
+                pass
+                
+        return AnalyticsReview(
+            approved=False,
+            confidence=0,
+            reason=f"Verifier failed to parse LLM output: {error_str}"
+        )

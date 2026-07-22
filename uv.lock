@@ -2075,6 +2075,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/36/a8/3fb9a4319efa3b26f5be0e90e6d8918df43fa7c7e977d26390f589501d82/sentry_sdk-2.64.0-py3-none-any.whl", hash = "sha256:715ea91ca860a819e8d8a50a7bde3a80d0df3b4ed7b6660a20fb9a2d084188f1", size = 498901, upload-time = "2026-06-30T08:13:45.566Z" },
 ]
 
+[package.optional-dependencies]
+fastapi = [
+    { name = "fastapi" },
+]
+
 [[package]]
 name = "shellingham"
 version = "1.5.4"
@@ -2615,11 +2620,13 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "inquirerpy" },
+    { name = "langsmith" },
     { name = "platformdirs" },
     { name = "plotext" },
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "rich" },
+    { name = "sentry-sdk", extra = ["fastapi"] },
     { name = "supabase" },
     { name = "termcharts" },
     { name = "twine" },
@@ -2638,11 +2645,13 @@ dev = [
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.139.0" },
     { name = "inquirerpy", specifier = ">=0.3.4" },
+    { name = "langsmith", specifier = ">=0.10.2" },
     { name = "platformdirs", specifier = ">=4.2.2" },
     { name = "plotext", specifier = ">=5.3.2" },
     { name = "python-dotenv", specifier = ">=0.9.9" },
     { name = "requests", specifier = ">=2.31.0" },
     { name = "rich", specifier = ">=13.9.4" },
+    { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.11.0" },
     { name = "supabase", specifier = ">=2.3.0" },
     { name = "termcharts", specifier = ">=1.1.2" },
     { name = "twine", specifier = ">=6.2.0" },

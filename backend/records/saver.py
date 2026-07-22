@@ -21,7 +21,7 @@ def _resolve_account(account_name: str | None, default_account: str | None, vali
         return norm
     
     # Auto-create explicitly specified accounts that do not exist
-    if norm.lower() != "unknown":
+    if norm.lower() not in ("unknown", "none"):
         new_accounts.add(norm)
         valid_accounts.add(norm)
     return norm
@@ -94,15 +94,6 @@ _RECORD_TYPE_ENUM = {
     "budget": RecordType.BUDGET,
 }
 
-_TYPE_RELATIONSHIP = {
-    "expense": "expense",
-    "income": "income",
-    "lending": "lending",
-    "transfer": "transfer",
-    "account": "account",
-    "budget": "budget",
-}
-
 
 def record_saver(state):
     """Generic saver node — dispatches based on state.get("record_type")."""
@@ -135,7 +126,7 @@ def record_saver(state):
                 raw_text=state.get("raw_text"),
             )
             type_record = _build_type_record(record_type, data, default_account, valid_accounts, new_accounts)
-            setattr(base_record, _TYPE_RELATIONSHIP[record_type], type_record)
+            setattr(base_record, record_type, type_record)
 
             if record_type == "budget":
                 # Check for existing budget with same category
@@ -175,15 +166,21 @@ def record_saver(state):
 
         db.flush()
 
-        # Budget alerts for expenses
+        # Budget alerts for expenses and budgets
         alerts = []
         if record_type == "expense":
-            from backend.db.schema import ExpenseRecord
             db.expire_all()
             for record_id in saved_ids:
                 expense = db.get(ExpenseRecord, record_id)
                 if expense is not None:
                     alerts.extend(build_budget_alerts_for_expense(db, expense))
+        elif record_type == "budget":
+            from backend.budget.alerts import build_budget_alerts_for_budget
+            db.expire_all()
+            for record_id in saved_ids:
+                budget = db.get(BudgetRecord, record_id)
+                if budget is not None:
+                    alerts.extend(build_budget_alerts_for_budget(db, budget))
 
         sync_account_balances(db)
         db.commit()

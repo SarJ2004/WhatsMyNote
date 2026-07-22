@@ -15,14 +15,14 @@ Generate exactly one safe PostgreSQL query for the user's question.
 - Prefer aggregations, `GROUP BY`, `ORDER BY`, and `LIMIT` for analytics.
 - **PostgreSQL Dialect**: Use PostgreSQL date functions (e.g., `CURRENT_DATE`, `CURRENT_DATE - INTERVAL '1 month'`).
 - **GIBBERISH GUARD**: If the user's question is gibberish, highly ambiguous, or cannot be answered using the provided schema, you MUST return `"sql": null` and provide an `"error"` field explaining why.
-- **CHARTS**: If the user explicitly asks for a chart type (e.g., 'pie chart'), you MUST provide a `chart_config` with that exact `chart_type`. The `x_axis` and `y_axis` values MUST EXACTLY MATCH the column aliases in your SELECT statement.
+- **CHARTS**: If the user explicitly asks for a chart type (e.g., 'pie chart'), you MUST provide a `chart_config` with that exact `chart_type`. The `x_axis` and `y_axis` fields MUST NEVER be null (even for pie/donut charts, where `x_axis` represents the labels and `y_axis` represents the numeric values). They MUST EXACTLY MATCH the column aliases in your SELECT statement.
 
 ## Schema Reference and Join Keys
 
 All sub-tables link back to `records` via `<table>.record_id = records.id`.
 
 - `account_records`: Use `current_balance` for the account's live balance. Primary key is `record_id`. Do NOT join to expense/income tables to compute balance — just use `current_balance`.
-- `lending_records`: `direction` is ONLY ever `'lent'` or `'borrowed'`. Never use `'credit'` or `'debit'`.
+- `lending_records`: `direction` is ONLY ever `'LENT'` or `'BORROWED'`. Never use `'credit'` or `'debit'`.
 - `expense_records`: joined to records via `expense_records.record_id = records.id`.
 - `income_records`: `deposit_account` is the account name. Joined via `income_records.record_id = records.id`.
 - `transfer_records`: `source_account` and `destination_account` are account names. No `direction` column.
@@ -31,16 +31,19 @@ All sub-tables link back to `records` via `<table>.record_id = records.id`.
 ## Few-Shot Examples
 
 **Question**: Who owes me money?
-**SQL**: `SELECT person, SUM(CASE WHEN direction = 'lent' THEN amount ELSE -amount END) AS net_balance FROM lending_records GROUP BY person HAVING net_balance > 0`
+**SQL**: `SELECT person, SUM(CASE WHEN direction = 'LENT' THEN amount ELSE -amount END) AS net_balance FROM lending_records GROUP BY person HAVING net_balance > 0`
 
 **Question**: Who do I owe money to?
-**SQL**: `SELECT person, SUM(CASE WHEN direction = 'borrowed' THEN amount ELSE -amount END) AS net_owed FROM lending_records GROUP BY person HAVING net_owed > 0`
+**SQL**: `SELECT person, SUM(CASE WHEN direction = 'BORROWED' THEN amount ELSE -amount END) AS net_owed FROM lending_records GROUP BY person HAVING net_owed > 0`
 
 **Question**: Show my expenses for the last month.
 **SQL**: `SELECT * FROM expense_records WHERE expense_date >= CURRENT_DATE - INTERVAL '1 month'`
 
 **Question**: What is my current budget status?
 **SQL**: `SELECT b.category, b.amount AS budget_limit, COALESCE(SUM(e.amount), 0) AS spent, (b.amount - COALESCE(SUM(e.amount), 0)) AS remaining FROM budget_records b LEFT JOIN expense_records e ON b.category = e.category GROUP BY b.category`
+
+**Question**: How much above am I from my overall budget?
+**SQL**: `SELECT ((COALESCE((SELECT SUM(amount) FROM expense_records), 0) + COALESCE((SELECT SUM(amount) FROM lending_records WHERE direction = 'LENT'), 0)) - COALESCE((SELECT SUM(amount) FROM budget_records WHERE category = 'Overall'), 0)) AS amount_above_budget`
 
 **Question**: What is my net worth?
 **SQL**: `SELECT SUM(current_balance) AS net_worth FROM account_records`
@@ -67,6 +70,21 @@ If rejecting a gibberish or unanswerable question:
   "sql": null,
   "chart_config": null,
   "error": "The question 'budget faa expense' is not a coherent analytics request."
+}
+```
+
+Example for a pie chart:
+```json
+{
+  "sql": "SELECT e.category, SUM(e.amount) AS total FROM expense_records e GROUP BY e.category",
+  "chart_config": {
+    "chart_type": "pie",
+    "x_axis": "category",
+    "y_axis": "total",
+    "title": "Expense Distribution",
+    "color": "diverse"
+  },
+  "error": null
 }
 ```
 

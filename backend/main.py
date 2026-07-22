@@ -1,9 +1,10 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional
 from supabase import create_client, Client
 from fastapi.encoders import jsonable_encoder
+import sentry_sdk
 
 app = FastAPI()
 
@@ -13,6 +14,20 @@ def setup_backend_env():
     _setup_env()
 
 setup_backend_env()
+
+# Initialize Sentry Error Monitoring
+sentry_dsn = os.environ.get("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        environment=os.environ.get("ENV", "dev"),
+        send_default_pii=True,
+        # Enable sending logs to Sentry
+        enable_logs=True,
+        traces_sample_rate=1.0,
+    )
+    sentry_sdk.set_tag("component", "backend")
+
 
 # Initialize global Supabase client once
 url = os.environ.get("SUPABASE_URL")
@@ -36,6 +51,9 @@ def verify_token(authorization: str = Header(None), x_groq_api_key: str = Header
     if not res or not res.user:
         raise HTTPException(status_code=401, detail="Invalid token")
         
+    import sentry_sdk
+    sentry_sdk.set_user({"id": res.user.id, "email": res.user.email if hasattr(res.user, 'email') else None})
+    
     os.environ["CURRENT_USER_ID"] = res.user.id
     return res.user.id
 
@@ -52,8 +70,16 @@ def chat(req: ChatRequest, user_id: str = Depends(verify_token)):
     
     try:
         new_state = compiled_graph.invoke(app_state)
+        
+        if os.environ.get("ENV") != "dev":
+            new_state.pop("analytics_sql", None)
+            new_state.pop("analytics_review", None)
+            
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        if os.environ.get("ENV") == "dev":
+            raise HTTPException(status_code=500, detail=str(e))
+        else:
+            raise HTTPException(status_code=500, detail="Internal Server Error")
         
     return {"state": jsonable_encoder(new_state)}
 
@@ -78,6 +104,7 @@ def setup(req: SetupRequest, user_id: str = Depends(verify_token)):
                 name=item["name"],
                 is_default=(idx == req.default_account_index),
                 opening_balance=item.get("opening_balance", 0),
+                current_balance=item.get("opening_balance", 0),
                 currency=item.get("currency"),
                 notes=item.get("notes"),
             )
@@ -104,7 +131,10 @@ def setup(req: SetupRequest, user_id: str = Depends(verify_token)):
             
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        if os.environ.get("ENV") == "dev":
+            raise HTTPException(status_code=500, detail=str(e))
+        else:
+            raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         db.close()
         

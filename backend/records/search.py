@@ -3,21 +3,9 @@
 from __future__ import annotations
 
 from backend.db.config import SessionLocal
-from backend.db.schema import (
-    BaseRecord, ExpenseRecord, IncomeRecord, LendingRecord,
-    TransferRecord, AccountRecord, BudgetRecord,
-)
+from backend.db.schema import BaseRecord
+from backend.records.resolver import _TYPE_TO_ORM
 from sqlalchemy.orm import joinedload
-
-
-_TYPE_TO_ORM = {
-    "expense": ExpenseRecord,
-    "income": IncomeRecord,
-    "lending": LendingRecord,
-    "transfer": TransferRecord,
-    "account": AccountRecord,
-    "budget": BudgetRecord,
-}
 
 
 def _record_to_display_dict(record_type: str, record) -> dict:

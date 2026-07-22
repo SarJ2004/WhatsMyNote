@@ -1,6 +1,6 @@
 import os
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
@@ -13,9 +13,6 @@ _SessionLocal = sessionmaker(
     autoflush=False,
     autocommit=False,
 )
-
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 
 @event.listens_for(engine, "begin")
 def _setup_rls(conn):

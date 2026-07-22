@@ -2,6 +2,12 @@
 
 from backend.records.models.common import RecordSelector, TargetRecord, UpdateOperation
 
+__all__ = [
+    "RecordSelector",
+    "TargetRecord",
+    "UpdateOperation",
+]
+
 from backend.records.models.expense import (
     CreateExpense, UpdateExpense, DeleteExpense, QueryExpense,
 )

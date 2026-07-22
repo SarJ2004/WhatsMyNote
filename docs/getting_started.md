@@ -14,44 +14,41 @@ uv tool install whatsmynote
 pip install whatsmynote
 ```
 
-## 2. Authentication
+## 2. The Minimalist TUI & Authentication
 
-When you run `whatsmynote` for the very first time, the system needs to securely identify you so your financial data is completely isolated.
+WhatsMyNote runs entirely inside a sleek, responsive terminal interface powered by Textual.
 
 Run the CLI:
 ```bash
 whatsmynote
 ```
 
-You will see the following prompt:
+When you first launch the app, you'll be greeted by the IDLE screen. Since this is your first time, you need to log in to isolate your financial data securely.
+
+**Type the login command:**
 ```text
-WhatsMyNote - Supabase Authentication
-Do you want to (L)og in, (S)ign up, (F)orgot Password, or (O)Auth [Google/GitHub]? [l/s/f/o/q] (l): o
-Which provider? [google/github] (google): google
-Opening browser to authenticate with Google...
+> /login
 ```
 
-1. A browser window will automatically pop open.
-2. Sign in using your Google or GitHub account.
-3. You will see a beautiful **"Access Granted"** success page.
-4. You can safely close the tab, and the terminal will say:
-   `Successfully authenticated via Google!`
+The CLI will dynamically prompt you inline:
+`Do you want to (L)og in, (S)ign up, (F)orgot Password, or (O)Auth [Google/GitHub]?`
+
+1. **OAuth:** If you choose `o`, the CLI will pop open your browser. Sign in using Google or GitHub. Once the "Access Granted" page appears, safely close the tab. The CLI will automatically intercept the token in the background and log you in!
+2. **Email:** If you choose `s`, you can sign up with an email and password directly within the terminal.
 
 > **Security Note:** The CLI securely stores your session token locally on your machine. You will only ever have to log in once!
->
-> **Password Reset:** If you signed up with an email/password, you can use the `(F)orgot Password` flow right from the CLI. It will email you a secure link, and once you authenticate, it will prompt you for a new password seamlessly.
 
 ## 3. Initial Setup Wizard
 
-Upon your very first successful login, WhatsMyNote will realize your database is empty. It will automatically launch an interactive setup wizard to get your baseline finances configured.
+Upon your very first successful login, the interface will detect that your database is empty. It will seamlessly transition into an interactive onboarding wizard.
 
 ### Setting up your Accounts
 First, it will ask you what bank accounts or wallets you want to track:
 ```text
 Let's set up your accounts.
-Account Name (e.g., SBI, Cash, HDFC): HDFC
+Account Name (e.g., SBI, Cash, HDFC) [default: Cash]: HDFC
 Opening Balance (0.0): 1500
-Currency (INR, USD, etc.): USD
+Currency (INR, USD, etc.) [default: USD]: USD
 ```
 
 Next, it will ask you to select a **Default Account**. 
@@ -63,26 +60,25 @@ Next, it will ask if you want to configure monthly spending limits:
 Category Name (e.g., Food, Travel, Rent): Food
 Monthly Budget Amount: 500
 ```
-*(You can easily skip this by pressing Enter if you don't want to track budgets).*
+*(You can easily skip any prompt by hitting `Enter` to use the default value).*
 
 ## 4. You are ready!
 
-Once the setup wizard finishes, you will see the main chat interface:
+Once the setup wizard finishes, your name will appear in the top-right header, and you can begin chatting.
 
-```text
-╭──────────────────────────────────────────────────╮
-│ WhatsMyNote CLI                                  │
-│ Type finance messages. Use exit or quit to stop. │
-╰──────────────────────────────────────────────────╯
-You: 
-```
-
-**Try typing your first message!**
+**Try typing your first message:**
 > *"I just grabbed a $5 coffee"*
 > *"My employer deposited my $5000 salary into HDFC"*
 > *"My friend Alex borrowed $50 from me"*
 
-**Built-in Commands:**
-- `clear`: Clears the terminal screen.
-- `/logout`: Logs you out and clears your session token.
-- `exit` or `quit`: Closes the application.
+**Global Commands & Hotkeys:**
+- `/login`, `/signup`: Authenticate your session.
+- `/logout`: Securely log out and wipe your local session token.
+- `/config`: Set or update your `GROQ_API_KEY`.
+- `/clear`: Clear the chat log.
+- `Ctrl+C` or `Ctrl+Q`: Force quit the application instantly.
+- `Esc`: Cancel any active flow (e.g., back out of a deletion confirmation).
+- `Up/Down Arrows`: Cycle through your previously typed commands.
+
+**Fuzzy Search Modals:**
+If you ever want to update or delete a record (e.g. *"Delete my recent lunch expense"*), the UI will pop up a floating modal table. You can use your keyboard to fuzzy search, select multiple rows with `Space`, or hit `Enter` to confirm your action!
