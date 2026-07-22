@@ -10,7 +10,9 @@ load_dotenv()
 # --- Replace these before publishing ---
 if os.environ.get("ENV") == "dev":
     API_URL = "http://127.0.0.1:8000"
-else:
+elif os.environ.get("ENV")== "stage":
+    API_URL = "https://whatsmynote-staging.onrender.com"
+elif os.environ.get("ENV")== "prod":
     API_URL = "https://whatsmynote.onrender.com"
 
 SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co"

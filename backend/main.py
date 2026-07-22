@@ -50,6 +50,9 @@ def verify_token(authorization: str = Header(None), x_groq_api_key: str = Header
     if not res or not res.user:
         raise HTTPException(status_code=401, detail="Invalid token")
         
+    import sentry_sdk
+    sentry_sdk.set_user({"id": res.user.id, "email": res.user.email if hasattr(res.user, 'email') else None})
+    
     os.environ["CURRENT_USER_ID"] = res.user.id
     return res.user.id
 
