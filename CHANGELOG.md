@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5](https://github.com/SarJ2004/WhatsMyNote/compare/v0.2.4...v0.2.5) (2026-07-23)
+
+
+### Documentation
+
+* use absolute raw github urls for readme images ([4446ccb](https://github.com/SarJ2004/WhatsMyNote/commit/4446ccbaa94b7aa5c31d7be98004c22897bc3aaf))
+
 ## [0.2.4](https://github.com/SarJ2004/WhatsMyNote/compare/v0.2.3...v0.2.4) (2026-07-23)
 
 
