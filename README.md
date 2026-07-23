@@ -47,13 +47,13 @@ Just type what happened naturally. The AI will instantly parse your intent, vali
 ### 📸 Features Showcase
 
 <div align="center">
-  <img src="docs/assets/splash-menu.png" alt="Splash Screen" width="48%">
-  <img src="docs/assets/listing-expenses.png" alt="Listing Expenses" width="48%">
+  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/splash-menu.png" alt="Splash Screen" width="48%">
+  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/listing-expenses.png" alt="Listing Expenses" width="48%">
 </div>
 <br/>
 <div align="center">
-  <img src="docs/assets/showing-analytics.png" alt="Analytics Charts" width="48%">
-  <img src="docs/assets/fuzzy-menu.png" alt="Fuzzy Search Modal" width="48%">
+  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/showing-analytics.png" alt="Analytics Charts" width="48%">
+  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/fuzzy-menu.png" alt="Fuzzy Search Modal" width="48%">
 </div>
 
 **Say goodbye to manual tracking:**
