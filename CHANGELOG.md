@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4](https://github.com/SarJ2004/WhatsMyNote/compare/v0.2.3...v0.2.4) (2026-07-23)
+
+
+### Bug Fixes
+
+* dynamically set Supabase credentials based on ENV ([2aa771a](https://github.com/SarJ2004/WhatsMyNote/commit/2aa771ab5196bd07f7e4196f8e1fb841667553b8))
+
 ## [0.2.3](https://github.com/SarJ2004/WhatsMyNote/compare/v0.2.2...v0.2.3) (2026-07-22)
 
 
