@@ -40,6 +40,10 @@ dependencies = [
     "twine>=6.2.0",
     "langsmith>=0.10.2",
     "sentry-sdk[fastapi]>=2.11.0",
+    "langgraph>=0.2.6",
+    "langchain-groq>=0.2.1",
+    "sqlalchemy>=2.0.36",
+    "psycopg2-binary>=2.9.10",
 ]
 
 [project.urls]
@@ -50,11 +54,6 @@ Repository = "https://github.com/SarJ2004/WhatsMyNote"
 whatsmynote = "whatsmynote.app.main:main"
 
 [dependency-groups]
-dev = [
-    "langgraph>=0.2.6",
-    "langchain-groq>=0.2.1",
-    "sqlalchemy>=2.0.36",
-    "psycopg2-binary>=2.9.10",
-]
+dev = []
 
 # Trigger PyPI release for v0.1.0
