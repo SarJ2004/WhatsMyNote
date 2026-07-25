@@ -207,6 +207,11 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         )
         if backend_active:
             was_in_flow = True
+            self.app_state["awaiting_confirmation"] = False
+            self.app_state["awaiting_update_details"] = False
+            self.app_state["awaiting_selection"] = False
+            self.app_state["selected_record_id"] = None
+            self.app_state["selected_record_ids"] = None
             
         if was_in_flow:
             log.write("[#888888]cancelled.[/#888888]")
@@ -289,6 +294,11 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
             log.write(f"\n[#ffaa55]> {val}[/#ffaa55]")
             log.write("[#888888]cancelled.[/#888888]")
             self.set_state("IDLE")
+            self.app_state["awaiting_confirmation"] = False
+            self.app_state["awaiting_update_details"] = False
+            self.app_state["awaiting_selection"] = False
+            self.app_state["selected_record_id"] = None
+            self.app_state["selected_record_ids"] = None
             inp.password = False
             return
 
@@ -331,6 +341,10 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
                     log.write("[#ffaa55]groq api key missing. use /config to set it up.[/#ffaa55]")
                     return
                 self.do_chat(val)
+
+        elif self.state in ["AWAITING_CONFIRMATION", "AWAITING_UPDATE_DETAILS"]:
+            self.set_state("IDLE")
+            self.do_chat(val)
 
         elif self.state == "CONFIG_API_KEY":
             set_groq_api_key(val)
