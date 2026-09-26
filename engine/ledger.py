@@ -28,6 +28,23 @@ def _user(conn):
     return value
 
 
+def set_budget(conn, category, amount, period):
+    user = _user(conn)
+    with conn.cursor() as cur:
+        cur.execute(
+            "insert into records (user_id, record_type, raw_text) "
+            "values (%s, 'budget', %s) returning id",
+            (user, f"budget {category}"),
+        )
+        record_id = cur.fetchone()[0]
+        cur.execute(
+            "insert into budget_records (record_id, category, amount_minor, "
+            "currency, period) values (%s, %s, %s, 'INR', %s)",
+            (record_id, category, amount, period),
+        )
+    return record_id
+
+
 def open_account(conn, name, currency, opening_balance, is_default=False):
     user = _user(conn)
     with conn.cursor() as cur:
