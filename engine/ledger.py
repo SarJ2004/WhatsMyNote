@@ -33,14 +33,14 @@ def set_budget(conn, category, amount, period):
     with conn.cursor() as cur:
         cur.execute(
             "insert into records (user_id, record_type, raw_text) "
-            "values (%s, 'budget', %s) returning id",
+            "values (%s, 'BUDGET', %s) returning id",
             (user, f"budget {category}"),
         )
         record_id = cur.fetchone()[0]
         cur.execute(
-            "insert into budget_records (record_id, category, amount_minor, "
-            "currency, period) values (%s, %s, %s, 'INR', %s)",
-            (record_id, category, amount, period),
+            "insert into budget_records (record_id, category, amount, amount_minor, "
+            "currency, period) values (%s, %s, %s, %s, 'INR', %s)",
+            (record_id, category, amount, amount, period),
         )
     return record_id
 
@@ -50,7 +50,7 @@ def open_account(conn, name, currency, opening_balance, is_default=False):
     with conn.cursor() as cur:
         cur.execute(
             "insert into records (user_id, record_type, raw_text) "
-            "values (%s, 'account', %s) returning id",
+            "values (%s, 'ACCOUNT', %s) returning id",
             (user, f"account {name}"),
         )
         record_id = cur.fetchone()[0]
@@ -109,16 +109,16 @@ def apply(conn, action):
 def _book_expense(cur, user, action, account_id, account_name):
     cur.execute(
         "insert into records (user_id, record_type, raw_text) "
-        "values (%s, 'expense', %s) returning id",
+        "values (%s, 'EXPENSE', %s) returning id",
         (user, action.get("raw_text", "expense")),
     )
     record_id = cur.fetchone()[0]
     cur.execute(
-        "insert into expense_records (record_id, amount_minor, currency, "
+        "insert into expense_records (record_id, amount, amount_minor, currency, "
         "converted_minor, category, payment_source, expense_date) "
-        "values (%s, %s, %s, %s, %s, %s, %s)",
-        (record_id, action["amount"], action["currency"], action["amount"],
-         action["category"], account_name, action["date"]),
+        "values (%s, %s, %s, %s, %s, %s, %s, %s)",
+        (record_id, action["amount"], action["amount"], action["currency"],
+         action["amount"], action["category"], account_name, action["date"]),
     )
     cur.execute(
         "update account_records set current_balance = current_balance - %s "
@@ -132,16 +132,16 @@ def _book_transfer(cur, user, action):
     dest_id, _, _ = _resolve_account(cur, action["destination"])
     cur.execute(
         "insert into records (user_id, record_type, raw_text) "
-        "values (%s, 'transfer', %s) returning id",
+        "values (%s, 'TRANSFER', %s) returning id",
         (user, action.get("raw_text", "transfer")),
     )
     record_id = cur.fetchone()[0]
     cur.execute(
-        "insert into transfer_records (record_id, amount_minor, currency, "
+        "insert into transfer_records (record_id, amount, amount_minor, currency, "
         "source_account, destination_account, transfer_date) "
-        "values (%s, %s, %s, %s, %s, %s)",
-        (record_id, action["amount"], action["currency"], action["source"],
-         action["destination"], action["date"]),
+        "values (%s, %s, %s, %s, %s, %s, %s)",
+        (record_id, action["amount"], action["amount"], action["currency"],
+         action["source"], action["destination"], action["date"]),
     )
     cur.execute(
         "update account_records set current_balance = current_balance - %s "

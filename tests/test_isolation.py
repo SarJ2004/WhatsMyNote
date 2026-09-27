@@ -31,7 +31,7 @@ def test_another_users_row_is_invisible_and_untouchable(db):
         with db.cursor() as cur:
             cur.execute(
                 "insert into records (user_id, record_type, raw_text) "
-                "values (%s, 'expense', 'lunch') returning id",
+                "values (%s, 'EXPENSE', 'lunch') returning id",
                 ("11111111-1111-1111-1111-111111111111",),
             )
             row_id = cur.fetchone()[0]

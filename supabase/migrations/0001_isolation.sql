@@ -4,17 +4,17 @@
 drop table if exists confirmations, fx_rates, transfer_records, lending_records,
     income_records, budget_records, expense_records, account_records,
     records cascade;
-drop type if exists record_type cascade;
-drop type if exists lending_direction cascade;
+drop type if exists recordtype cascade;
+drop type if exists lendingdirection cascade;
 
-create type record_type as enum
-    ('expense', 'income', 'transfer', 'lending', 'account', 'budget');
-create type lending_direction as enum ('lent', 'borrowed');
+create type recordtype as enum
+    ('LENDING', 'EXPENSE', 'ACCOUNT', 'BUDGET', 'TRANSFER', 'INCOME', 'REMINDER', 'TASK');
+create type lendingdirection as enum ('LENT', 'BORROWED');
 
 create table records (
     id          bigint generated always as identity primary key,
     user_id     uuid not null,
-    record_type record_type not null,
+    record_type recordtype not null,
     raw_text    text not null,
     created_at  timestamptz not null default now(),
     updated_at  timestamptz not null default now(),
@@ -23,6 +23,7 @@ create table records (
 
 create table expense_records (
     record_id       bigint primary key references records(id) on delete cascade,
+    amount          integer not null,
     amount_minor    integer not null,
     currency        char(3) not null,
     converted_minor integer not null,
@@ -48,6 +49,7 @@ create table account_records (
 create table budget_records (
     record_id   bigint primary key references records(id) on delete cascade,
     category    text not null,
+    amount      integer not null,
     amount_minor integer not null,
     currency    char(3) not null,
     period      text not null default 'monthly',
@@ -57,6 +59,7 @@ create table budget_records (
 
 create table income_records (
     record_id       bigint primary key references records(id) on delete cascade,
+    amount          integer not null,
     amount_minor    integer not null,
     currency        char(3) not null,
     converted_minor integer not null,
@@ -69,6 +72,7 @@ create table income_records (
 
 create table transfer_records (
     record_id           bigint primary key references records(id) on delete cascade,
+    amount              integer not null,
     amount_minor        integer not null,
     currency            char(3) not null,
     source_account      text not null,
@@ -79,12 +83,13 @@ create table transfer_records (
 
 create table lending_records (
     record_id           bigint primary key references records(id) on delete cascade,
+    amount              integer not null,
     amount_minor        integer not null,
     currency            char(3) not null,
     converted_minor     integer not null,
     fx_rate             numeric,
     person              text not null,
-    direction           lending_direction not null,
+    direction           lendingdirection not null,
     account             text,
     expected_payback_by date,
     notes               text
