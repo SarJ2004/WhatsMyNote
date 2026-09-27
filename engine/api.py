@@ -6,11 +6,15 @@ import hashlib
 import time
 
 import psycopg2
+from pathlib import Path
+
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from engine.ledger import LedgerError, apply, open_account
 from engine.parse import parse_message
+from engine.queries import balances as query_balances
+from engine.queries import spending_by_category
 from datetime import date
 
 
@@ -24,6 +28,11 @@ def build_app(dsn, verify):
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.get("/")
+    def site():
+        page = Path(__file__).resolve().parents[1] / "web" / "index.html"
+        return FileResponse(page)
 
     def identity(request):
         header = request.headers.get("authorization", "")
@@ -87,7 +96,48 @@ def build_app(dsn, verify):
         user = identity(request)
         if not user:
             return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
-        return {"balances": []}
+        with connect(user) as conn:
+            return {"balances": query_balances(conn)}
+
+    @app.get("/spending")
+    def spending(request: Request, start: str, end: str):
+        user = identity(request)
+        if not user:
+            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
+        with connect(user) as conn:
+            rows = spending_by_category(conn, start, end)
+        return {"spending": [{"category": category, "converted_minor": amount} for category, amount in rows]}
+
+    @app.get("/records")
+    def records(request: Request, type: str = "", start: str = "", end: str = "", q: str = ""):
+        user = identity(request)
+        if not user:
+            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
+        clauses = ["1=1"]
+        params = []
+        if type:
+            clauses.append("r.record_type = %s")
+            params.append(type)
+        if start:
+            clauses.append("r.created_at::date >= %s")
+            params.append(start)
+        if end:
+            clauses.append("r.created_at::date <= %s")
+            params.append(end)
+        if q:
+            clauses.append("r.raw_text ilike %s")
+            params.append("%" + q + "%")
+        with connect(user) as conn, conn.cursor() as cur:
+            cur.execute(
+                "select r.created_at::date, r.record_type, r.raw_text "
+                "from records r where " + " and ".join(clauses) + " order by r.created_at desc",
+                params,
+            )
+            rows = [
+                {"date": str(row[0]), "record_type": row[1], "raw_text": row[2]}
+                for row in cur.fetchall()
+            ]
+        return {"records": rows}
 
     return app
 

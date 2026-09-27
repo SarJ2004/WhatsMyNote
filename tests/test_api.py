@@ -68,6 +68,22 @@ def test_chat_with_no_account_books_nothing(client):
     assert response.json()["code"] == "no_account"
 
 
+def test_reads_return_the_callers_rows(client):
+    api, _ = client
+    headers = {"authorization": "Bearer alice-token"}
+    api.post("/accounts", json={"name": "HDFC", "currency": "INR", "opening_balance": 100000},
+             headers=headers)
+    api.post("/chat", json={"message": "spent 400 on dinner"}, headers=headers)
+    balances = api.get("/balances", headers=headers)
+    spending = api.get("/spending?start=2026-09-01&end=2026-09-30", headers=headers)
+    records = api.get("/records", headers=headers)
+    assert balances.status_code == 200
+    assert balances.json()["balances"][0]["name"] == "HDFC"
+    assert spending.status_code == 200
+    assert records.status_code == 200
+    assert records.json()["records"]
+
+
 def test_verified_token_is_reused_within_the_window(client):
     api, verifier = client
     for _ in range(3):
