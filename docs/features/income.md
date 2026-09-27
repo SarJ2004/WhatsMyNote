@@ -8,7 +8,7 @@ When you log an income event, the **Income Agent** ensures the specified amount 
 
 The Income Agent extracts:
 - `amount`: The exact numerical value (e.g., $5000.00).
-- `source`: Where the money came from (e.g., Employer, Freelance Client).
+- `source`: Where the money came from (e.g., salary, a client).
 - `account`: Where the money was deposited. If omitted, it automatically goes into your **Default Account**.
 - `income_date`: When you received it (defaults to today).
 - `notes`: Any context you provided.

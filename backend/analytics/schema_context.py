@@ -42,7 +42,7 @@ SCHEMA = {
     },
     "income_records": {
         "record_id": "INTEGER PRIMARY KEY, foreign key to records.id",
-        "source": "VARCHAR, who or what paid the user (e.g., salary, employer, a person's name)",
+        "source": "VARCHAR, who or what paid the user (e.g., salary, a client, a person's name)",
         "deposit_account": "VARCHAR, the account the money was deposited into",
         "amount": "FLOAT, the amount of income",
         "income_date": "DATE, when the income was received",

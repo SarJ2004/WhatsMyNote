@@ -1,122 +1,16 @@
-import re
 from textual.app import ComposeResult
-from textual.screen import Screen, ModalScreen
-from textual.widgets import Input, Label, RichLog, Static, SelectionList
-from textual.widgets.selection_list import Selection
-from textual.containers import Container, Center
+from textual.screen import Screen
+from textual.widgets import Input, Label, RichLog, Static
+from textual.containers import Center
 from textual.binding import Binding
 
 from whatsmynote.app.auth import load_session
-from whatsmynote.app.config import get_groq_api_key, set_groq_api_key
+from whatsmynote.app.config import get_model_key, set_model_key
 from whatsmynote.app.ui.constants import LOGO, get_commands_table
 from whatsmynote.app.ui.widgets import CustomFooter, InputArea, ThinkingIndicator
 from whatsmynote.app.ui.mixins.auth import AuthMixin
 from whatsmynote.app.ui.mixins.onboarding import OnboardingMixin
 from whatsmynote.app.ui.mixins.chat import ChatMixin
-
-class SelectionModal(ModalScreen[list[int]]):
-    CSS_PATH = "screens.tcss"
-
-    def __init__(self, items: list[dict], mode: str = "multi"):
-        super().__init__()
-        self.items = items
-        self.mode = mode
-        self.filtered_items = items
-        self.last_selected = set()
-
-    def compose(self) -> ComposeResult:
-        hint = "[dim]up/down: navigate, enter: confirm, esc: cancel[/dim]" if self.mode == "single" else "[dim]up/down: navigate, space: select, ctrl+a: select all, enter: confirm, esc: cancel[/dim]"
-        with Container(id="selection-container"):
-            yield Label(f"Search and select ({self.mode} mode)\n{hint}", markup=True, id="selection-label")
-            yield Input(placeholder="Fuzzy search...", id="selection-search")
-            yield SelectionList(id="selection-list")
-
-    def on_mount(self) -> None:
-        self.query_one("#selection-search").focus()
-        self._populate_list()
-
-    def _populate_list(self, query: str = ""):
-        selection_list = self.query_one("#selection-list", SelectionList)
-        selected = selection_list.selected
-        selection_list.clear_options()
-        
-        pattern = ".*".join(map(re.escape, query.lower()))
-        regex = re.compile(pattern)
-        
-        self.filtered_items = []
-        
-        keys = set()
-        for item in self.items:
-            keys.update([k for k in item.keys() if k != "id"])
-        keys = sorted(list(keys))
-        
-        max_widths = {k: len(str(k)) for k in keys}
-        for item in self.items:
-            for k in keys:
-                max_widths[k] = max(max_widths[k], len(str(item.get(k, ''))))
-        
-        for item in self.items:
-            raw_str = " ".join(str(v) for v in item.values())
-            
-            if not query or regex.search(raw_str.lower()):
-                self.filtered_items.append(item)
-                item_id = item.get("id")
-                
-                display_str = " | ".join(f"{str(item.get(k, '')):<{max_widths[k]}}" for k in keys)
-                
-                if item_id is not None:
-                    is_selected = item_id in selected
-                    selection_list.add_option(Selection(display_str, item_id, is_selected))
-
-    async def on_input_changed(self, event: Input.Changed) -> None:
-        if event.input.id == "selection-search":
-            self._populate_list(event.value)
-
-    def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
-        if self.mode == "single":
-            selection_list = self.query_one("#selection-list", SelectionList)
-            current_selected = set(selection_list.selected)
-            if len(current_selected) > 1:
-                new_items = current_selected - self.last_selected
-                if new_items:
-                    new_item = new_items.pop()
-                    selection_list.deselect_all()
-                    selection_list.select(new_item)
-                    self.last_selected = {new_item}
-            else:
-                self.last_selected = current_selected
-        else:
-            selection_list = self.query_one("#selection-list", SelectionList)
-            self.last_selected = set(selection_list.selected)
-
-    async def on_key(self, event) -> None:
-        if event.key == "escape":
-            self.dismiss([])
-        elif event.key == "down" and self.query_one("#selection-search").has_focus:
-            self.query_one("#selection-list").focus()
-        elif event.key == "enter":
-            selection_list = self.query_one("#selection-list", SelectionList)
-            if self.mode == "single":
-                highlighted = selection_list.highlighted
-                if highlighted is not None:
-                    opt = selection_list.get_option_at_index(highlighted)
-                    self.dismiss([opt.value])
-                else:
-                    self.dismiss([])
-            else:
-                selected = list(selection_list.selected)
-                if not selected:
-                    highlighted = selection_list.highlighted
-                    if highlighted is not None:
-                        opt = selection_list.get_option_at_index(highlighted)
-                        selected = [opt.value]
-                self.dismiss(selected)
-        elif event.key == "ctrl+a" and self.mode == "multi":
-            selection_list = self.query_one("#selection-list", SelectionList)
-            if len(selection_list.selected) == len(self.filtered_items):
-                selection_list.deselect_all()
-            else:
-                selection_list.select_all()
 
 class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
     CSS_PATH = "screens.tcss"
@@ -134,8 +28,6 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         self.temp_email = ""
         self.history = []
         self.history_index = 0
-        self.app_state = {}
-        self.current_search_results = []
         self.onboarding_data = {}
 
     def compose(self) -> ComposeResult:
@@ -177,10 +69,6 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         self.state = new_state
         if new_state == "IDLE":
             self.update_hints("[bold]enter[/bold] send  [bold]/[/bold] focus  /login  /logout  /config  /clear")
-        elif new_state == "AWAITING_CONFIRMATION":
-            self.update_hints("[bold]y/n[/bold] confirm  [bold]esc[/bold] cancel", "Confirmation Required")
-        elif new_state == "AWAITING_UPDATE_DETAILS":
-            self.update_hints("[bold]enter[/bold] submit  [bold]esc[/bold] cancel", "Awaiting Update Details")
         elif new_state == "AUTH_MODE_SELECT":
             self.update_hints("[bold]l[/bold] login  [bold]s[/bold] signup  [bold]f[/bold] forgot  [bold]o[/bold] oauth  [bold]q[/bold] cancel", "Auth Mode")
         elif new_state in ["AUTH_EMAIL", "AUTH_FORGOT_EMAIL"]:
@@ -200,18 +88,6 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
         
         if self.state != "IDLE":
             was_in_flow = True
-            
-        backend_active = any(
-            self.app_state.get(key) 
-            for key in ["awaiting_confirmation", "awaiting_update_details", "awaiting_selection"]
-        )
-        if backend_active:
-            was_in_flow = True
-            self.app_state["awaiting_confirmation"] = False
-            self.app_state["awaiting_update_details"] = False
-            self.app_state["awaiting_selection"] = False
-            self.app_state["selected_record_id"] = None
-            self.app_state["selected_record_ids"] = None
             
         if was_in_flow:
             log.write("[#888888]cancelled.[/#888888]")
@@ -252,8 +128,8 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
             messages.append(f"[#888888]Welcome back, {name}! Let's talk money 💸[/#888888]")
             self.check_onboarding_status()
             
-        if not get_groq_api_key():
-            messages.append("[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
+        if not get_model_key():
+            messages.append("[#ffaa55]No model key saved. Run /config to set one.[/#ffaa55]")
             
         if messages:
             self.query_one("#startup-messages", Static).update("\n".join(messages))
@@ -271,8 +147,8 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
                 full_name = metadata.get("full_name") or metadata.get("name") or ""
                 name = full_name.split(" ")[0] if full_name else user.email.split("@")[0]
                 log.write(f"[#888888]Session restored for {name}. Let's go! 🚀[/#888888]")
-            if not get_groq_api_key():
-                log.write("[#ffaa55]warning: GROQ_API_KEY not set. please run /config to set it up.[/#ffaa55]")
+            if not get_model_key():
+                log.write("[#ffaa55]No model key saved. Run /config to set one.[/#ffaa55]")
             
         val = event.value.strip()
         inp = event.input
@@ -294,11 +170,6 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
             log.write(f"\n[#ffaa55]> {val}[/#ffaa55]")
             log.write("[#888888]cancelled.[/#888888]")
             self.set_state("IDLE")
-            self.app_state["awaiting_confirmation"] = False
-            self.app_state["awaiting_update_details"] = False
-            self.app_state["awaiting_selection"] = False
-            self.app_state["selected_record_id"] = None
-            self.app_state["selected_record_ids"] = None
             inp.password = False
             return
 
@@ -325,7 +196,7 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
                     log.display = False
                     self.query_one("#startup-container").display = True
                 elif val == "/config":
-                    log.write("Enter your GROQ API Key:")
+                    log.write("Enter your model key:")
                     self.set_state("CONFIG_API_KEY")
                     inp.password = True
                 elif val in ["/quit", "/exit"]:
@@ -337,18 +208,14 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
                 if not user:
                     log.write("[#ffaa55]you must be logged in to chat. use /login or /signup[/#ffaa55]")
                     return
-                if not get_groq_api_key():
-                    log.write("[#ffaa55]groq api key missing. use /config to set it up.[/#ffaa55]")
+                if not get_model_key():
+                    log.write("[#ffaa55]Model key missing. Use /config to set it.[/#ffaa55]")
                     return
                 self.do_chat(val)
 
-        elif self.state in ["AWAITING_CONFIRMATION", "AWAITING_UPDATE_DETAILS"]:
-            self.set_state("IDLE")
-            self.do_chat(val)
-
         elif self.state == "CONFIG_API_KEY":
-            set_groq_api_key(val)
-            log.write("[#dddddd]groq api key saved successfully![/#dddddd]")
+            set_model_key(val)
+            log.write("[#dddddd]Model key saved.[/#dddddd]")
             inp.password = False
             self.set_state("IDLE")
 
@@ -404,105 +271,16 @@ class MainScreen(Screen, AuthMixin, OnboardingMixin, ChatMixin):
             else:
                 log.write("[#ffaa55]invalid provider. try google or github.[/#ffaa55]")
 
-        elif self.state == "OB_ACC_COUNT":
-            try:
-                count = int(val) if val else 1
-            except ValueError:
-                log.write("[#ffaa55]Please enter a valid number.[/#ffaa55]")
-                return
-            if count < 1:
-                log.write("[#ffaa55]You need at least 1 account.[/#ffaa55]")
-                return
-            self.onboarding_data["target_accounts"] = count
-            self.onboarding_data["current_index"] = 1
-            self.set_state("OB_ACC_NAME")
-            default_name = "Cash" if self.onboarding_data["current_index"] == 1 else f"Account {self.onboarding_data['current_index']}"
-            log.write(f"Account {self.onboarding_data['current_index']} name? [Default: {default_name}]")
-            
         elif self.state == "OB_ACC_NAME":
-            default_name = "Cash" if self.onboarding_data["current_index"] == 1 else f"Account {self.onboarding_data['current_index']}"
-            name = val if val else default_name
-            self.onboarding_data["current_account"]["name"] = name
+            self.onboarding_data["name"] = val or "Cash"
             self.set_state("OB_ACC_BAL")
-            log.write(f"Account {self.onboarding_data['current_index']} initial balance? [Default: 0]")
-            
+            log.write("Opening balance, in the smallest unit? [Default: 0]")
+
         elif self.state == "OB_ACC_BAL":
             try:
-                bal = float(val) if val else 0.0
+                bal = int(val) if val else 0
             except ValueError:
-                log.write("[#ffaa55]Please enter a valid number.[/#ffaa55]")
+                log.write("[#ffaa55]Enter a whole number.[/#ffaa55]")
                 return
-            self.onboarding_data["current_account"]["opening_balance"] = bal
-            self.onboarding_data["accounts"].append(self.onboarding_data["current_account"])
-            self.onboarding_data["current_account"] = {}
-            
-            if self.onboarding_data["current_index"] < self.onboarding_data["target_accounts"]:
-                self.onboarding_data["current_index"] += 1
-                self.set_state("OB_ACC_NAME")
-                default_name = f"Account {self.onboarding_data['current_index']}"
-                log.write(f"Account {self.onboarding_data['current_index']} name? [Default: {default_name}]")
-            else:
-                self.set_state("OB_ACC_DEF")
-                acc_list = ", ".join(f"{i+1}. {a['name']}" for i, a in enumerate(self.onboarding_data["accounts"]))
-                log.write(f"Which account should be default? ({acc_list}) [Default: 1]")
-
-        elif self.state == "OB_ACC_DEF":
-            try:
-                idx = int(val) if val else 1
-            except ValueError:
-                log.write("[#ffaa55]Please enter a valid number.[/#ffaa55]")
-                return
-            if not (1 <= idx <= self.onboarding_data["target_accounts"]):
-                log.write(f"[#ffaa55]Please enter a number between 1 and {self.onboarding_data['target_accounts']}.[/#ffaa55]")
-                return
-            self.onboarding_data["default_account_index"] = idx - 1
-            self.set_state("OB_BUDGET_ASK")
-            log.write("Do you want to set up budgets? (y/n) [Default: y]")
-
-        elif self.state == "OB_BUDGET_ASK":
-            ans = val.lower() if val else "y"
-            if ans in ["y", "yes"]:
-                self.set_state("OB_BUDGET_COUNT")
-                log.write("How many budgets? [Default: 1]")
-            else:
-                self.do_onboarding_setup()
-                
-        elif self.state == "OB_BUDGET_COUNT":
-            try:
-                count = int(val) if val else 1
-            except ValueError:
-                log.write("[#ffaa55]Please enter a valid number.[/#ffaa55]")
-                return
-            if count < 1:
-                self.do_onboarding_setup()
-                return
-            self.onboarding_data["target_budgets"] = count
-            self.onboarding_data["current_index"] = 1
-            self.set_state("OB_BUDGET_CAT")
-            default_cat = "Overall" if self.onboarding_data["current_index"] == 1 else f"Category {self.onboarding_data['current_index']}"
-            log.write(f"Budget {self.onboarding_data['current_index']} category? [Default: {default_cat}]")
-            
-        elif self.state == "OB_BUDGET_CAT":
-            default_cat = "Overall" if self.onboarding_data["current_index"] == 1 else f"Category {self.onboarding_data['current_index']}"
-            cat = val if val else default_cat
-            self.onboarding_data["current_budget"]["category"] = cat
-            self.set_state("OB_BUDGET_AMT")
-            log.write(f"Budget {self.onboarding_data['current_index']} amount? [Default: 0]")
-            
-        elif self.state == "OB_BUDGET_AMT":
-            try:
-                amt = float(val) if val else 0.0
-            except ValueError:
-                log.write("[#ffaa55]Please enter a valid number.[/#ffaa55]")
-                return
-            self.onboarding_data["current_budget"]["amount"] = amt
-            self.onboarding_data["budgets"].append(self.onboarding_data["current_budget"])
-            self.onboarding_data["current_budget"] = {}
-            
-            if self.onboarding_data["current_index"] < self.onboarding_data["target_budgets"]:
-                self.onboarding_data["current_index"] += 1
-                self.set_state("OB_BUDGET_CAT")
-                default_cat = f"Category {self.onboarding_data['current_index']}"
-                log.write(f"Budget {self.onboarding_data['current_index']} category? [Default: {default_cat}]")
-            else:
-                self.do_onboarding_setup()
+            self.onboarding_data["opening_balance"] = bal
+            self.do_onboarding_setup()

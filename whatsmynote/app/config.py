@@ -44,18 +44,21 @@ def get_session_path() -> Path:
     """Return the path to the Supabase session file."""
     return get_data_dir() / "session.json"
 
-def get_groq_api_key() -> str | None:
+def get_model_key() -> str | None:
     from dotenv import load_dotenv
     load_dotenv(get_env_path())
-    return os.environ.get("GROQ_API_KEY")
+    return os.environ.get("MODEL_KEY") or os.environ.get("GROQ_API_KEY")
 
-def set_groq_api_key(api_key: str) -> None:
+def set_model_key(api_key: str) -> None:
     env_path = get_env_path()
     content = ""
     if env_path.exists():
         content = env_path.read_text()
-    
-    lines = [line for line in content.splitlines() if not line.startswith("GROQ_API_KEY=")]
-    lines.append(f"GROQ_API_KEY={api_key}")
+
+    lines = [
+        line for line in content.splitlines()
+        if not line.startswith("MODEL_KEY=") and not line.startswith("GROQ_API_KEY=")
+    ]
+    lines.append(f"MODEL_KEY={api_key}")
     env_path.write_text("\n".join(lines) + "\n")
-    os.environ["GROQ_API_KEY"] = api_key
+    os.environ["MODEL_KEY"] = api_key

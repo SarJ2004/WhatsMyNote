@@ -68,7 +68,7 @@ Once the setup wizard finishes, your name will appear in the top-right header, a
 
 **Try typing your first message:**
 > *"I just grabbed a $5 coffee"*
-> *"My employer deposited my $5000 salary into HDFC"*
+> *"Salary of $5000 deposited into HDFC"*
 > *"My friend Alex borrowed $50 from me"*
 
 **Global Commands & Hotkeys:**
