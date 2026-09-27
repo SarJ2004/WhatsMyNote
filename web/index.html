@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhatsMyNote</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #1c1915;
+    --muted: #6b645c;
+    --line: #e4ddd3;
+    --paper: #faf7f2;
+    --card: #fff;
+    --accent: #9a3412;
+    --accent-soft: #fed7aa;
+    --good: #3f6212;
+    --bad: #9f1239;
+    --bar: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #f5f0e8;
+      --muted: #b5ada3;
+      --line: #3a342c;
+      --paper: #16130f;
+      --card: #221e19;
+      --accent: #fdba74;
+      --accent-soft: #7c2d12;
+      --good: #bef264;
+      --bad: #fda4af;
+      --bar: #fb923c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 16px/1.5 ui-sans-serif, system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  header, main { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.02em; }
+  h2 { font-size: 0.95rem; margin: 0 0 0.75rem; }
+  .lede { color: var(--muted); margin: 0.35rem 0 0; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 0 0 1rem;
+  }
+  form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
+  label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; color: var(--muted); }
+  input, select, button { font: inherit; padding: 0.45rem 0.65rem; border-radius: 8px; }
+  input, select { border: 1px solid var(--line); background: var(--paper); color: var(--ink); min-width: 0; }
+  button {
+    border: 0;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .error { color: var(--bad); min-height: 1.4em; margin: 0.5rem 0 0; width: 100%; }
+  .ok { color: var(--good); }
+  .balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
+  .balance strong { display: block; font-size: 1.35rem; }
+  .balance span { color: var(--muted); font-size: 0.85rem; }
+  .chart { width: 100%; overflow-x: auto; }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .chart text { fill: var(--ink); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.4rem 0.35rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+  .chat-log { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 0.75rem; max-height: 280px; overflow: auto; }
+  .bubble { padding: 0.45rem 0.7rem; border-radius: 10px; max-width: 40rem; }
+  .bubble.me { align-self: flex-end; background: var(--accent-soft); }
+  .bubble.them { align-self: flex-start; background: var(--paper); border: 1px solid var(--line); }
+  .empty { color: var(--muted); margin: 0; }
+  #app[hidden], #signed-out[hidden] { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>WhatsMyNote</h1>
+    <p class="lede">Tell it what you spent. It keeps the books and answers questions about them.</p>
+  </div>
+  <button id="signout" class="quiet" hidden>Sign out</button>
+</header>
+<main>
+  <section id="signed-out" class="card">
+    <h2>Sign in</h2>
+    <p class="lede">Use the email and password for your own books. A first visit creates the account here, then asks you to name an account before anything is booked.</p>
+    <form id="signin">
+      <label>Email <input id="email" type="email" autocomplete="username" required></label>
+      <label>Password <input id="password" type="password" autocomplete="current-password" required minlength="6"></label>
+      <button id="signin-button" type="submit">Sign in</button>
+      <button id="signup-button" class="quiet" type="button">Create account</button>
+      <p id="signin-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="card">
+      <h2>Balances</h2>
+      <div id="balances" class="balances"><p class="empty">No balances yet.</p></div>
+    </div>
+
+    <div id="setup" class="card" hidden>
+      <h2>Set up an account</h2>
+      <p class="lede">A booking needs an account first. The opening balance is in major units, such as 1000.00.</p>
+      <form id="account-form">
+        <label>Name <input id="account-name" required placeholder="Cash"></label>
+        <label>Currency
+          <select id="account-currency">
+            <option value="INR">INR</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+          </select>
+        </label>
+        <label>Opening balance <input id="account-balance" inputmode="decimal" required value="0"></label>
+        <button type="submit">Create account</button>
+        <p id="setup-error" class="error" role="alert"></p>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Spending by category</h2>
+      <form id="spending-filter">
+        <label>From <input id="spend-from" type="date"></label>
+        <label>To <input id="spend-to" type="date"></label>
+        <button class="quiet" type="submit">Show</button>
+      </form>
+      <div id="chart" class="chart"><p class="empty">No spending in this range.</p></div>
+      <p id="spending-error" class="error" role="alert"></p>
+    </div>
+
+    <div class="card">
+      <h2>Records</h2>
+      <form id="record-filter">
+        <label>Type
+          <select id="record-type">
+            <option value="">All</option>
+            <option>EXPENSE</option>
+            <option>INCOME</option>
+            <option>TRANSFER</option>
+            <option>LENDING</option>
+            <option>ACCOUNT</option>
+            <option>BUDGET</option>
+          </select>
+        </label>
+        <label>From <input id="record-from" type="date"></label>
+        <label>To <input id="record-to" type="date"></label>
+        <label>Search <input id="record-q" placeholder="dinner"></label>
+        <button class="quiet" type="submit">Filter</button>
+      </form>
+      <div id="records"><p class="empty">No records yet.</p></div>
+      <p id="records-error" class="error" role="alert"></p>
+    </div>
+
+    <div class="card">
+      <h2>Chat</h2>
+      <div id="chat-log" class="chat-log"></div>
+      <form id="chat">
+        <label style="flex:1">Message
+          <input id="message" required placeholder="spent 400 on dinner" autocomplete="off">
+        </label>
+        <button type="submit">Send</button>
+        <p id="chat-error" class="error" role="alert"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const API = "https://whatsmynote-staging.onrender.com";
+  const SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_iLiN9zD9sD_TSP6HcceLcw_3Zk6v1Wk";
+
+  const ERRORS = {
+    unauthenticated: "Sign in again. That session is no longer accepted.",
+    bad_key: "That model key was rejected.",
+    rate_unavailable: "Exchange rates are unavailable right now, so nothing was booked.",
+    no_account: "Add an account before booking anything.",
+    unsupported_currency: "That currency is not supported, so nothing was booked.",
+    ambiguous: "That matches more than one record, so nothing was changed.",
+    unparseable: "That message could not be read, so nothing was booked."
+  };
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const signedOut = document.getElementById("signed-out");
+  const app = document.getElementById("app");
+  const signout = document.getElementById("signout");
+  const setup = document.getElementById("setup");
+
+  function sentence(body) {
+    if (body && ERRORS[body.code]) return ERRORS[body.code];
+    return "Something went wrong, and nothing was changed.";
+  }
+
+  function show(el, body) {
+    el.textContent = body ? sentence(body) : "";
+  }
+
+  function money(minor, currency) {
+    const value = (Number(minor) / 100).toFixed(2);
+    return currency ? value + " " + currency : value;
+  }
+
+  function isoDate(date) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return date.getFullYear() + "-" + month + "-" + day;
+  }
+
+  function todayISO() {
+    return isoDate(new Date());
+  }
+
+  function monthStart() {
+    const now = new Date();
+    return isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  }
+
+  async function accessToken() {
+    const { data } = await supabase.auth.getSession();
+    return data.session ? data.session.access_token : null;
+  }
+
+  async function api(path, options) {
+    const token = await accessToken();
+    if (!token) {
+      const error = new Error("unauthenticated");
+      error.body = { code: "unauthenticated" };
+      throw error;
+    }
+    const response = await fetch(API + path, {
+      ...options,
+      headers: {
+        "authorization": "Bearer " + token,
+        ...(options && options.body ? { "content-type": "application/json" } : {}),
+        ...(options && options.headers)
+      }
+    });
+    let body = {};
+    try { body = await response.json(); } catch (err) { body = {}; }
+    if (response.status === 401) body = { code: "unauthenticated" };
+    if (!response.ok) {
+      const error = new Error(body.code || "failed");
+      error.body = body;
+      throw error;
+    }
+    return body;
+  }
+
+  function listOf(body, key) {
+    if (Array.isArray(body)) return body;
+    if (body && Array.isArray(body[key])) return body[key];
+    return [];
+  }
+
+  function renderBalances(body) {
+    const rows = listOf(body, "balances");
+    const host = document.getElementById("balances");
+    setup.hidden = rows.length > 0;
+    if (!rows.length) {
+      host.innerHTML = '<p class="empty">No balances yet.</p>';
+      return;
+    }
+    host.replaceChildren(...rows.map((row) => {
+      const card = document.createElement("div");
+      card.className = "balance";
+      const amount = document.createElement("strong");
+      amount.textContent = money(row.current_balance ?? row.balance ?? row.amount, row.currency);
+      const name = document.createElement("span");
+      name.textContent = (row.name || "Account") + (row.is_default ? " · default" : "");
+      card.append(amount, name);
+      return card;
+    }));
+  }
+
+  function renderChart(body) {
+    const rows = listOf(body, "spending").map((row) => ({
+      category: String(row.category || row.name || "other"),
+      amount: Number(row.converted_minor ?? row.amount ?? row.total ?? 0)
+    })).filter((row) => row.amount > 0);
+    const host = document.getElementById("chart");
+    host.replaceChildren();
+    if (!rows.length) {
+      host.innerHTML = '<p class="empty">No spending in this range.</p>';
+      return;
+    }
+    const width = 640;
+    const barH = 28;
+    const gap = 10;
+    const labelW = 120;
+    const height = rows.length * (barH + gap) + 8;
+    const max = Math.max(...rows.map((row) => row.amount));
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Spending by category");
+    rows.forEach((row, index) => {
+      const y = index * (barH + gap);
+      const barW = Math.max(2, ((width - labelW - 90) * row.amount) / max);
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", "0");
+      label.setAttribute("y", String(y + 18));
+      label.textContent = row.category;
+      const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      bar.setAttribute("x", String(labelW));
+      bar.setAttribute("y", String(y + 4));
+      bar.setAttribute("width", String(barW));
+      bar.setAttribute("height", String(barH - 6));
+      bar.setAttribute("rx", "4");
+      bar.setAttribute("fill", "var(--bar)");
+      const value = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      value.setAttribute("x", String(labelW + barW + 8));
+      value.setAttribute("y", String(y + 18));
+      value.textContent = money(row.amount);
+      svg.append(label, bar, value);
+    });
+    host.append(svg);
+  }
+
+  function renderRecords(body) {
+    const rows = listOf(body, "records");
+    const host = document.getElementById("records");
+    host.replaceChildren();
+    if (!rows.length) {
+      host.innerHTML = '<p class="empty">No records match that filter.</p>';
+      return;
+    }
+    const table = document.createElement("table");
+    const head = document.createElement("tr");
+    ["When", "Type", "Detail", "Amount"].forEach((label) => {
+      const cell = document.createElement("th");
+      cell.textContent = label;
+      head.append(cell);
+    });
+    table.append(head);
+    rows.forEach((row) => {
+      const tr = document.createElement("tr");
+      const detail = row.category || row.merchant || row.source || row.person
+        || row.name || row.raw_text || "";
+      [row.date || row.expense_date || row.created_at || "",
+       row.record_type || row.type || "",
+       detail,
+       money(row.amount_minor ?? row.amount ?? row.converted_minor, row.currency)
+      ].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+        tr.append(cell);
+      });
+      table.append(tr);
+    });
+    host.append(table);
+  }
+
+  function addBubble(text, mine) {
+    const bubble = document.createElement("div");
+    bubble.className = "bubble " + (mine ? "me" : "them");
+    bubble.textContent = text;
+    const log = document.getElementById("chat-log");
+    log.append(bubble);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  async function refresh() {
+    const [balances, spending, records] = await Promise.allSettled([
+      api("/balances"),
+      loadSpending(),
+      loadRecords()
+    ]);
+    if (balances.status === "fulfilled") renderBalances(balances.value);
+    else {
+      setup.hidden = false;
+      show(document.getElementById("setup-error"), balances.reason.body);
+    }
+    if (spending.status === "rejected") show(document.getElementById("spending-error"), spending.reason.body);
+    if (records.status === "rejected") show(document.getElementById("records-error"), records.reason.body);
+  }
+
+  function query(params) {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) search.set(key, value);
+    });
+    const text = search.toString();
+    return text ? "?" + text : "";
+  }
+
+  async function loadSpending() {
+    document.getElementById("spending-error").textContent = "";
+    const body = await api("/spending" + query({
+      start: document.getElementById("spend-from").value,
+      end: document.getElementById("spend-to").value
+    }));
+    renderChart(body);
+    return body;
+  }
+
+  async function loadRecords() {
+    document.getElementById("records-error").textContent = "";
+    const body = await api("/records" + query({
+      type: document.getElementById("record-type").value,
+      start: document.getElementById("record-from").value,
+      end: document.getElementById("record-to").value,
+      q: document.getElementById("record-q").value.trim()
+    }));
+    renderRecords(body);
+    return body;
+  }
+
+  async function showSignedIn() {
+    signedOut.hidden = true;
+    app.hidden = false;
+    signout.hidden = false;
+    document.getElementById("spend-from").value = monthStart();
+    document.getElementById("spend-to").value = todayISO();
+    await refresh();
+  }
+
+  function showSignedOut() {
+    app.hidden = true;
+    signout.hidden = true;
+    signedOut.hidden = false;
+  }
+
+  document.getElementById("signin").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const error = document.getElementById("signin-error");
+    error.textContent = "";
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    document.getElementById("password").value = "";
+    if (authError) {
+      error.textContent = "That email or password was not accepted.";
+      return;
+    }
+    await showSignedIn();
+  });
+
+  document.getElementById("signup-button").addEventListener("click", async () => {
+    const error = document.getElementById("signin-error");
+    error.textContent = "";
+    const form = document.getElementById("signin");
+    if (!form.reportValidity()) return;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const { error: authError } = await supabase.auth.signUp({ email, password });
+    document.getElementById("password").value = "";
+    if (authError) {
+      error.textContent = "That account could not be created. Try a different email.";
+      return;
+    }
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      await showSignedIn();
+      return;
+    }
+    error.textContent = "Account created. Confirm the email, then sign in.";
+  });
+
+  document.getElementById("account-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const error = document.getElementById("setup-error");
+    error.textContent = "";
+    const major = document.getElementById("account-balance").value.replace(/,/g, "");
+    if (!/^\d+(\.\d{1,2})?$/.test(major)) {
+      error.textContent = "Enter the opening balance as a number, such as 1000.00.";
+      return;
+    }
+    const [whole, fraction = ""] = major.split(".");
+    const opening = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+    try {
+      await api("/accounts", {
+        method: "POST",
+        body: JSON.stringify({
+          name: document.getElementById("account-name").value.trim(),
+          currency: document.getElementById("account-currency").value,
+          opening_balance: opening
+        })
+      });
+      document.getElementById("account-name").value = "";
+      await refresh();
+    } catch (err) {
+      show(error, err.body);
+    }
+  });
+
+  document.getElementById("spending-filter").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try { await loadSpending(); }
+    catch (err) { show(document.getElementById("spending-error"), err.body); }
+  });
+
+  document.getElementById("record-filter").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try { await loadRecords(); }
+    catch (err) { show(document.getElementById("records-error"), err.body); }
+  });
+
+  document.getElementById("chat").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const error = document.getElementById("chat-error");
+    error.textContent = "";
+    if (document.getElementById("balances").querySelector(".balance") === null) {
+      setup.hidden = false;
+      show(error, { code: "no_account" });
+      return;
+    }
+    const input = document.getElementById("message");
+    const message = input.value.trim();
+    if (!message) return;
+    addBubble(message, true);
+    input.value = "";
+    try {
+      const body = await api("/chat", {
+        method: "POST",
+        body: JSON.stringify({ message })
+      });
+      if (body.confirmation || body.needs_confirmation || body.token) {
+        addBubble("That needs a confirmation before anything changes.", false);
+      } else if (typeof body.reply === "string") {
+        addBubble(body.reply, false);
+      } else if (typeof body.sentence === "string") {
+        addBubble(body.sentence, false);
+      } else if (body.balance !== undefined) {
+        addBubble("Booked. Balance is now " + money(body.balance) + ".", false);
+      } else {
+        addBubble("Done.", false);
+      }
+      await refresh();
+    } catch (err) {
+      show(error, err.body);
+      addBubble(sentence(err.body), false);
+      if (err.body && err.body.code === "no_account") setup.hidden = false;
+    }
+  });
+
+  signout.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    showSignedOut();
+  });
+
+  const { data } = await supabase.auth.getSession();
+  if (data.session) await showSignedIn();
+</script>
+</body>
+</html>
