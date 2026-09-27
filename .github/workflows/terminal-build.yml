@@ -19,7 +19,7 @@ jobs:
           - os: macos-14
             artifact: whatsmynote-macos
           - os: windows-latest
-            artifact: whatsmynote-windows.exe
+            artifact: whatsmynote-windows
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -70,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
           test -f dist/whatsmynote-macos/whatsmynote-macos
-          test -f dist/whatsmynote-windows.exe/whatsmynote-windows.exe
+          test -f dist/whatsmynote-windows/whatsmynote-windows.exe
 
       - name: Upload release assets
         env:
@@ -79,5 +79,5 @@ jobs:
           set -euo pipefail
           gh release upload "${GITHUB_REF_NAME}" \
             dist/whatsmynote-macos/whatsmynote-macos \
-            dist/whatsmynote-windows.exe/whatsmynote-windows.exe \
+            dist/whatsmynote-windows/whatsmynote-windows.exe \
             --clobber
