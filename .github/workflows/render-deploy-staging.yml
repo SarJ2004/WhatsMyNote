@@ -24,6 +24,7 @@ jobs:
         uses: JorgeLNJunior/render-deploy@v1.5.0
         with:
           service_id: ${{ secrets.STAGING_RENDER_SERVICE_ID }}
+          start_command: .venv/bin/uvicorn backend.live:app --host 0.0.0.0 --port $PORT
           api_key: ${{ secrets.RENDER_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           clear_cache: false
