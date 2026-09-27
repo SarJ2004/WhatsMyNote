@@ -9,7 +9,7 @@ def balances(conn):
             "order by a.name"
         )
         return [
-            {"name": row[0], "currency": row[1].strip(), "balance": int(row[2])}
+            {"name": row[0], "currency": row[1].strip(), "current_balance": int(row[2])}
             for row in cur.fetchall()
         ]
 
