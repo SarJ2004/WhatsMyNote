@@ -1,31 +1,3 @@
-SelectionModal {
-    align: center middle;
-    background: rgba(0, 0, 0, 0.8);
-}
-#selection-container {
-    width: 80%;
-    max-width: 120;
-    height: 80%;
-    background: #111111;
-    border: solid #888888;
-    padding: 1 2;
-}
-#selection-label {
-    width: 100%;
-    margin-bottom: 1;
-}
-#selection-search {
-    border: none;
-    background: #222222;
-    color: #dddddd;
-    margin-bottom: 1;
-}
-#selection-list {
-    background: #111111;
-    border: none;
-    height: 1fr;
-}
-
 MainScreen {
     background: #000000;
     color: #e0e0e0;

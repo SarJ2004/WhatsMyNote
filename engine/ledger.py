@@ -99,6 +99,9 @@ def apply(conn, action):
         if kind == "expense":
             record_id, name, currency = _resolve_account(cur, action.get("account"))
             _book_expense(cur, user, action, record_id, name)
+        elif kind == "income":
+            record_id, name, currency = _resolve_account(cur, action.get("account"))
+            _book_income(cur, user, action, record_id, name)
         elif kind == "transfer":
             _book_transfer(cur, user, action)
         else:
@@ -122,6 +125,27 @@ def _book_expense(cur, user, action, account_id, account_name):
     )
     cur.execute(
         "update account_records set current_balance = current_balance - %s "
+        "where record_id = %s",
+        (action["amount"], account_id),
+    )
+
+
+def _book_income(cur, user, action, account_id, account_name):
+    cur.execute(
+        "insert into records (user_id, record_type, raw_text) "
+        "values (%s, 'INCOME', %s) returning id",
+        (user, action.get("raw_text", "income")),
+    )
+    record_id = cur.fetchone()[0]
+    cur.execute(
+        "insert into income_records (record_id, amount, amount_minor, currency, "
+        "converted_minor, source, deposit_account, income_date) "
+        "values (%s, %s, %s, %s, %s, %s, %s, %s)",
+        (record_id, action["amount"], action["amount"], action["currency"],
+         action["amount"], action.get("source") or "income", account_name, action["date"]),
+    )
+    cur.execute(
+        "update account_records set current_balance = current_balance + %s "
         "where record_id = %s",
         (action["amount"], account_id),
     )
