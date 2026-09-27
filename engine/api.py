@@ -21,6 +21,10 @@ def build_app(dsn, verify):
     app = FastAPI()
     cache = {}
 
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
     def identity(request):
         header = request.headers.get("authorization", "")
         if not header.startswith("Bearer "):

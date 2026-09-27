@@ -36,6 +36,13 @@ def client():
     return TestClient(app), verifier
 
 
+def test_health_is_public(client):
+    api, _ = client
+    response = api.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
 def test_request_without_a_token_is_unauthenticated(client):
     api, _ = client
     response = api.post("/chat", json={"message": "spent 400 on dinner"})
