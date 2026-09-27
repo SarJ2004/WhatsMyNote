@@ -31,6 +31,7 @@ Control your lending, borrowing, expenses, income, and transfers through pure na
   - [Architecture & Tech Stack](#-architecture--tech-stack)
 - [Getting Started (For Users)](#-getting-started-for-users)
   - [Installation](#installation)
+  - [Download](#download)
   - [First Run & Authentication](#first-run--authentication)
 - [Documentation & Features](#-documentation--features)
 - [Local Development (For Contributors)](#-local-development-for-contributors)
@@ -120,6 +121,15 @@ uv tool install whatsmynote
 # Or standard pip:
 pip install whatsmynote
 ```
+
+### Download
+
+Each version tag also publishes one-file terminal builds. Both Mac and Windows can use either the download or the Python install (`uv tool install whatsmynote`).
+
+| Platform | Asset |
+|---|---|
+| macOS | `whatsmynote-macos` |
+| Windows | `whatsmynote-windows.exe` |
 
 ### First Run & Authentication
 
