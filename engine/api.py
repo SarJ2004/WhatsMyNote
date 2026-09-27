@@ -86,3 +86,24 @@ def build_app(dsn, verify):
         return {"balances": []}
 
     return app
+
+
+def _live_verify(token):
+    import os
+    from supabase import create_client
+
+    url = os.environ["SUPABASE_URL"]
+    key = os.environ["SUPABASE_KEY"]
+    client = create_client(url, key)
+    result = client.auth.get_user(token)
+    if not result or not result.user:
+        return None
+    return result.user.id
+
+
+def create_live_app():
+    """The process Render starts. Tests build their own app and never call this."""
+    import os
+
+    database_url = os.environ["DATABASE_URL"].replace("postgresql+psycopg2://", "postgresql://")
+    return build_app(database_url, _live_verify)
