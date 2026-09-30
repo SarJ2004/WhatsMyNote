@@ -8,7 +8,8 @@ into, so two currencies are never added together.
 
 from engine.parse import date_range
 
-_ME = "nullif(current_setting('request.jwt.claim.sub', true), '')::uuid"
+# The caller, as text: user ids are uuid in a new database and varchar in an older one.
+_ME = "nullif(current_setting('request.jwt.claim.sub', true), '')"
 
 # One row per entry, in one shape, for lists and for finding what to change. An
 # entry's amount is the one the person typed, in the currency they typed it in;
@@ -51,7 +52,7 @@ def balances(conn):
     with conn.cursor() as cur:
         cur.execute(
             "select a.name, a.currency, a.current_balance from account_records a "
-            f"join records r on r.id = a.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = a.record_id where r.user_id::text = {_ME} "
             "order by a.name"
         )
         return [
@@ -67,7 +68,7 @@ def account_balances(conn, account_ids):
     with conn.cursor() as cur:
         cur.execute(
             "select a.record_id, a.name, a.currency, a.current_balance from account_records a "
-            f"join records r on r.id = a.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = a.record_id where r.user_id::text = {_ME} "
             "and a.record_id = any(%s)",
             (list(account_ids),),
         )
@@ -80,7 +81,7 @@ def spending_by_category(conn, start, end):
     with conn.cursor() as cur:
         cur.execute(
             "select category, sum(converted_minor) from expense_records e "
-            f"join records r on r.id = e.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = e.record_id where r.user_id::text = {_ME} "
             "and e.expense_date between %s and %s "
             "group by category order by category",
             (start, end),
@@ -95,7 +96,7 @@ def spending(conn, start, end, category=None, text=None):
         cur.execute(
             "select e.category, coalesce(e.converted_currency, e.currency), "
             "sum(e.converted_minor), count(*) from expense_records e "
-            f"join records r on r.id = e.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = e.record_id where r.user_id::text = {_ME} "
             "and e.expense_date between %s and %s" + clauses +
             " group by 1, 2 order by 3 desc, 1",
             [start, end] + params,
@@ -110,7 +111,7 @@ def income(conn, start, end, text=None):
         cur.execute(
             "select i.source, coalesce(i.converted_currency, i.currency), "
             "sum(i.converted_minor), count(*) from income_records i "
-            f"join records r on r.id = i.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = i.record_id where r.user_id::text = {_ME} "
             "and i.income_date between %s and %s" + clauses +
             " group by 1, 2 order by 3 desc, 1",
             [start, end] + params,
@@ -134,7 +135,7 @@ def owed(conn, today, direction=None, person=None):
             "sum(case when l.is_repayment then -l.amount_minor else l.amount_minor end), "
             "min(l.expected_payback_by) filter (where not l.is_repayment) "
             "from lending_records l join records r on r.id = l.record_id "
-            f"where r.user_id = {_ME}" + clauses +
+            f"where r.user_id::text = {_ME}" + clauses +
             " group by lower(l.person), l.direction, l.currency "
             "having sum(case when l.is_repayment then -l.amount_minor "
             "else l.amount_minor end) > 0 order by 1, 2",
@@ -154,14 +155,14 @@ def budgets(conn, today, category=None):
             "select b.category, b.currency, b.amount_minor, b.period, p.start, p.finish, "
             "coalesce((select sum(e.converted_minor) from expense_records e "
             "join records er on er.id = e.record_id "
-            f"where er.user_id = {_ME} and lower(e.category) = lower(b.category) "
+            f"where er.user_id::text = {_ME} and lower(e.category) = lower(b.category) "
             "and e.expense_date between p.start and p.finish "
             "and coalesce(e.converted_currency, e.currency) = b.currency), 0) "
             "from budget_records b join records r on r.id = b.record_id "
             "cross join lateral (select case when b.period = 'weekly' then %s::date "
             "else %s::date end as start, case when b.period = 'weekly' then %s::date "
             "else %s::date end as finish) p "
-            f"where r.user_id = {_ME}"
+            f"where r.user_id::text = {_ME}"
             + (" and lower(b.category) = lower(%s)" if category else "")
             + " order by b.category",
             [week[0], month[0], week[1], month[1]] + ([category] if category else []),
@@ -173,7 +174,7 @@ def budgets(conn, today, category=None):
 
 def records(conn, record_type="", start="", end="", text=""):
     """Entries as the site lists them, most recent first."""
-    clauses, params = [f"r.user_id = {_ME}"], []
+    clauses, params = [f"r.user_id::text = {_ME}"], []
     if record_type:
         clauses.append("r.record_type::text = %s")
         params.append(record_type.upper())
@@ -200,7 +201,7 @@ def budget(conn, record_id):
     with conn.cursor() as cur:
         cur.execute(
             "select b.category, b.amount_minor, b.currency, b.period from budget_records b "
-            f"join records r on r.id = b.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = b.record_id where r.user_id::text = {_ME} "
             "and b.record_id = %s",
             (record_id,),
         )
@@ -232,18 +233,18 @@ def context(conn):
             "(select coalesce(json_agg(json_build_object('name', a.name, 'currency', "
             "trim(a.currency), 'default', a.is_default) order by a.name), '[]') "
             "from account_records a join records r on r.id = a.record_id "
-            f"where r.user_id = {_ME}), "
+            f"where r.user_id::text = {_ME}), "
             "(select coalesce(json_agg(category order by seen desc), '[]') from ("
             "select category, max(seen) as seen from ("
             "select lower(b.category) as category, now() as seen from budget_records b "
-            f"join records r on r.id = b.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = b.record_id where r.user_id::text = {_ME} "
             "union all select * from (select lower(e.category), r.created_at "
             "from expense_records e join records r on r.id = e.record_id "
-            f"where r.user_id = {_ME} order by r.created_at desc limit 200) recent"
+            f"where r.user_id::text = {_ME} order by r.created_at desc limit 200) recent"
             ") c group by category order by max(seen) desc limit 30) named), "
             "(select coalesce(json_agg(person), '[]') from ("
             "select (array_agg(l.person order by r.id))[1] as person from lending_records l "
-            f"join records r on r.id = l.record_id where r.user_id = {_ME} "
+            f"join records r on r.id = l.record_id where r.user_id::text = {_ME} "
             "and r.settled_at is null group by lower(l.person) "
             "order by max(r.created_at) desc limit 20) open)"
         )
@@ -280,7 +281,7 @@ def _entries(conn, kinds, text=None, amount=None, start=None, end=None, order="d
 
 def _entry_select(kind):
     return (f"select * from (select r.id, '{kind}'::text as kind, {_ENTRIES[kind]} "
-            f"where r.user_id = {_ME}) as q (id, kind, day, amount, currency, label, words, cost) "
+            f"where r.user_id::text = {_ME}) as q (id, kind, day, amount, currency, label, words, cost) "
             "where true")
 
 

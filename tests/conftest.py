@@ -1,12 +1,13 @@
 import psycopg2
 import pytest
 
-from tests.support import DSN, reset_schema
+from tests.support import DSN, SCHEMAS, reset_schema
 
 
-@pytest.fixture
-def dsn():
-    reset_schema(DSN)
+@pytest.fixture(params=SCHEMAS)
+def dsn(request):
+    """Every database test runs on a fresh database and on staging's legacy schema."""
+    reset_schema(DSN, request.param)
     return DSN
 
 

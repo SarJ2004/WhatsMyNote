@@ -42,6 +42,7 @@ alter table lending_records
     alter column converted_minor type bigint;
 
 create index if not exists records_user_type on records (user_id, record_type);
+create index if not exists records_user_text on records ((user_id::text));
 
 -- The old backend filled these timestamps in code, so an older database has no default.
 alter table records alter column created_at set default now();
@@ -62,6 +63,8 @@ create table if not exists model_usage (
 
 -- A detail row is visible only when the record it belongs to is the caller's.
 -- A pooled connection keeps an emptied claim as '' rather than null, hence nullif.
+-- The user id is compared as text: a database built by 0001 stores it as uuid,
+-- and one the old backend created stores it as varchar, with ids as integer.
 do $$
 declare
     detail text;
@@ -75,9 +78,9 @@ begin
         execute format(
             'create policy %1$I on %2$I '
             'using (exists (select 1 from records r where r.id = %2$I.record_id '
-            'and r.user_id = nullif(current_setting(''request.jwt.claim.sub'', true), '''')::uuid)) '
+            'and r.user_id::text = nullif(current_setting(''request.jwt.claim.sub'', true), ''''))) '
             'with check (exists (select 1 from records r where r.id = %2$I.record_id '
-            'and r.user_id = nullif(current_setting(''request.jwt.claim.sub'', true), '''')::uuid))',
+            'and r.user_id::text = nullif(current_setting(''request.jwt.claim.sub'', true), '''')))',
             detail || '_owner', detail);
     end loop;
 end $$;
@@ -86,15 +89,15 @@ alter table records enable row level security;
 drop policy if exists tenant_isolation on records;
 drop policy if exists records_owner on records;
 create policy records_owner on records
-    using (user_id = nullif(current_setting('request.jwt.claim.sub', true), '')::uuid)
-    with check (user_id = nullif(current_setting('request.jwt.claim.sub', true), '')::uuid);
+    using (user_id::text = nullif(current_setting('request.jwt.claim.sub', true), ''))
+    with check (user_id::text = nullif(current_setting('request.jwt.claim.sub', true), ''));
 
 alter table confirmations enable row level security;
 drop policy if exists tenant_isolation on confirmations;
 drop policy if exists confirmations_owner on confirmations;
 create policy confirmations_owner on confirmations
-    using (user_id = nullif(current_setting('request.jwt.claim.sub', true), '')::uuid)
-    with check (user_id = nullif(current_setting('request.jwt.claim.sub', true), '')::uuid);
+    using (user_id::text = nullif(current_setting('request.jwt.claim.sub', true), ''))
+    with check (user_id::text = nullif(current_setting('request.jwt.claim.sub', true), ''));
 
 -- Reference rates are public data. Users may read them; only the engine writes.
 alter table fx_rates enable row level security;
