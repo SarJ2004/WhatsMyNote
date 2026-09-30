@@ -281,8 +281,8 @@ def _entries(conn, kinds, text=None, amount=None, start=None, end=None, order="d
 
 def _entry_select(kind):
     return (f"select * from (select r.id, '{kind}'::text as kind, {_ENTRIES[kind]} "
-            f"where r.user_id::text = {_ME}) as q (id, kind, day, amount, currency, label, words, cost) "
-            "where true")
+            f"where r.user_id::text = {_ME}) "
+            "as q (id, kind, day, amount, currency, label, words, cost) where true")
 
 
 def _filters(category, category_clause, text, haystack):
