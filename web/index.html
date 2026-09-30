@@ -2,490 +2,1020 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://wxnihqslmljbidbortzp.supabase.co wss://wxnihqslmljbidbortzp.supabase.co https://cdn.jsdelivr.net; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>WhatsMyNote</title>
+<meta name="description" content="Keep your money in plain sentences. Book spending by typing, see balances, and see where the month went.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6b52'/%3E%3Cpath d='M9 11h14M9 16h14M9 21h9' stroke='%23f4faf6' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,560;9..144,640&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light dark;
-    --ink: #1c1915;
-    --muted: #6b645c;
-    --faint: #8a8178;
-    --line: #e4ddd3;
-    --paper: #f6f1e8;
+    --paper: #f5f1ea;
     --card: #fffdf9;
-    --wash: #efe8dc;
-    --accent: #9a3412;
-    --accent-ink: #fffaf5;
-    --accent-soft: #fde6d2;
-    --good: #3f6212;
-    --bad: #9f1239;
-    --bar: #c2410c;
-    --bar-track: #f3e6da;
-    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04), 0 12px 32px rgba(28, 25, 21, 0.05);
-    --focus: #9a3412;
+    --raised: #ffffff;
+    --wash: #efe9df;
+    --ink: #1d1a16;
+    --muted: #665f57;
+    --faint: #756d63;
+    --line: #e5ddd1;
+    --line-strong: #d4cabb;
+    --accent: #2f6b52;
+    --accent-hover: #285c46;
+    --accent-ink: #f4faf6;
+    --accent-soft: #e1ede6;
+    --accent-line: #b9d4c5;
+    --warm: #9c4521;
+    --warm-soft: #f7e4d8;
+    --blue-soft: #e0e9f4;
+    --blue: #2f5a8a;
+    --bad: #a3342a;
+    --bad-soft: #f8e3df;
+    --bar: #2f6b52;
+    --bar-track: #ece5da;
+    --shadow: 0 1px 0 rgba(29, 26, 22, 0.03), 0 10px 30px -12px rgba(29, 26, 22, 0.12);
+    --shadow-lift: 0 24px 60px -20px rgba(29, 26, 22, 0.28);
+    --focus: #2f6b52;
+    --radius: 18px;
+    --radius-sm: 11px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --ink: #f5f0e8;
-      --muted: #b5ada3;
-      --faint: #8f877e;
-      --line: #3a342c;
-      --paper: #16130f;
-      --card: #221e19;
-      --wash: #2a241e;
-      --accent: #e8a06a;
-      --accent-ink: #1c120c;
-      --accent-soft: #5c3318;
-      --good: #bef264;
-      --bad: #fda4af;
-      --bar: #fb923c;
-      --bar-track: #3a2a20;
-      --shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 16px 40px rgba(0, 0, 0, 0.28);
-      --focus: #fdba74;
+      --paper: #14120f;
+      --card: #1d1a16;
+      --raised: #25211c;
+      --wash: #26221c;
+      --ink: #f3eee6;
+      --muted: #b3aba0;
+      --faint: #8b8378;
+      --line: #342f28;
+      --line-strong: #463f36;
+      --accent: #86c7a6;
+      --accent-hover: #9dd4b7;
+      --accent-ink: #0d1c15;
+      --accent-soft: #1d3329;
+      --accent-line: #2f5443;
+      --warm: #eba27c;
+      --warm-soft: #3a2519;
+      --blue-soft: #1d2a3a;
+      --blue: #9cc0e8;
+      --bad: #f2a497;
+      --bad-soft: #3b1f1b;
+      --bar: #86c7a6;
+      --bar-track: #2a2620;
+      --shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 14px 36px -14px rgba(0, 0, 0, 0.55);
+      --shadow-lift: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
+      --focus: #9dd4b7;
     }
   }
+
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
     min-height: 100vh;
-    font: 400 16px/1.55 "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    min-height: 100dvh;
+    font: 400 16px/1.55 "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--ink);
-    background:
-      radial-gradient(ellipse 80% 40% at 10% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
-      var(--paper);
+    background: var(--paper);
+    background-image:
+      radial-gradient(1200px 520px at 12% -12%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+      radial-gradient(900px 480px at 100% 0%, color-mix(in srgb, var(--warm) 7%, transparent), transparent 70%);
+    background-repeat: no-repeat;
+    -webkit-font-smoothing: antialiased;
   }
-  button, input, select { font: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  :focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 2px;
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
   @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after {
-      animation: none !important;
-      transition: none !important;
-    }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 
-  .shell { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1.15rem 3rem; }
+  .shell {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: max(1.1rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right)) 3rem max(1.25rem, env(safe-area-inset-left));
+  }
+
+  /* Header */
   header.top {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    padding: 0.35rem 0 1.35rem;
+    padding: 0.3rem 0 1.4rem;
   }
-  .brand { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+  .brand { display: flex; align-items: center; gap: 0.7rem; min-width: 0; text-decoration: none; color: inherit; }
   .mark {
-    width: 36px; height: 36px; flex: none;
-    border-radius: 10px;
+    width: 38px; height: 38px; flex: none;
+    border-radius: 11px;
     background: var(--accent);
     color: var(--accent-ink);
     display: grid; place-items: center;
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
   }
-  .brand h1 {
+  .brand-name {
     font-family: Fraunces, Georgia, serif;
-    font-size: 1.35rem;
+    font-size: 1.32rem;
     font-weight: 560;
-    letter-spacing: -0.03em;
-    margin: 0;
+    letter-spacing: -0.025em;
     line-height: 1.1;
-  }
-  .brand p { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.9rem; }
-
-  h2 {
-    font-family: Fraunces, Georgia, serif;
-    font-weight: 560;
-    font-size: 1.15rem;
-    letter-spacing: -0.02em;
     margin: 0;
   }
-  .section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.75rem;
-    margin-bottom: 0.85rem;
+  .who { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+  .who-email {
+    color: var(--muted);
+    font-size: 0.9rem;
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 0.25rem;
   }
-  .section-head p, .lede { color: var(--muted); margin: 0; }
-  .lede { margin-top: 0.35rem; max-width: 38rem; }
 
+  /* Type */
+  h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 560; letter-spacing: -0.02em; margin: 0; }
+  h2 { font-size: 1.16rem; line-height: 1.25; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.88rem; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+  }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn.busy { cursor: progress; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-quiet { background: transparent; border-color: var(--line-strong); }
+  .btn-quiet:hover:not(:disabled) { background: var(--wash); }
+  .btn-ghost { background: transparent; color: var(--muted); padding-inline: 0.7rem; }
+  .btn-ghost:hover:not(:disabled) { background: var(--wash); color: var(--ink); }
+  .btn-icon { width: 44px; padding: 0; }
+  .btn svg { flex: none; }
+
+  /* Cards */
   .card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 1.15rem 1.15rem 1.2rem;
-    margin: 0 0 0.9rem;
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
-  }
-
-  form.fields, form.stack { display: flex; flex-wrap: wrap; gap: 0.65rem 0.7rem; align-items: end; }
-  form.stack { flex-direction: column; align-items: stretch; }
-  form.stack label.grow { flex: 0 0 auto; }
-  form.stack .actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
-  label { display: flex; flex-direction: column; gap: 0.28rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em; color: var(--muted); }
-  label.grow { flex: 1 1 14rem; }
-  input, select {
-    border: 1px solid var(--line);
-    background: var(--paper);
-    color: var(--ink);
-    border-radius: 10px;
-    padding: 0.5rem 0.75rem;
-    min-height: 44px;
+    padding: 1.25rem;
     min-width: 0;
   }
-  input::placeholder { color: var(--faint); }
-  button.primary, button.quiet, button.oauth {
-    min-height: 44px;
-    border-radius: 10px;
-    padding: 0.55rem 0.95rem;
-    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
-  }
-  button.primary {
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-ink);
-    font-weight: 600;
-  }
-  button.primary:hover { filter: brightness(1.06); }
-  button.quiet {
-    background: transparent;
-    color: var(--ink);
-    border: 1px solid var(--line);
-  }
-  button.quiet:hover, button.oauth:hover { background: var(--wash); }
-  button:disabled { opacity: 0.6; cursor: progress; }
-
-  .oauth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.9rem 0 0.2rem; }
-  button.oauth {
+  .card-head {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    background: var(--card);
-    color: var(--ink);
-    border: 1px solid var(--line);
-    font-weight: 600;
-  }
-  button.oauth svg { flex: none; }
-  .divider {
-    display: flex;
-    align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
-    color: var(--faint);
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin: 0.95rem 0 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
   }
-  .divider::before, .divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--line);
+  .card-head p { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.92rem; }
+
+  /* Fields */
+  .field { display: flex; flex-direction: column; gap: 0.32rem; min-width: 0; }
+  .field > span, .field > label > span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--muted);
   }
+  input, select, textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.55rem 0.8rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line-strong);
+    background: var(--raised);
+    font-size: 1rem;
+    line-height: 1.3;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  input::placeholder, textarea::placeholder { color: var(--faint); }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  input[type="date"] { min-width: 0; }
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.3rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238d857b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
+  .hint { font-size: 0.82rem; color: var(--faint); margin: 0; }
+  .error {
+    color: var(--bad);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+  .error:empty { display: none; }
+  .notice {
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.85rem;
+    font-size: 0.93rem;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+    margin: 0 0 1rem;
+  }
+  .notice.bad { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 30%, transparent); color: var(--ink); }
+  .notice:empty { display: none; }
 
-  .error { color: var(--bad); min-height: 1.4em; margin: 0.55rem 0 0; width: 100%; font-size: 0.92rem; }
-  .empty { color: var(--muted); margin: 0.35rem 0 0; }
+  /* Signed out */
+  .gate {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 2.5rem;
+    align-items: center;
+    padding: 1.5rem 0 1rem;
+  }
+  .pitch h1 {
+    font-size: clamp(2.1rem, 4.4vw, 3.3rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 560;
+  }
+  .pitch h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+  .pitch .lede { font-size: 1.12rem; color: var(--muted); max-width: 32rem; margin: 1rem 0 1.6rem; }
+  .features { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; max-width: 30rem; }
+  .features li { display: grid; grid-template-columns: 36px 1fr; gap: 0.8rem; align-items: start; }
+  .features .ico {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center;
+  }
+  .features strong { display: block; font-weight: 600; }
+  .features span.muted { font-size: 0.94rem; }
+  .sample {
+    margin-top: 1.8rem;
+    max-width: 30rem;
+    display: grid;
+    gap: 0.45rem;
+    font-size: 0.95rem;
+  }
+  .sample .say, .sample .hear {
+    padding: 0.55rem 0.85rem;
+    border-radius: 14px;
+    width: fit-content;
+    max-width: 88%;
+  }
+  .sample .say { justify-self: end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 5px; }
+  .sample .hear { background: var(--card); border: 1px solid var(--line); border-bottom-left-radius: 5px; }
 
-  .balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.7rem; }
-  .balance {
+  .auth { padding: 1.5rem; box-shadow: var(--shadow-lift); }
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     background: var(--wash);
     border-radius: 12px;
-    padding: 0.85rem 0.95rem;
-    min-width: 0;
+    padding: 4px;
+    margin-bottom: 1.2rem;
   }
-  .balance strong {
+  .tabs button {
+    border: 0;
+    background: transparent;
+    min-height: 40px;
+    border-radius: 9px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  }
+  .tabs button[aria-pressed="true"] { background: var(--raised); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+  .oauth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .btn-oauth { background: var(--raised); border-color: var(--line-strong); width: 100%; }
+  .btn-oauth:hover:not(:disabled) { background: var(--wash); }
+  .divider {
+    display: flex; align-items: center; gap: 0.75rem;
+    color: var(--faint);
+    font-size: 0.8rem;
+    margin: 1.1rem 0;
+  }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  form.stack { display: grid; gap: 0.85rem; }
+  .auth .btn-primary { width: 100%; margin-top: 0.2rem; }
+  .fine { font-size: 0.84rem; color: var(--faint); margin: 1rem 0 0; text-align: center; }
+
+  /* Signed in */
+  .balances {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .balance {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem 1.05rem;
+    box-shadow: var(--shadow);
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .balance.total { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .balance.total .label, .balance.total .code { color: color-mix(in srgb, var(--accent-ink) 78%, transparent); }
+  .balance .label {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.86rem; font-weight: 600; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .balance .amount {
     display: block;
     font-family: Fraunces, Georgia, serif;
-    font-size: 1.45rem;
+    font-size: 1.75rem;
     font-weight: 560;
     letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.2;
+    line-height: 1.15;
+    margin-top: 0.35rem;
+    font-variant-numeric: tabular-nums lining-nums;
     overflow-wrap: anywhere;
   }
-  .balance span { color: var(--muted); font-size: 0.88rem; }
+  .balance .amount.neg { color: var(--bad); }
+  .balance .code { font-size: 0.8rem; color: var(--faint); letter-spacing: 0.06em; }
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .skeleton {
+    border-radius: var(--radius);
+    min-height: 96px;
+    background: linear-gradient(100deg, var(--wash) 30%, color-mix(in srgb, var(--wash) 55%, var(--card)) 50%, var(--wash) 70%);
+    background-size: 300% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+  .onboard { max-width: 640px; margin: 0.5rem auto 0; padding: 1.6rem; }
+  .onboard h1 { font-size: 1.7rem; letter-spacing: -0.03em; }
+  .onboard .lede { color: var(--muted); margin: 0.5rem 0 1.3rem; }
+  .setup-grid { display: grid; grid-template-columns: 1.3fr 0.8fr 1fr; gap: 0.75rem; }
+  .step {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.6rem;
+  }
 
   .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 0.9rem;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 1rem;
     align-items: start;
+    margin-bottom: 1rem;
   }
-  .layout > * { min-width: 0; }
 
-  .chart { width: 100%; overflow-x: auto; margin-top: 0.85rem; }
-  .chart svg { width: 100%; min-width: 280px; height: auto; display: block; }
-  .chart text { fill: var(--ink); font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif; font-size: 13px; }
-  .chart .tick { fill: var(--muted); }
-
-  .table-wrap { width: 100%; overflow-x: auto; margin-top: 0.75rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
-  th, td {
-    text-align: left;
-    padding: 0.55rem 0.4rem;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-  }
-  th {
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  td.clip { max-width: 16rem; overflow-wrap: anywhere; }
-
-  .pill {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 0.12rem 0.4rem;
+  /* Chat */
+  .chat { display: flex; flex-direction: column; }
+  .key-chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    min-height: 34px;
+    padding: 0.25rem 0.7rem;
     border-radius: 999px;
-    background: var(--wash);
-    color: var(--muted);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    font-size: 0.84rem; font-weight: 600; color: var(--muted);
   }
-
-  .chat-log {
+  .key-chip:hover { background: var(--wash); color: var(--ink); }
+  .key-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
+  .key-chip.on .dot { background: var(--accent); }
+  .log {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin: 0.2rem 0 0.85rem;
-    max-height: 320px;
-    overflow: auto;
-    min-height: 4.5rem;
+    gap: 0.7rem;
+    min-height: 260px;
+    max-height: 480px;
+    overflow-y: auto;
+    padding: 0.2rem 0.1rem 0.8rem;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
   }
+  .log-empty { margin: auto 0; text-align: center; padding: 1rem 0.5rem; }
+  .log-empty p { margin: 0 0 0.9rem; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: center; }
+  .chip {
+    border: 1px solid var(--line-strong);
+    background: var(--raised);
+    border-radius: 999px;
+    padding: 0.4rem 0.8rem;
+    min-height: 36px;
+    font-size: 0.9rem;
+    color: var(--ink);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .turn { display: flex; flex-direction: column; gap: 0.4rem; max-width: min(34rem, 90%); animation: rise 220ms ease-out; }
+  .turn.me { align-self: flex-end; align-items: flex-end; }
+  .turn.them { align-self: flex-start; align-items: flex-start; }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
   .bubble {
-    padding: 0.55rem 0.8rem;
-    border-radius: 14px;
-    max-width: min(36rem, 92%);
+    padding: 0.6rem 0.9rem;
+    border-radius: 16px;
     overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
-  .bubble.me { align-self: flex-end; background: var(--accent-soft); border-bottom-right-radius: 4px; }
-  .bubble.them { align-self: flex-start; background: var(--wash); border-bottom-left-radius: 4px; }
-
-  .gate {
-    max-width: 440px;
-    margin: 1.25rem auto 0;
-    padding: 1.15rem 1.2rem 1.2rem;
+  .me .bubble { background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 5px; }
+  .them .bubble { background: var(--wash); border-bottom-left-radius: 5px; }
+  .them.failed .bubble { background: var(--bad-soft); }
+  .balance-chip {
+    display: inline-flex; align-items: baseline; gap: 0.4rem;
+    font-size: 0.86rem; color: var(--muted);
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--card);
   }
-  .gate h2 { font-size: 1.55rem; }
-  .gate .lede { font-size: 0.95rem; }
-  .gate .oauth-row { margin-top: 0.75rem; }
-  .gate .divider { margin: 0.7rem 0 0.6rem; }
-  footer.note {
-    color: var(--faint);
-    font-size: 0.82rem;
-    margin: 1.2rem 0 0;
-    text-align: center;
+  .balance-chip strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .observations { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+  .observations li {
+    display: grid; grid-template-columns: auto 1fr; gap: 0.55rem; align-items: start;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 12px;
+    background: var(--warm-soft);
   }
+  .observations li::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--warm); margin-top: 0.45rem;
+  }
+  .observations .cat { font-weight: 600; margin-right: 0.3rem; }
+  .confirm-card {
+    border: 1px solid var(--accent-line);
+    background: var(--card);
+    border-radius: 14px;
+    padding: 0.85rem 0.95rem;
+    display: grid;
+    gap: 0.65rem;
+    box-shadow: var(--shadow);
+    width: 100%;
+  }
+  .confirm-card .summary { font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+  .confirm-card .meta { font-size: 0.84rem; color: var(--muted); margin: 0; }
+  .confirm-card .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .confirm-card.settled { border-color: var(--line); box-shadow: none; }
+  .typing { display: inline-flex; gap: 4px; padding: 0.85rem 0.95rem; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); animation: blink 1.2s infinite ease-in-out; }
+  .typing i:nth-child(2) { animation-delay: 0.15s; }
+  .typing i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+  .composer {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    border-top: 1px solid var(--line);
+    padding-top: 0.9rem;
+  }
+  .composer input { min-height: 48px; border-radius: 14px; }
+  .composer .btn { min-height: 48px; border-radius: 14px; padding-inline: 1.1rem; }
 
-  #app[hidden], #signed-out[hidden] { display: none; }
+  /* Spending */
+  .segmented {
+    display: flex; flex-wrap: wrap; gap: 0.35rem;
+    margin-bottom: 0.8rem;
+  }
+  .segmented button {
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    border-radius: 999px;
+    min-height: 34px;
+    padding: 0.2rem 0.75rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .segmented button:hover { background: var(--wash); color: var(--ink); }
+  .segmented button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .range { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem; }
+  .total-line { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .total-line strong {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.6rem; font-weight: 560; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+  .bars li { display: grid; gap: 0.3rem; }
+  .bars .row { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.93rem; }
+  .bars .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: capitalize; }
+  .bars .value { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+  .bars .track { height: 10px; border-radius: 999px; background: var(--bar-track); overflow: hidden; }
+  .bars .fill { height: 100%; border-radius: 999px; background: var(--bar); transform-origin: left; animation: grow 500ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .empty-state { text-align: center; color: var(--muted); padding: 1.6rem 0.5rem; margin: 0; }
 
-  @media (max-width: 820px) {
+  /* Records */
+  .filters {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr 2fr;
+    gap: 0.6rem;
+    align-items: end;
+    margin-bottom: 0.4rem;
+  }
+  .search-row { display: flex; gap: 0.6rem; align-items: end; min-width: 0; }
+  .search-row .field { flex: 1; }
+  .table-wrap { width: 100%; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 0.7rem 0.55rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { color: var(--faint); font-weight: 700; font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--wash) 55%, transparent); }
+  td.when { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; width: 8.5rem; }
+  td.kind { width: 7.5rem; }
+  td.detail { overflow-wrap: anywhere; }
+  td.num, th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .pill {
+    display: inline-block;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    background: var(--wash); color: var(--muted);
+  }
+  .pill.expense { background: var(--warm-soft); color: var(--warm); }
+  .pill.income { background: var(--accent-soft); color: var(--accent); }
+  .pill.transfer { background: var(--blue-soft); color: var(--blue); }
+  .count { font-size: 0.86rem; color: var(--faint); margin: 0.6rem 0 0; }
+
+  /* Settings */
+  dialog {
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 0;
+    width: min(480px, calc(100vw - 2rem));
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: var(--shadow-lift);
+  }
+  dialog::backdrop { background: rgba(20, 18, 15, 0.45); backdrop-filter: blur(3px); }
+  dialog[open] { animation: pop 180ms ease-out; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .dialog-body { padding: 1.4rem 1.4rem 1.2rem; display: grid; gap: 0.95rem; }
+  .dialog-head { display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+  .dialog-head p { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.93rem; }
+  .secret { position: relative; }
+  .secret input { padding-right: 4.6rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.93rem; }
+  .secret button {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    border: 0; background: transparent; color: var(--accent);
+    font-weight: 600; font-size: 0.86rem; min-height: 36px; padding: 0 0.7rem; border-radius: 8px;
+  }
+  .secret button:hover { background: var(--wash); }
+  .privacy {
+    display: grid; grid-template-columns: 20px 1fr; gap: 0.6rem;
+    background: var(--wash); border-radius: 12px; padding: 0.75rem 0.85rem;
+    font-size: 0.88rem; color: var(--muted);
+  }
+  .privacy svg { color: var(--accent); margin-top: 2px; }
+  .dialog-actions { display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.2rem; }
+  .dialog-actions .right { display: flex; gap: 0.5rem; margin-left: auto; }
+
+  footer.note { color: var(--faint); font-size: 0.84rem; margin: 2rem 0 0; text-align: center; }
+
+  @media (max-width: 900px) {
+    .gate { grid-template-columns: 1fr; gap: 1.6rem; padding-top: 0.2rem; }
+    .gate .auth { order: -1; }
+    .pitch h1 { font-size: 2rem; }
+    .pitch .lede { margin-bottom: 1.2rem; }
+    .sample { display: none; }
     .layout { grid-template-columns: 1fr; }
-    header.top { align-items: flex-start; }
-    .brand p { display: none; }
+    .filters { grid-template-columns: 1fr 1fr; }
+    .filters .type, .filters .search-row { grid-column: 1 / -1; }
   }
-  @media (max-width: 520px) {
-    .oauth-row { grid-template-columns: 1fr; }
-    .shell { padding-inline: 0.85rem; }
+  @media (max-width: 640px) {
+    .shell { padding-inline: max(0.9rem, env(safe-area-inset-left)); }
+    header.top { padding-bottom: 1rem; }
+    .who-email { display: none; }
+    .card { padding: 1.05rem; border-radius: 16px; }
+    .auth { padding: 1.2rem; }
+    .balances { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; }
+    .balance .amount { font-size: 1.42rem; }
+    .setup-grid { grid-template-columns: 1fr 1fr; }
+    .setup-grid .name { grid-column: 1 / -1; }
+    .onboard { padding: 1.2rem; }
+    .log { min-height: 220px; max-height: 60vh; }
+    .turn { max-width: 94%; }
+    .brand-name { font-size: 1.18rem; }
+    .mark { width: 34px; height: 34px; }
+    .who { gap: 0.25rem; }
+    #open-settings { width: 44px; padding: 0; }
+    #open-settings span { display: none; }
+    #signout { padding-inline: 0.8rem; }
+    .balances { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+    table thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.3rem 0.6rem;
+      padding: 0.75rem 0.1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    tbody tr:last-child { border-bottom: 0; }
+    td { border: 0; padding: 0; width: auto; }
+    td.when { width: auto; order: 2; font-size: 0.86rem; align-self: center; }
+    td.kind { width: auto; order: 1; }
+    td.num { order: 3; }
+    td.detail { order: 4; grid-column: 1 / -1; }
+    tbody tr:hover td { background: none; }
   }
 </style>
 </head>
 <body>
 <div class="shell">
 <header class="top">
-  <div class="brand">
+  <a class="brand" href="./" aria-label="WhatsMyNote home">
     <span class="mark" aria-hidden="true">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M5 16.5V7.8c0-.5.3-.9.7-1.1l6-2.4a1.2 1.2 0 0 1 .9 0l6 2.4c.4.2.7.6.7 1.1v8.7c0 .5-.3.9-.7 1.1l-6 2.4a1.2 1.2 0 0 1-.9 0l-6-2.4a1.2 1.2 0 0 1-.7-1.1Z" stroke="currentColor" stroke-width="1.6"/>
-        <path d="M8.5 12.2h7M12 8.8v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M6 7.5h12M6 12h12M6 16.5h7.5"/>
       </svg>
     </span>
-    <div>
-      <h1>WhatsMyNote</h1>
-      <p>A quiet place for your own books.</p>
-    </div>
+    <span class="brand-name">WhatsMyNote</span>
+  </a>
+  <div class="who" id="who" hidden>
+    <span class="who-email" id="who-email"></span>
+    <button class="btn btn-ghost" id="open-settings" type="button" aria-haspopup="dialog" aria-label="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>
+      </svg>
+      <span>Settings</span>
+    </button>
+    <button class="btn btn-quiet" id="signout" type="button">Sign out</button>
   </div>
-  <button id="signout" class="quiet" hidden>Sign out</button>
 </header>
 
 <main>
-  <section id="signed-out" class="card gate">
-    <h2>Sign in</h2>
-    <p class="lede">Your books stay yours. Use Google, GitHub, or the email and password for this account. A first visit creates it, then asks you to name an account before anything is booked.</p>
-    <div class="oauth-row">
-      <button id="google" class="oauth" type="button">
-        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-          <path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.5z"/>
-          <path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3A9 9 0 0 0 9 18z"/>
-          <path fill="#FBBC05" d="M3.9 10.7a5.4 5.4 0 0 1 0-3.4V5H.9a9 9 0 0 0 0 8l3-2.3z"/>
-          <path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 .9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z"/>
-        </svg>
-        Google
-      </button>
-      <button id="github" class="oauth" type="button">
-        <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
-          <path d="M8 0C3.6 0 0 3.6 0 8c0 3.5 2.3 6.5 5.5 7.6.4.1.5-.2.5-.4v-1.4c-2.2.5-2.7-1.1-2.7-1.1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.2-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.5 7.5 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3.1-1.9 3.7-3.6 3.9.3.3.6.8.6 1.5v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8c0-4.4-3.6-8-8-8z"/>
-        </svg>
-        GitHub
-      </button>
-    </div>
-    <div class="divider">or email</div>
-    <form id="signin" class="stack">
-      <label class="grow">Email
-        <input id="email" type="email" autocomplete="username" required>
-      </label>
-      <label class="grow">Password
-        <input id="password" type="password" autocomplete="current-password" required minlength="6">
-      </label>
-      <div class="actions">
-        <button id="signin-button" class="primary" type="submit">Sign in</button>
-        <button id="signup-button" class="quiet" type="button">Create account</button>
+  <section id="signed-out" class="gate" aria-labelledby="pitch-title">
+    <div class="pitch">
+      <h1 id="pitch-title">Your money, kept in <em>plain sentences.</em></h1>
+      <p class="lede">Type what happened, the way you would tell a friend. WhatsMyNote books it, keeps your balances right, and shows where the month went.</p>
+      <ul class="features">
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg>
+          </span>
+          <div><strong>Book by typing</strong><span class="muted">"spent 400 on dinner" is a complete entry.</span></div>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3Z"/></svg>
+          </span>
+          <div><strong>Nothing changes by surprise</strong><span class="muted">Anything that removes a record asks you first.</span></div>
+        </li>
+        <li>
+          <span class="ico" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          </span>
+          <div><strong>Private to you</strong><span class="muted">Your books are visible to your account and no one else.</span></div>
+        </li>
+      </ul>
+      <div class="sample" aria-hidden="true">
+        <div class="say">spent 400 on dinner</div>
+        <div class="hear">Booked 400.00 on dinner from Cash. Cash now holds 4,600.00.</div>
       </div>
-      <p id="signin-error" class="error" role="alert"></p>
-    </form>
+    </div>
+
+    <div class="card auth">
+      <div class="tabs" role="group" aria-label="Sign in or create an account">
+        <button type="button" id="tab-signin" aria-pressed="true">Sign in</button>
+        <button type="button" id="tab-signup" aria-pressed="false">Create account</button>
+      </div>
+      <p id="auth-notice" class="notice" role="status"></p>
+      <div class="oauth-row">
+        <button id="google" class="btn btn-oauth" type="button" data-provider="google">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.5z"/>
+            <path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3A9 9 0 0 0 9 18z"/>
+            <path fill="#FBBC05" d="M3.9 10.7a5.4 5.4 0 0 1 0-3.4V5H.9a9 9 0 0 0 0 8l3-2.3z"/>
+            <path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 .9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z"/>
+          </svg>
+          Google
+        </button>
+        <button id="github" class="btn btn-oauth" type="button" data-provider="github">
+          <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+            <path d="M8 0C3.6 0 0 3.6 0 8c0 3.5 2.3 6.5 5.5 7.6.4.1.5-.2.5-.4v-1.4c-2.2.5-2.7-1.1-2.7-1.1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.2-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.5 7.5 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3.1-1.9 3.7-3.6 3.9.3.3.6.8.6 1.5v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8c0-4.4-3.6-8-8-8z"/>
+          </svg>
+          GitHub
+        </button>
+      </div>
+      <div class="divider">or with email</div>
+      <form id="auth-form" class="stack" novalidate>
+        <label class="field"><span>Email</span>
+          <input id="email" type="email" autocomplete="username" inputmode="email" required placeholder="you@example.com">
+        </label>
+        <label class="field"><span>Password</span>
+          <input id="password" type="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <p id="password-hint" class="hint" hidden>At least 6 characters. We send a link to confirm the email.</p>
+        <p id="auth-error" class="error" role="alert"></p>
+        <button id="auth-submit" class="btn btn-primary" type="submit">Sign in</button>
+      </form>
+      <p class="fine">Your password goes only to the sign-in service, never to the books.</p>
+    </div>
   </section>
 
-  <section id="app" hidden>
-    <div class="card">
-      <div class="section-head">
-        <h2>Balances</h2>
-        <p>What each account holds right now.</p>
-      </div>
-      <div id="balances" class="balances"><p class="empty">No balances yet.</p></div>
-    </div>
+  <section id="app" hidden aria-label="Your books">
+    <h1 class="sr-only">Your books</h1>
+    <div id="balances" class="balances" aria-label="Balances"></div>
+    <p id="balances-error" class="notice bad" role="alert"></p>
 
-    <div id="setup" class="card" hidden>
-      <div class="section-head">
-        <h2>Set up an account</h2>
+    <div id="setup" class="card onboard" hidden>
+      <div class="step">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        First step
       </div>
-      <p class="lede">A booking needs an account first. The opening balance is in major units, such as 1000.00.</p>
-      <form id="account-form" class="fields" style="margin-top:0.85rem">
-        <label>Name <input id="account-name" required placeholder="Cash"></label>
-        <label>Currency
-          <select id="account-currency">
-            <option value="INR">INR</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-          </select>
-        </label>
-        <label>Opening balance <input id="account-balance" inputmode="decimal" required value="0"></label>
-        <button class="primary" type="submit">Create account</button>
-        <p id="setup-error" class="error" role="alert"></p>
-      </form>
-    </div>
-
-    <div class="layout">
-      <div class="card">
-        <div class="section-head">
-          <h2>Spending by category</h2>
-        </div>
-        <form id="spending-filter" class="fields">
-          <label>From <input id="spend-from" type="date"></label>
-          <label>To <input id="spend-to" type="date"></label>
-          <button class="quiet" type="submit">Show</button>
-        </form>
-        <div id="chart" class="chart"><p class="empty">No spending in this range.</p></div>
-        <p id="spending-error" class="error" role="alert"></p>
-      </div>
-
-      <div class="card">
-        <div class="section-head">
-          <h2>Ask the books</h2>
-          <p>Plain language in, a booking out.</p>
-        </div>
-        <div id="chat-log" class="chat-log" aria-live="polite"></div>
-        <form id="chat" class="fields">
-          <label class="grow">Message
-            <input id="message" required placeholder="spent 400 on dinner" autocomplete="off">
+      <h1>Name your first account</h1>
+      <p class="lede">Every booking lands in an account, like the cash in your wallet or a bank account. Start with one. You can say which account in a message later.</p>
+      <form id="account-form" class="stack" novalidate>
+        <div class="setup-grid">
+          <label class="field name"><span>Account name</span>
+            <input id="account-name" required maxlength="60" placeholder="Cash" autocomplete="off">
           </label>
-          <button class="primary" type="submit">Send</button>
-          <p id="chat-error" class="error" role="alert"></p>
-        </form>
-      </div>
+          <label class="field"><span>Currency</span>
+            <select id="account-currency">
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </label>
+          <label class="field"><span>Opening balance</span>
+            <input id="account-balance" inputmode="decimal" required value="0" autocomplete="off">
+          </label>
+        </div>
+        <p class="hint">What the account holds today, such as 5000 or 5000.50.</p>
+        <p id="setup-error" class="error" role="alert"></p>
+        <div><button class="btn btn-primary" type="submit" id="setup-submit">Create account</button></div>
+      </form>
     </div>
 
-    <div class="card">
-      <div class="section-head">
-        <h2>Records</h2>
-        <p>Filter what has already been booked.</p>
+    <div id="dashboard" hidden>
+      <div class="layout">
+        <section class="card chat" aria-labelledby="chat-title">
+          <div class="card-head">
+            <div>
+              <h2 id="chat-title">Ask your books</h2>
+              <p>Say what happened. Balances update as you go.</p>
+            </div>
+            <button id="key-chip" class="key-chip" type="button" aria-haspopup="dialog">
+              <span class="dot" aria-hidden="true"></span><span id="key-chip-text">Model key</span>
+            </button>
+          </div>
+          <div id="log" class="log" role="log" aria-live="polite" aria-relevant="additions">
+            <div class="log-empty" id="log-empty">
+              <p>Try one of these, or write your own.</p>
+              <div class="chips">
+                <button class="chip" type="button">spent 400 on dinner</button>
+                <button class="chip" type="button">spent 120 on coffee yesterday</button>
+                <button class="chip" type="button">spent 1,250 on groceries</button>
+              </div>
+            </div>
+          </div>
+          <form id="chat" class="composer" autocomplete="off">
+            <label class="sr-only" for="message">Message</label>
+            <input id="message" required maxlength="500" placeholder="spent 400 on dinner" enterkeyhint="send">
+            <button class="btn btn-primary" type="submit" id="send">
+              <span>Send</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </form>
+        </section>
+
+        <section class="card" aria-labelledby="spend-title">
+          <div class="card-head">
+            <div>
+              <h2 id="spend-title">Where it went</h2>
+              <p>Spending by category.</p>
+            </div>
+          </div>
+          <div class="segmented" id="presets" role="group" aria-label="Date range">
+            <button type="button" data-range="month" aria-pressed="true">This month</button>
+            <button type="button" data-range="last-month" aria-pressed="false">Last month</button>
+            <button type="button" data-range="90" aria-pressed="false">90 days</button>
+            <button type="button" data-range="year" aria-pressed="false">This year</button>
+          </div>
+          <div class="range">
+            <label class="field"><span>From</span><input id="spend-from" type="date"></label>
+            <label class="field"><span>To</span><input id="spend-to" type="date"></label>
+          </div>
+          <div id="chart"></div>
+          <p id="spending-error" class="error" role="alert"></p>
+        </section>
       </div>
-      <form id="record-filter" class="fields">
-        <label>Type
-          <select id="record-type">
-            <option value="">All</option>
-            <option>EXPENSE</option>
-            <option>INCOME</option>
-            <option>TRANSFER</option>
-            <option>LENDING</option>
-            <option>ACCOUNT</option>
-            <option>BUDGET</option>
-          </select>
-        </label>
-        <label>From <input id="record-from" type="date"></label>
-        <label>To <input id="record-to" type="date"></label>
-        <label class="grow">Search <input id="record-q" placeholder="dinner"></label>
-        <button class="quiet" type="submit">Filter</button>
-      </form>
-      <div id="records" class="table-wrap"><p class="empty">No records yet.</p></div>
-      <p id="records-error" class="error" role="alert"></p>
+
+      <section class="card" aria-labelledby="records-title">
+        <div class="card-head">
+          <div>
+            <h2 id="records-title">Records</h2>
+            <p>Everything booked, newest first.</p>
+          </div>
+        </div>
+        <form id="record-filter" class="filters" autocomplete="off">
+          <label class="field type"><span>Type</span>
+            <select id="record-type">
+              <option value="">All types</option>
+              <option value="EXPENSE">Expense</option>
+              <option value="INCOME">Income</option>
+              <option value="TRANSFER">Transfer</option>
+              <option value="LENDING">Lending</option>
+              <option value="ACCOUNT">Account</option>
+              <option value="BUDGET">Budget</option>
+            </select>
+          </label>
+          <label class="field"><span>From</span><input id="record-from" type="date"></label>
+          <label class="field"><span>To</span><input id="record-to" type="date"></label>
+          <div class="search-row">
+            <label class="field"><span>Search</span><input id="record-q" type="search" placeholder="dinner"></label>
+            <button class="btn btn-quiet" type="button" id="record-clear">Clear</button>
+          </div>
+        </form>
+        <div id="records" class="table-wrap"></div>
+        <p id="records-count" class="count" aria-live="polite"></p>
+        <p id="records-error" class="error" role="alert"></p>
+      </section>
     </div>
   </section>
 </main>
-<footer class="note">Personal books. Nothing here is shared with anyone else.</footer>
+<footer class="note">Your books, visible only to you.</footer>
 </div>
 
+<dialog id="settings" aria-labelledby="settings-title">
+  <form id="settings-form" class="dialog-body" novalidate>
+    <div class="dialog-head">
+      <div>
+        <h2 id="settings-title">Your model</h2>
+        <p>Chat reads your messages with a language model. Bring your own key, from any OpenAI-compatible provider.</p>
+      </div>
+      <button class="btn btn-ghost btn-icon" type="button" id="settings-close" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label for="model-key"><span>API key</span></label>
+      <div class="secret">
+        <input id="model-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-...">
+        <button type="button" id="toggle-key" aria-pressed="false" aria-controls="model-key">Show</button>
+      </div>
+    </div>
+    <label class="field"><span>Base URL <span class="muted">(optional)</span></span>
+      <input id="model-base" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://api.openai.com/v1">
+    </label>
+    <label class="field"><span>Model name <span class="muted">(optional)</span></span>
+      <input id="model-name" autocomplete="off" spellcheck="false" placeholder="gpt-4o-mini">
+    </label>
+    <div class="privacy">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      <span>Kept only in this browser. It is sent with each chat message and never stored on the server.</span>
+    </div>
+    <p id="settings-error" class="error" role="alert"></p>
+    <div class="dialog-actions">
+      <button class="btn btn-ghost" type="button" id="settings-forget">Forget key</button>
+      <div class="right">
+        <button class="btn btn-quiet" type="button" id="settings-cancel">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
 <script type="module">
+  // Read the return address before the auth client consumes it.
+  const landing = new URL(window.location.href);
+  const landingHash = new URLSearchParams(landing.hash.replace(/^#/, ""));
+
   import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/+esm";
 
-  const API = "https://whatsmynote-staging.onrender.com";
   const SITE = "https://whatsmynote-staging.onrender.com/";
   const SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co";
   const SUPABASE_KEY = "sb_publishable_iLiN9zD9sD_TSP6HcceLcw_3Zk6v1Wk";
+  const PROVIDERS = { google: "Google", github: "GitHub" };
+  const STORE = { key: "wmn.model.key", base: "wmn.model.base", name: "wmn.model.name", provider: "wmn.oauth.provider" };
+  const CONFIRM_TTL_MS = 10 * 60 * 1000;
 
   const ERRORS = {
-    unauthenticated: "Sign in again. That session is no longer accepted.",
-    bad_key: "That model key was rejected.",
+    unauthenticated: "Your session ended. Sign in again.",
+    bad_key: "Your model key was rejected. Check it in Settings.",
+    no_key: "Chat needs a model key. Add yours in Settings.",
     rate_unavailable: "Exchange rates are unavailable right now, so nothing was booked.",
     no_account: "Add an account before booking anything.",
     unsupported_currency: "That currency is not supported, so nothing was booked.",
-    ambiguous: "That matches more than one record, so nothing was changed.",
-    unparseable: "That message could not be read, so nothing was booked."
+    ambiguous: "That matches more than one record, so nothing was changed. Be more specific.",
+    unparseable: "That message could not be read as a money action, so nothing was booked.",
+    limit_reached: "You have reached the limit for now. Try again a little later.",
+    network: "The books could not be reached. Check the connection and try again."
   };
+  const GENERIC = "Something went wrong, and nothing was changed.";
 
+  const $ = (id) => document.getElementById(id);
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const signedOut = document.getElementById("signed-out");
-  const app = document.getElementById("app");
-  const signout = document.getElementById("signout");
-  const setup = document.getElementById("setup");
+  let signedInAs = null;
+  let accounts = [];
+  let chatBusy = false;
 
-  function sentence(body) {
-    if (body && ERRORS[body.code]) return ERRORS[body.code];
-    return "Something went wrong, and nothing was changed.";
+  // ---------- small helpers ----------
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
   }
 
-  function show(el, body) {
-    el.textContent = body ? sentence(body) : "";
+  function sentence(code) {
+    return ERRORS[code] || GENERIC;
   }
 
-  function money(minor, currency) {
-    const value = (Number(minor) / 100).toFixed(2);
-    return currency ? value + " " + currency : value;
+  function failure(code) {
+    const error = new Error(code);
+    error.code = code;
+    return error;
+  }
+
+  function setBusy(button, busy, label) {
+    button.disabled = busy;
+    button.classList.toggle("busy", busy);
+    button.setAttribute("aria-busy", busy ? "true" : "false");
+    if (label !== undefined) {
+      const span = button.querySelector("span");
+      (span || button).textContent = label;
+    }
+  }
+
+  // Model settings belong to the signed-in person, so a second account on the
+  // same browser never sends someone else's key.
+  function settingKey(name) {
+    return signedInAs ? STORE[name] + "." + signedInAs : null;
+  }
+
+  function readSetting(name) {
+    const key = settingKey(name);
+    if (!key) return "";
+    try { return window.localStorage.getItem(key) || ""; } catch (err) { return ""; }
+  }
+
+  function writeSetting(name, value) {
+    const key = settingKey(name);
+    if (!key) return;
+    try {
+      if (value) window.localStorage.setItem(key, value);
+      else window.localStorage.removeItem(key);
+    } catch (err) { /* storage can be blocked; the page still works without it */ }
+  }
+
+  function fractionDigits(currency) {
+    try {
+      return new Intl.NumberFormat(undefined, { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+    } catch (err) {
+      return 2;
+    }
+  }
+
+  function formatMoney(minor, currency) {
+    const value = Number(minor);
+    if (!Number.isFinite(value)) return "";
+    if (currency) {
+      try {
+        const digits = fractionDigits(currency);
+        return new Intl.NumberFormat(undefined, { style: "currency", currency, currencyDisplay: "narrowSymbol" })
+          .format(value / 10 ** digits);
+      } catch (err) { /* unknown code: fall through to a plain number */ }
+    }
+    return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value / 100);
+  }
+
+  function sharedCurrency() {
+    const codes = new Set(accounts.map((row) => row.currency).filter(Boolean));
+    return codes.size === 1 ? [...codes][0] : null;
   }
 
   function isoDate(date) {
@@ -494,44 +1024,14 @@
     return date.getFullYear() + "-" + month + "-" + day;
   }
 
-  function todayISO() {
-    return isoDate(new Date());
-  }
-
-  function monthStart() {
-    const now = new Date();
-    return isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
-  }
-
-  async function accessToken() {
-    const { data } = await supabase.auth.getSession();
-    return data.session ? data.session.access_token : null;
-  }
-
-  async function api(path, options) {
-    const token = await accessToken();
-    if (!token) {
-      const error = new Error("unauthenticated");
-      error.body = { code: "unauthenticated" };
-      throw error;
-    }
-    const response = await fetch(API + path, {
-      ...options,
-      headers: {
-        "authorization": "Bearer " + token,
-        ...(options && options.body ? { "content-type": "application/json" } : {}),
-        ...(options && options.headers)
-      }
-    });
-    let body = {};
-    try { body = await response.json(); } catch (err) { body = {}; }
-    if (response.status === 401) body = { code: "unauthenticated" };
-    if (!response.ok) {
-      const error = new Error(body.code || "failed");
-      error.body = body;
-      throw error;
-    }
-    return body;
+  function prettyDate(iso) {
+    const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
+    if (!year || !month || !day) return String(iso || "");
+    const date = new Date(year, month - 1, day);
+    const sameYear = date.getFullYear() === new Date().getFullYear();
+    return date.toLocaleDateString(undefined, sameYear
+      ? { day: "numeric", month: "short" }
+      : { day: "numeric", month: "short", year: "numeric" });
   }
 
   function listOf(body, key) {
@@ -540,353 +1040,821 @@
     return [];
   }
 
-  function renderBalances(body) {
-    const rows = listOf(body, "balances");
-    const host = document.getElementById("balances");
-    setup.hidden = rows.length > 0;
-    if (!rows.length) {
-      host.replaceChildren();
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "No balances yet.";
-      host.append(empty);
-      return;
-    }
-    host.replaceChildren(...rows.map((row) => {
-      const card = document.createElement("div");
-      card.className = "balance";
-      const amount = document.createElement("strong");
-      amount.textContent = money(row.current_balance ?? row.balance ?? row.amount, row.currency);
-      const name = document.createElement("span");
-      name.textContent = (row.name || "Account") + (row.is_default ? " · default" : "");
-      card.append(amount, name);
-      return card;
-    }));
-  }
-
-  function svgEl(name) {
-    return document.createElementNS("http://www.w3.org/2000/svg", name);
-  }
-
-  function renderChart(body) {
-    const rows = listOf(body, "spending").map((row) => ({
-      category: String(row.category || row.name || "other"),
-      amount: Number(row.converted_minor ?? row.amount ?? row.total ?? 0)
-    })).filter((row) => row.amount > 0);
-    const host = document.getElementById("chart");
-    host.replaceChildren();
-    if (!rows.length) {
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "No spending in this range.";
-      host.append(empty);
-      return;
-    }
-    const width = 640;
-    const barH = 22;
-    const gap = 14;
-    const labelW = 132;
-    const valueW = 84;
-    const height = rows.length * (barH + gap) + 4;
-    const max = Math.max(...rows.map((row) => row.amount));
-    const svg = svgEl("svg");
-    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
-    svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Spending by category, largest first in this range");
-    rows.forEach((row, index) => {
-      const y = index * (barH + gap);
-      const trackW = width - labelW - valueW;
-      const barW = Math.max(4, (trackW * row.amount) / max);
-      const label = svgEl("text");
-      label.setAttribute("x", "0");
-      label.setAttribute("y", String(y + 16));
-      label.textContent = row.category.length > 16 ? row.category.slice(0, 15) + "…" : row.category;
-      const track = svgEl("rect");
-      track.setAttribute("x", String(labelW));
-      track.setAttribute("y", String(y + 2));
-      track.setAttribute("width", String(trackW));
-      track.setAttribute("height", "18");
-      track.setAttribute("rx", "4");
-      track.setAttribute("fill", "var(--bar-track)");
-      const bar = svgEl("rect");
-      bar.setAttribute("x", String(labelW));
-      bar.setAttribute("y", String(y + 2));
-      bar.setAttribute("width", String(barW));
-      bar.setAttribute("height", "18");
-      bar.setAttribute("rx", "4");
-      bar.setAttribute("fill", "var(--bar)");
-      const value = svgEl("text");
-      value.setAttribute("class", "tick");
-      value.setAttribute("x", String(width));
-      value.setAttribute("y", String(y + 16));
-      value.setAttribute("text-anchor", "end");
-      value.textContent = money(row.amount);
-      svg.append(label, track, bar, value);
-    });
-    host.append(svg);
-  }
-
-  function renderRecords(body) {
-    const rows = listOf(body, "records");
-    const host = document.getElementById("records");
-    host.replaceChildren();
-    if (!rows.length) {
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "No records match that filter.";
-      host.append(empty);
-      return;
-    }
-    const table = document.createElement("table");
-    const head = document.createElement("tr");
-    ["When", "Type", "Detail", "Amount"].forEach((label, index) => {
-      const cell = document.createElement("th");
-      cell.textContent = label;
-      if (index === 3) cell.className = "num";
-      cell.setAttribute("scope", "col");
-      head.append(cell);
-    });
-    table.append(head);
-    rows.forEach((row) => {
-      const tr = document.createElement("tr");
-      const detail = row.category || row.merchant || row.source || row.person
-        || row.name || row.raw_text || "";
-      const cells = [
-        row.date || row.expense_date || row.created_at || "",
-        row.record_type || row.type || "",
-        detail,
-        money(row.amount_minor ?? row.amount ?? row.converted_minor, row.currency)
-      ];
-      cells.forEach((value, index) => {
-        const cell = document.createElement("td");
-        cell.textContent = String(value);
-        if (index === 1 && value) {
-          const pill = document.createElement("span");
-          pill.className = "pill";
-          pill.textContent = String(value);
-          cell.textContent = "";
-          cell.append(pill);
-        }
-        if (index === 2) cell.className = "clip";
-        if (index === 3) cell.className = "num";
-        tr.append(cell);
-      });
-      table.append(tr);
-    });
-    host.append(table);
-  }
-
-  function addBubble(text, mine) {
-    const bubble = document.createElement("div");
-    bubble.className = "bubble " + (mine ? "me" : "them");
-    bubble.textContent = text;
-    const log = document.getElementById("chat-log");
-    log.append(bubble);
-    log.scrollTop = log.scrollHeight;
-  }
-
-  async function refresh() {
-    const [balances, spending, records] = await Promise.allSettled([
-      api("/balances"),
-      loadSpending(),
-      loadRecords()
-    ]);
-    if (balances.status === "fulfilled") renderBalances(balances.value);
-    else {
-      setup.hidden = false;
-      show(document.getElementById("setup-error"), balances.reason.body);
-    }
-    if (spending.status === "rejected") show(document.getElementById("spending-error"), spending.reason.body);
-    if (records.status === "rejected") show(document.getElementById("records-error"), records.reason.body);
-  }
-
   function query(params) {
     const search = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) search.set(key, value);
-    });
+    Object.entries(params).forEach(([key, value]) => { if (value) search.set(key, value); });
     const text = search.toString();
     return text ? "?" + text : "";
   }
 
+  // ---------- the books API ----------
+
+  async function accessToken() {
+    const { data } = await supabase.auth.getSession();
+    return data.session ? data.session.access_token : null;
+  }
+
+  function modelHeaders() {
+    const headers = {};
+    const key = readSetting("key");
+    const base = readSetting("base");
+    const name = readSetting("name");
+    if (key) headers["X-Model-Key"] = key;
+    if (base) headers["X-Model-Base-URL"] = base;
+    if (name) headers["X-Model-Name"] = name;
+    return headers;
+  }
+
+  async function api(path, { method = "GET", body, model = false } = {}) {
+    const token = await accessToken();
+    if (!token) {
+      sessionEnded();
+      throw failure("unauthenticated");
+    }
+    const headers = { authorization: "Bearer " + token };
+    if (body !== undefined) headers["content-type"] = "application/json";
+    if (model) Object.assign(headers, modelHeaders());
+    let response;
+    try {
+      response = await fetch(path, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body)
+      });
+    } catch (err) {
+      throw failure("network");
+    }
+    let data = null;
+    try { data = await response.json(); } catch (err) { data = null; }
+    if (response.status === 401) {
+      sessionEnded();
+      throw failure("unauthenticated");
+    }
+    if (!response.ok) {
+      throw failure(data && typeof data.code === "string" ? data.code : "failed");
+    }
+    return data || {};
+  }
+
+  // A server that fails on a revoked token without saying so would otherwise
+  // leave the page stuck; ask the sign-in service directly.
+  async function sessionRejected() {
+    try {
+      const { error } = await supabase.auth.getUser();
+      return Boolean(error && error.status >= 400 && error.status < 500);
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function sessionEnded() {
+    if (!signedInAs) return;
+    await supabase.auth.signOut({ scope: "local" });
+    notice(ERRORS.unauthenticated, true);
+  }
+
+  // ---------- balances and setup ----------
+
+  function renderBalanceSkeleton() {
+    $("balances").replaceChildren(el("div", "skeleton"), el("div", "skeleton"));
+  }
+
+  function balanceCard(label, minor, currency, extra) {
+    const card = el("div", "balance" + (extra === "total" ? " total" : ""));
+    const top = el("span", "label");
+    top.append(document.createTextNode(label));
+    if (extra === "default") top.append(el("span", "tag", "Default"));
+    const amount = el("span", "amount" + (Number(minor) < 0 && extra !== "total" ? " neg" : ""), formatMoney(minor, currency));
+    card.append(top, amount);
+    if (currency) card.append(el("span", "code", currency));
+    return card;
+  }
+
+  function renderBalances() {
+    const host = $("balances");
+    const rows = accounts;
+    host.hidden = rows.length === 0;
+    const cards = [];
+    const shared = sharedCurrency();
+    if (rows.length > 1 && shared) {
+      const total = rows.reduce((sum, row) => sum + Number(row.current_balance || 0), 0);
+      cards.push(balanceCard("All accounts", total, shared, "total"));
+    }
+    rows.forEach((row) => {
+      cards.push(balanceCard(row.name || "Account", row.current_balance, row.currency, row.is_default && rows.length > 1 ? "default" : ""));
+    });
+    host.replaceChildren(...cards);
+  }
+
+  function normaliseAccounts(body) {
+    return listOf(body, "balances").map((row) => ({
+      name: row.name,
+      currency: row.currency ? String(row.currency).trim() : "",
+      current_balance: row.current_balance ?? row.balance ?? row.amount ?? 0,
+      is_default: Boolean(row.is_default)
+    }));
+  }
+
+  async function loadBalances() {
+    $("balances-error").textContent = "";
+    try {
+      accounts = normaliseAccounts(await api("/balances"));
+    } catch (err) {
+      if (err.code === "unauthenticated") return false;
+      if (err.code === "failed" && await sessionRejected()) {
+        await sessionEnded();
+        return false;
+      }
+      $("balances").replaceChildren();
+      $("balances-error").textContent = err.code === "network"
+        ? sentence(err.code)
+        : "Balances could not be loaded. Try refreshing the page.";
+      return false;
+    }
+    renderBalances();
+    const first = accounts.length === 0;
+    $("setup").hidden = !first;
+    $("dashboard").hidden = first;
+    return true;
+  }
+
+  // ---------- spending ----------
+
+  function rangeFor(kind) {
+    const now = new Date();
+    const today = isoDate(now);
+    if (kind === "last-month") {
+      return [isoDate(new Date(now.getFullYear(), now.getMonth() - 1, 1)), isoDate(new Date(now.getFullYear(), now.getMonth(), 0))];
+    }
+    if (kind === "90") return [isoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 89)), today];
+    if (kind === "year") return [isoDate(new Date(now.getFullYear(), 0, 1)), today];
+    return [isoDate(new Date(now.getFullYear(), now.getMonth(), 1)), today];
+  }
+
+  function applyPreset(kind) {
+    const [from, to] = rangeFor(kind);
+    $("spend-from").value = from;
+    $("spend-to").value = to;
+    markPreset(kind);
+  }
+
+  function markPreset(kind) {
+    $("presets").querySelectorAll("button").forEach((button) => {
+      button.setAttribute("aria-pressed", button.dataset.range === kind ? "true" : "false");
+    });
+  }
+
+  function renderChart(body) {
+    const rows = listOf(body, "spending").map((row) => ({
+      category: String(row.category || row.name || "Other"),
+      amount: Number(row.converted_minor ?? row.amount ?? row.total ?? 0)
+    })).filter((row) => row.amount > 0).sort((a, b) => b.amount - a.amount);
+    const host = $("chart");
+    if (!rows.length) {
+      host.replaceChildren(el("p", "empty-state", "No spending in this range yet."));
+      return;
+    }
+    const currency = sharedCurrency();
+    const total = rows.reduce((sum, row) => sum + row.amount, 0);
+    const max = rows[0].amount;
+    const head = el("div", "total-line");
+    head.append(el("span", "muted small", "Total spent"), el("strong", "", formatMoney(total, currency)));
+    const list = el("ul", "bars");
+    list.setAttribute("aria-label", "Spending by category, largest first");
+    rows.forEach((row) => {
+      const item = el("li");
+      const line = el("div", "row");
+      line.append(el("span", "name", row.category), el("span", "value", formatMoney(row.amount, currency)));
+      const track = el("div", "track");
+      track.setAttribute("aria-hidden", "true");
+      const fill = el("div", "fill");
+      fill.style.width = Math.max(2, (row.amount / max) * 100) + "%";
+      track.append(fill);
+      item.append(line, track);
+      list.append(item);
+    });
+    host.replaceChildren(head, list);
+  }
+
   async function loadSpending() {
-    document.getElementById("spending-error").textContent = "";
-    const body = await api("/spending" + query({
-      start: document.getElementById("spend-from").value,
-      end: document.getElementById("spend-to").value
-    }));
-    renderChart(body);
-    return body;
+    $("spending-error").textContent = "";
+    let from = $("spend-from").value;
+    let to = $("spend-to").value;
+    if (!from || !to) {
+      [from, to] = rangeFor("month");
+      $("spend-from").value = $("spend-from").value || from;
+      $("spend-to").value = $("spend-to").value || to;
+      from = $("spend-from").value;
+      to = $("spend-to").value;
+    }
+    if (from > to) {
+      $("spending-error").textContent = "The start date is after the end date.";
+      return;
+    }
+    try {
+      renderChart(await api("/spending" + query({ start: from, end: to })));
+    } catch (err) {
+      if (err.code !== "unauthenticated") $("spending-error").textContent = "Spending could not be loaded. Try again.";
+    }
   }
 
+  // ---------- records ----------
+
+  function recordAmount(row) {
+    const minor = row.amount_minor ?? row.converted_minor ?? row.amount;
+    if (minor === undefined || minor === null) return "";
+    return formatMoney(minor, row.currency ? String(row.currency).trim() : sharedCurrency());
+  }
+
+  function renderRecords(body) {
+    const rows = listOf(body, "records");
+    const host = $("records");
+    const filtered = Boolean($("record-type").value || $("record-from").value || $("record-to").value || $("record-q").value.trim());
+    if (!rows.length) {
+      host.replaceChildren(el("p", "empty-state", filtered ? "Nothing matches that filter." : "Nothing booked yet. Your first message will show up here."));
+      $("records-count").textContent = "";
+      return;
+    }
+    const amounts = rows.map(recordAmount);
+    const showAmount = amounts.some(Boolean);
+    const table = el("table");
+    const thead = el("thead");
+    const head = el("tr");
+    ["When", "Type", "Detail"].concat(showAmount ? ["Amount"] : []).forEach((label, index) => {
+      const cell = el("th", index === 3 ? "num" : "", label);
+      cell.setAttribute("scope", "col");
+      head.append(cell);
+    });
+    thead.append(head);
+    const tbody = el("tbody");
+    rows.forEach((row, index) => {
+      const tr = el("tr");
+      const kind = String(row.record_type || row.type || "").toUpperCase();
+      const when = el("td", "when", prettyDate(row.date || row.expense_date || row.created_at || ""));
+      const type = el("td", "kind");
+      if (kind) type.append(el("span", "pill " + kind.toLowerCase(), kind.toLowerCase()));
+      const detail = el("td", "detail", String(row.raw_text || row.category || row.merchant || row.source || row.person || row.name || ""));
+      tr.append(when, type, detail);
+      if (showAmount) tr.append(el("td", "num", amounts[index]));
+      tbody.append(tr);
+    });
+    table.append(thead, tbody);
+    host.replaceChildren(table);
+    $("records-count").textContent = rows.length === 1 ? "1 record" : rows.length + " records";
+  }
+
+  let recordsRequest = 0;
   async function loadRecords() {
-    document.getElementById("records-error").textContent = "";
-    const body = await api("/records" + query({
-      type: document.getElementById("record-type").value,
-      start: document.getElementById("record-from").value,
-      end: document.getElementById("record-to").value,
-      q: document.getElementById("record-q").value.trim()
-    }));
-    renderRecords(body);
-    return body;
+    $("records-error").textContent = "";
+    const from = $("record-from").value;
+    const to = $("record-to").value;
+    if (from && to && from > to) {
+      $("records-error").textContent = "The start date is after the end date.";
+      return;
+    }
+    const ticket = ++recordsRequest;
+    try {
+      const body = await api("/records" + query({
+        type: $("record-type").value,
+        start: from,
+        end: to,
+        q: $("record-q").value.trim()
+      }));
+      if (ticket === recordsRequest) renderRecords(body);
+    } catch (err) {
+      if (ticket === recordsRequest && err.code !== "unauthenticated") {
+        $("records-error").textContent = "Records could not be loaded. Try again.";
+      }
+    }
   }
 
-  async function showSignedIn() {
-    signedOut.hidden = true;
-    app.hidden = false;
-    signout.hidden = false;
-    document.getElementById("spend-from").value = monthStart();
-    document.getElementById("spend-to").value = todayISO();
-    await refresh();
+  async function refresh() {
+    const ok = await loadBalances();
+    if (ok && accounts.length) await Promise.all([loadSpending(), loadRecords()]);
+  }
+
+  // ---------- chat ----------
+
+  function scrollLog() {
+    const log = $("log");
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function addTurn(side) {
+    $("log-empty").hidden = true;
+    const turn = el("div", "turn " + side);
+    $("log").append(turn);
+    return turn;
+  }
+
+  function sayMine(text) {
+    addTurn("me").append(el("div", "bubble", text));
+    scrollLog();
+  }
+
+  function showTyping() {
+    const turn = addTurn("them");
+    const dots = el("div", "bubble typing");
+    dots.setAttribute("aria-label", "Working");
+    dots.append(el("i"), el("i"), el("i"));
+    turn.append(dots);
+    scrollLog();
+    return turn;
+  }
+
+  function sayError(turn, code) {
+    turn.classList.add("failed");
+    turn.replaceChildren(el("div", "bubble", sentence(code)));
+    if (code === "no_key" || code === "bad_key") {
+      const button = el("button", "btn btn-quiet", "Open settings");
+      button.type = "button";
+      button.addEventListener("click", openSettings);
+      turn.append(button);
+    }
+    if (code === "no_account") {
+      $("setup").hidden = false;
+    }
+    scrollLog();
+  }
+
+  function renderResponse(turn, body) {
+    turn.replaceChildren();
+    const reply = typeof body.reply === "string" ? body.reply.trim() : "";
+    const hasBalance = body.balance !== undefined && body.balance !== null;
+    const balanceText = hasBalance ? formatMoney(body.balance, sharedCurrency()) : "";
+    if (reply) {
+      turn.append(el("div", "bubble", reply));
+      if (hasBalance) {
+        const chip = el("span", "balance-chip");
+        chip.append(document.createTextNode("Balance now"), el("strong", "", balanceText));
+        turn.append(chip);
+      }
+    } else if (hasBalance) {
+      turn.append(el("div", "bubble", "Booked. The balance is now " + balanceText + "."));
+    } else if (!body.confirmation) {
+      turn.append(el("div", "bubble", "Done."));
+    }
+    const observations = Array.isArray(body.observations) ? body.observations : [];
+    if (observations.length) {
+      const list = el("ul", "observations");
+      list.setAttribute("aria-label", "Things worth knowing");
+      observations.forEach((item) => {
+        const li = el("li");
+        const text = el("span");
+        if (item && item.category) text.append(el("span", "cat", String(item.category)));
+        text.append(document.createTextNode(String((item && item.detail) || "")));
+        li.append(text);
+        list.append(li);
+      });
+      turn.append(list);
+    }
+    if (body.confirmation && typeof body.confirmation.token === "string") {
+      turn.append(confirmCard(body.confirmation));
+    }
+    scrollLog();
+  }
+
+  function confirmCard(confirmation) {
+    const card = el("div", "confirm-card");
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", "Needs your confirmation");
+    const summary = el("p", "summary", String(confirmation.summary || "This needs your confirmation."));
+    const expires = new Date(Date.now() + CONFIRM_TTL_MS);
+    const meta = el("p", "meta", "Nothing changes until you confirm. This expires at "
+      + expires.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) + ".");
+    const actions = el("div", "actions");
+    const yes = el("button", "btn btn-primary");
+    yes.type = "button";
+    yes.append(el("span", "", "Confirm"));
+    const no = el("button", "btn btn-quiet", "Not now");
+    no.type = "button";
+    const error = el("p", "error");
+    error.setAttribute("role", "alert");
+    actions.append(yes, no);
+    card.append(summary, meta, actions, error);
+
+    const settle = (text) => {
+      window.clearTimeout(timer);
+      card.classList.add("settled");
+      actions.remove();
+      meta.textContent = text;
+    };
+    const timer = window.setTimeout(() => {
+      if (card.isConnected && actions.isConnected) settle("This confirmation expired, so nothing changed. Ask again to redo it.");
+    }, CONFIRM_TTL_MS);
+
+    no.addEventListener("click", () => settle("Left as it was. Nothing changed."));
+    yes.addEventListener("click", async () => {
+      error.textContent = "";
+      setBusy(yes, true, "Confirming");
+      no.disabled = true;
+      const turn = showTyping();
+      try {
+        const body = await api("/confirm", { method: "POST", body: { token: confirmation.token }, model: true });
+        settle("Confirmed.");
+        renderResponse(turn, body);
+        await refresh();
+      } catch (err) {
+        turn.remove();
+        if (err.code === "network") {
+          setBusy(yes, false, "Confirm");
+          no.disabled = false;
+          error.textContent = sentence(err.code);
+        } else {
+          settle(err.code === "failed" ? "That confirmation could not be used, so nothing changed. Ask again to redo it." : sentence(err.code));
+        }
+      }
+    });
+    return card;
+  }
+
+  async function sendMessage(text) {
+    const message = text.trim();
+    if (!message || chatBusy) return;
+    chatBusy = true;
+    setBusy($("send"), true);
+    $("message").value = "";
+    sayMine(message);
+    const turn = showTyping();
+    try {
+      const body = await api("/chat", { method: "POST", body: { message }, model: true });
+      renderResponse(turn, body);
+      await refresh();
+    } catch (err) {
+      if (err.code === "unauthenticated") turn.remove();
+      else sayError(turn, err.code);
+    } finally {
+      chatBusy = false;
+      setBusy($("send"), false);
+      if (signedInAs) $("message").focus({ preventScroll: true });
+    }
+  }
+
+  function resetChat() {
+    $("log").querySelectorAll(".turn").forEach((node) => node.remove());
+    $("log-empty").hidden = false;
+  }
+
+  // ---------- settings ----------
+
+  function renderKeyChip() {
+    const has = Boolean(readSetting("key"));
+    $("key-chip").classList.toggle("on", has);
+    $("key-chip-text").textContent = has ? "Your key" : "Add model key";
+  }
+
+  function openSettings() {
+    $("model-key").value = readSetting("key");
+    $("model-base").value = readSetting("base");
+    $("model-name").value = readSetting("name");
+    $("model-key").type = "password";
+    $("toggle-key").textContent = "Show";
+    $("toggle-key").setAttribute("aria-pressed", "false");
+    $("settings-error").textContent = "";
+    $("settings").showModal();
+    $("model-key").focus();
+  }
+
+  function validBaseUrl(value) {
+    if (!value) return true;
+    try {
+      const url = new URL(value);
+      if (url.protocol === "https:") return true;
+      return url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1");
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // ---------- signed in / out ----------
+
+  function notice(text, bad) {
+    const node = $("auth-notice");
+    node.textContent = text || "";
+    node.classList.toggle("bad", Boolean(bad));
+  }
+
+  function showSignedIn(session) {
+    signedInAs = session.user.id;
+    $("signed-out").hidden = true;
+    $("app").hidden = false;
+    $("who").hidden = false;
+    $("who-email").textContent = session.user.email || "";
+    notice("");
+    applyPreset("month");
+    renderKeyChip();
+    renderBalanceSkeleton();
+    $("setup").hidden = true;
+    $("dashboard").hidden = true;
+    refresh();
   }
 
   function showSignedOut() {
-    app.hidden = true;
-    signout.hidden = true;
-    signedOut.hidden = false;
+    signedInAs = null;
+    accounts = [];
+    $("app").hidden = true;
+    $("who").hidden = true;
+    $("signed-out").hidden = false;
+    $("who-email").textContent = "";
+    $("balances").replaceChildren();
+    $("chart").replaceChildren();
+    $("records").replaceChildren();
+    $("records-count").textContent = "";
+    resetChat();
+  }
+
+  function route(session) {
+    if (session && session.user) {
+      if (signedInAs !== session.user.id) showSignedIn(session);
+    } else if (signedInAs !== null || !$("app").hidden) {
+      showSignedOut();
+    }
+  }
+
+  // ---------- auth form ----------
+
+  let mode = "signin";
+
+  function setMode(next) {
+    mode = next;
+    $("tab-signin").setAttribute("aria-pressed", next === "signin" ? "true" : "false");
+    $("tab-signup").setAttribute("aria-pressed", next === "signup" ? "true" : "false");
+    $("auth-submit").textContent = next === "signin" ? "Sign in" : "Create account";
+    $("password").autocomplete = next === "signin" ? "current-password" : "new-password";
+    $("password-hint").hidden = next === "signin";
+    $("auth-error").textContent = "";
+  }
+
+  function authSentence(error, fallback) {
+    const code = error && error.code;
+    if (code === "email_not_confirmed") return "Confirm your email first. The link is in your inbox.";
+    if (code === "invalid_credentials") return "That email or password was not accepted.";
+    if (code === "user_already_exists" || code === "email_exists") return "That email already has an account. Sign in instead.";
+    if (code === "weak_password") return "Choose a longer password, at least 6 characters.";
+    if (code === "email_address_invalid") return "That email address does not look right.";
+    if (code === "over_email_send_rate_limit") return "Too many emails were sent just now. Wait a few minutes, then try again.";
+    if (code === "over_request_rate_limit" || (error && error.status === 429)) return "Too many attempts. Wait a minute, then try again.";
+    if (code === "signup_disabled") return "New accounts are closed right now.";
+    return fallback;
+  }
+
+  async function submitAuth(event) {
+    event.preventDefault();
+    const error = $("auth-error");
+    error.textContent = "";
+    notice("");
+    const email = $("email").value.trim();
+    const password = $("password").value;
+    if (!email || !$("email").checkValidity()) {
+      error.textContent = "Enter the email for this account.";
+      $("email").focus();
+      return;
+    }
+    if (password.length < 6) {
+      error.textContent = mode === "signin" ? "Enter your password." : "Choose a password of at least 6 characters.";
+      $("password").focus();
+      return;
+    }
+    const button = $("auth-submit");
+    setBusy(button, true, mode === "signin" ? "Signing in" : "Creating account");
+    try {
+      if (mode === "signin") {
+        const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+        if (authError) error.textContent = authSentence(authError, "Sign-in did not work just now. Try again.");
+        else $("password").value = "";
+      } else {
+        const { data, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: SITE }
+        });
+        if (authError) {
+          error.textContent = authSentence(authError, "That account could not be created. Try again.");
+        } else if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          error.textContent = authSentence({ code: "user_already_exists" });
+        } else if (!data.session) {
+          $("password").value = "";
+          setMode("signin");
+          notice("Check " + email + " for a confirmation link. It brings you back here, signed in.");
+        }
+      }
+    } catch (err) {
+      error.textContent = "The sign-in service could not be reached. Check the connection and try again.";
+    } finally {
+      setBusy(button, false, mode === "signin" ? "Sign in" : "Create account");
+    }
+  }
+
+  async function providerEnabled(provider) {
+    try {
+      const response = await fetch(SUPABASE_URL + "/auth/v1/settings", { headers: { apikey: SUPABASE_KEY } });
+      if (!response.ok) return null;
+      const settings = await response.json();
+      return Boolean(settings.external && settings.external[provider]);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function providerOff(label) {
+    return label + " sign-in is not switched on for this site yet. Use email and password for now.";
   }
 
   async function signInWith(provider, button) {
-    const error = document.getElementById("signin-error");
-    error.textContent = "";
-    button.disabled = true;
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: SITE }
-    });
-    if (authError) {
-      button.disabled = false;
-      error.textContent = "That sign-in could not start. Try again.";
+    const label = PROVIDERS[provider];
+    $("auth-error").textContent = "";
+    notice("");
+    setBusy(button, true);
+    const enabled = await providerEnabled(provider);
+    if (enabled === false) {
+      setBusy(button, false);
+      notice(providerOff(label), true);
+      return;
+    }
+    try { window.sessionStorage.setItem(STORE.provider, provider); } catch (err) { /* optional */ }
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: SITE } });
+    if (error) {
+      setBusy(button, false);
+      notice(/not enabled|unsupported provider/i.test(error.message || "")
+        ? providerOff(label)
+        : label + " sign-in could not start. Try again, or use email and password.", true);
     }
   }
 
-  document.getElementById("google").addEventListener("click", () => {
-    signInWith("google", document.getElementById("google"));
-  });
-  document.getElementById("github").addEventListener("click", () => {
-    signInWith("github", document.getElementById("github"));
-  });
-
-  document.getElementById("signin").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const error = document.getElementById("signin-error");
-    error.textContent = "";
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    document.getElementById("password").value = "";
-    if (authError) {
-      error.textContent = "That email or password was not accepted.";
-      return;
-    }
-    await showSignedIn();
-  });
-
-  document.getElementById("signup-button").addEventListener("click", async () => {
-    const error = document.getElementById("signin-error");
-    error.textContent = "";
-    const form = document.getElementById("signin");
-    if (!form.reportValidity()) return;
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const { error: authError } = await supabase.auth.signUp({ email, password });
-    document.getElementById("password").value = "";
-    if (authError) {
-      error.textContent = "That account could not be created. Try a different email.";
-      return;
-    }
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      await showSignedIn();
-      return;
-    }
-    error.textContent = "Account created. Confirm the email, then sign in.";
-  });
-
-  document.getElementById("account-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const error = document.getElementById("setup-error");
-    error.textContent = "";
-    const major = document.getElementById("account-balance").value.replace(/,/g, "");
-    if (!/^\d+(\.\d{1,2})?$/.test(major)) {
-      error.textContent = "Enter the opening balance as a number, such as 1000.00.";
-      return;
-    }
-    const [whole, fraction = ""] = major.split(".");
-    const opening = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+  function landingError() {
+    const code = landing.searchParams.get("error_code") || landingHash.get("error_code");
+    const error = landing.searchParams.get("error") || landingHash.get("error");
+    const description = landing.searchParams.get("error_description") || landingHash.get("error_description") || "";
+    if (!error && !code) return null;
+    let provider = "";
     try {
-      await api("/accounts", {
-        method: "POST",
-        body: JSON.stringify({
-          name: document.getElementById("account-name").value.trim(),
-          currency: document.getElementById("account-currency").value,
-          opening_balance: opening
-        })
-      });
-      document.getElementById("account-name").value = "";
-      await refresh();
-    } catch (err) {
-      show(error, err.body);
-    }
+      provider = window.sessionStorage.getItem(STORE.provider) || "";
+      window.sessionStorage.removeItem(STORE.provider);
+    } catch (err) { /* optional */ }
+    const label = PROVIDERS[provider] || "That";
+    if (code === "otp_expired") return "That email link has expired. Sign in, or create the account again for a fresh link.";
+    if (/not enabled|unsupported provider/i.test(description)) return providerOff(PROVIDERS[provider] || "That provider's");
+    if (error === "access_denied" && provider) return label + " sign-in was cancelled, so you are still signed out.";
+    return (provider ? label + " sign-in" : "That sign-in") + " did not finish" + (description ? ": " + description.replace(/\+/g, " ").replace(/\.$/, "") : "") + ".";
+  }
+
+  // ---------- wiring ----------
+
+  $("tab-signin").addEventListener("click", () => setMode("signin"));
+  $("tab-signup").addEventListener("click", () => setMode("signup"));
+  $("auth-form").addEventListener("submit", submitAuth);
+  document.querySelectorAll("[data-provider]").forEach((button) => {
+    button.addEventListener("click", () => signInWith(button.dataset.provider, button));
   });
 
-  document.getElementById("spending-filter").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try { await loadSpending(); }
-    catch (err) { show(document.getElementById("spending-error"), err.body); }
-  });
-
-  document.getElementById("record-filter").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try { await loadRecords(); }
-    catch (err) { show(document.getElementById("records-error"), err.body); }
-  });
-
-  document.getElementById("chat").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const error = document.getElementById("chat-error");
-    error.textContent = "";
-    if (document.getElementById("balances").querySelector(".balance") === null) {
-      setup.hidden = false;
-      show(error, { code: "no_account" });
-      return;
-    }
-    const input = document.getElementById("message");
-    const message = input.value.trim();
-    if (!message) return;
-    addBubble(message, true);
-    input.value = "";
-    try {
-      const body = await api("/chat", {
-        method: "POST",
-        body: JSON.stringify({ message })
-      });
-      if (body.confirmation || body.needs_confirmation || body.token) {
-        addBubble("That needs a confirmation before anything changes.", false);
-      } else if (typeof body.reply === "string") {
-        addBubble(body.reply, false);
-      } else if (typeof body.sentence === "string") {
-        addBubble(body.sentence, false);
-      } else if (body.balance !== undefined) {
-        addBubble("Booked. Balance is now " + money(body.balance) + ".", false);
-      } else {
-        addBubble("Done.", false);
-      }
-      await refresh();
-    } catch (err) {
-      show(error, err.body);
-      addBubble(sentence(err.body), false);
-      if (err.body && err.body.code === "no_account") setup.hidden = false;
-    }
-  });
-
-  signout.addEventListener("click", async () => {
+  $("signout").addEventListener("click", async () => {
+    setBusy($("signout"), true);
     await supabase.auth.signOut();
+    setBusy($("signout"), false);
     showSignedOut();
   });
 
-  const { data } = await supabase.auth.getSession();
-  if (data.session) await showSignedIn();
+  $("account-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const error = $("setup-error");
+    error.textContent = "";
+    const name = $("account-name").value.trim();
+    const currency = $("account-currency").value;
+    const digits = fractionDigits(currency);
+    const major = $("account-balance").value.replace(/[,\s]/g, "");
+    if (!name) {
+      error.textContent = "Give the account a name, such as Cash.";
+      $("account-name").focus();
+      return;
+    }
+    const pattern = digits > 0 ? new RegExp("^\\d+(\\.\\d{1," + digits + "})?$") : /^\d+$/;
+    if (!pattern.test(major)) {
+      error.textContent = "Enter the opening balance as a number, such as 5000 or 5000.50.";
+      $("account-balance").focus();
+      return;
+    }
+    const [whole, fraction = ""] = major.split(".");
+    const opening = Number(whole) * 10 ** digits + Number(fraction.padEnd(digits, "0") || 0);
+    if (!Number.isSafeInteger(opening)) {
+      error.textContent = "That opening balance is too large.";
+      return;
+    }
+    const button = $("setup-submit");
+    setBusy(button, true, "Creating");
+    try {
+      await api("/accounts", { method: "POST", body: { name, currency, opening_balance: opening } });
+      $("account-name").value = "";
+      $("account-balance").value = "0";
+      await refresh();
+      if (accounts.length) $("message").focus();
+    } catch (err) {
+      if (err.code !== "unauthenticated") {
+        error.textContent = err.code === "failed"
+          ? "That account could not be created, so nothing was changed. Try again in a moment."
+          : sentence(err.code);
+      }
+    } finally {
+      setBusy(button, false, "Create account");
+    }
+  });
+
+  $("chat").addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendMessage($("message").value);
+  });
+  $("log").querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => sendMessage(chip.textContent));
+  });
+
+  $("presets").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-range]");
+    if (!button) return;
+    applyPreset(button.dataset.range);
+    loadSpending();
+  });
+  ["spend-from", "spend-to"].forEach((id) => {
+    $(id).addEventListener("change", () => {
+      markPreset("");
+      loadSpending();
+    });
+  });
+
+  let searchTimer = 0;
+  $("record-filter").addEventListener("submit", (event) => {
+    event.preventDefault();
+    window.clearTimeout(searchTimer);
+    loadRecords();
+  });
+  ["record-type", "record-from", "record-to"].forEach((id) => $(id).addEventListener("change", loadRecords));
+  $("record-q").addEventListener("input", () => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(loadRecords, 300);
+  });
+  $("record-clear").addEventListener("click", () => {
+    $("record-type").value = "";
+    $("record-from").value = "";
+    $("record-to").value = "";
+    $("record-q").value = "";
+    loadRecords();
+  });
+
+  $("open-settings").addEventListener("click", openSettings);
+  $("key-chip").addEventListener("click", openSettings);
+  $("settings-close").addEventListener("click", () => $("settings").close());
+  $("settings-cancel").addEventListener("click", () => $("settings").close());
+  $("toggle-key").addEventListener("click", () => {
+    const hidden = $("model-key").type === "password";
+    $("model-key").type = hidden ? "text" : "password";
+    $("toggle-key").textContent = hidden ? "Hide" : "Show";
+    $("toggle-key").setAttribute("aria-pressed", hidden ? "true" : "false");
+  });
+  $("settings-forget").addEventListener("click", () => {
+    writeSetting("key", "");
+    writeSetting("base", "");
+    writeSetting("name", "");
+    renderKeyChip();
+    $("settings").close();
+  });
+  $("settings-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const key = $("model-key").value.trim();
+    const base = $("model-base").value.trim().replace(/\/+$/, "");
+    const name = $("model-name").value.trim();
+    if (!validBaseUrl(base)) {
+      $("settings-error").textContent = "Enter the base URL as a full https:// address.";
+      $("model-base").focus();
+      return;
+    }
+    if (/[^\x21-\x7e]/.test(key)) {
+      $("settings-error").textContent = "That key has spaces or unusual characters. Paste it again.";
+      $("model-key").focus();
+      return;
+    }
+    writeSetting("key", key);
+    writeSetting("base", base);
+    writeSetting("name", name);
+    renderKeyChip();
+    $("settings").close();
+  });
+  $("settings-form").addEventListener("input", () => { $("settings-error").textContent = ""; });
+  $("settings").addEventListener("close", () => {
+    $("model-key").value = "";
+    $("model-key").type = "password";
+  });
+
+  const returned = landingError();
+  if (returned) {
+    notice(returned, true);
+    const clean = new URL(window.location.href);
+    ["error", "error_code", "error_description"].forEach((key) => clean.searchParams.delete(key));
+    clean.hash = "";
+    window.history.replaceState(null, "", clean.pathname + clean.search);
+  }
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    // Defer work out of the auth callback so it never waits on its own lock.
+    window.setTimeout(() => route(session), 0);
+  });
 </script>
 </body>
 </html>
