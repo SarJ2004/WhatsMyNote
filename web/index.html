@@ -3,115 +3,377 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>WhatsMyNote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light dark;
     --ink: #1c1915;
     --muted: #6b645c;
+    --faint: #8a8178;
     --line: #e4ddd3;
-    --paper: #faf7f2;
-    --card: #fff;
+    --paper: #f6f1e8;
+    --card: #fffdf9;
+    --wash: #efe8dc;
     --accent: #9a3412;
-    --accent-soft: #fed7aa;
+    --accent-ink: #fffaf5;
+    --accent-soft: #fde6d2;
     --good: #3f6212;
     --bad: #9f1239;
     --bar: #c2410c;
+    --bar-track: #f3e6da;
+    --shadow: 0 1px 0 rgba(28, 25, 21, 0.04), 0 12px 32px rgba(28, 25, 21, 0.05);
+    --focus: #9a3412;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --ink: #f5f0e8;
       --muted: #b5ada3;
+      --faint: #8f877e;
       --line: #3a342c;
       --paper: #16130f;
       --card: #221e19;
-      --accent: #fdba74;
-      --accent-soft: #7c2d12;
+      --wash: #2a241e;
+      --accent: #e8a06a;
+      --accent-ink: #1c120c;
+      --accent-soft: #5c3318;
       --good: #bef264;
       --bad: #fda4af;
       --bar: #fb923c;
+      --bar-track: #3a2a20;
+      --shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 16px 40px rgba(0, 0, 0, 0.28);
+      --focus: #fdba74;
     }
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    font: 16px/1.5 ui-sans-serif, system-ui, sans-serif;
+    min-height: 100vh;
+    font: 400 16px/1.55 "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
     color: var(--ink);
-    background: var(--paper);
+    background:
+      radial-gradient(ellipse 80% 40% at 10% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+      var(--paper);
   }
-  header, main { max-width: 960px; margin: 0 auto; padding: 1.25rem 1rem; }
-  header { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-  h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.02em; }
-  h2 { font-size: 0.95rem; margin: 0 0 0.75rem; }
-  .lede { color: var(--muted); margin: 0.35rem 0 0; }
+  button, input, select { font: inherit; }
+  button { cursor: pointer; }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  .shell { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1.15rem 3rem; }
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.35rem 0 1.35rem;
+  }
+  .brand { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+  .mark {
+    width: 36px; height: 36px; flex: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    display: grid; place-items: center;
+  }
+  .brand h1 {
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.35rem;
+    font-weight: 560;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1.1;
+  }
+  .brand p { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.9rem; }
+
+  h2 {
+    font-family: Fraunces, Georgia, serif;
+    font-weight: 560;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+  .section-head p, .lede { color: var(--muted); margin: 0; }
+  .lede { margin-top: 0.35rem; max-width: 38rem; }
+
   .card {
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 1rem;
-    margin: 0 0 1rem;
+    border-radius: 16px;
+    padding: 1.15rem 1.15rem 1.2rem;
+    margin: 0 0 0.9rem;
+    box-shadow: var(--shadow);
   }
-  form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; }
-  label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; color: var(--muted); }
-  input, select, button { font: inherit; padding: 0.45rem 0.65rem; border-radius: 8px; }
-  input, select { border: 1px solid var(--line); background: var(--paper); color: var(--ink); min-width: 0; }
-  button {
+
+  form.fields, form.stack { display: flex; flex-wrap: wrap; gap: 0.65rem 0.7rem; align-items: end; }
+  form.stack { flex-direction: column; align-items: stretch; }
+  form.stack label.grow { flex: 0 0 auto; }
+  form.stack .actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  label { display: flex; flex-direction: column; gap: 0.28rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em; color: var(--muted); }
+  label.grow { flex: 1 1 14rem; }
+  input, select {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    min-height: 44px;
+    min-width: 0;
+  }
+  input::placeholder { color: var(--faint); }
+  button.primary, button.quiet, button.oauth {
+    min-height: 44px;
+    border-radius: 10px;
+    padding: 0.55rem 0.95rem;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+  button.primary {
     border: 0;
     background: var(--accent);
-    color: #fff;
-    cursor: pointer;
+    color: var(--accent-ink);
+    font-weight: 600;
   }
-  button.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-  .error { color: var(--bad); min-height: 1.4em; margin: 0.5rem 0 0; width: 100%; }
-  .ok { color: var(--good); }
-  .balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
-  .balance strong { display: block; font-size: 1.35rem; }
-  .balance span { color: var(--muted); font-size: 0.85rem; }
-  .chart { width: 100%; overflow-x: auto; }
-  .chart svg { width: 100%; height: auto; display: block; }
-  .chart text { fill: var(--ink); font-size: 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-  th, td { text-align: left; padding: 0.4rem 0.35rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
-  .chat-log { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 0.75rem; max-height: 280px; overflow: auto; }
-  .bubble { padding: 0.45rem 0.7rem; border-radius: 10px; max-width: 40rem; }
-  .bubble.me { align-self: flex-end; background: var(--accent-soft); }
-  .bubble.them { align-self: flex-start; background: var(--paper); border: 1px solid var(--line); }
-  .empty { color: var(--muted); margin: 0; }
+  button.primary:hover { filter: brightness(1.06); }
+  button.quiet {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  button.quiet:hover, button.oauth:hover { background: var(--wash); }
+  button:disabled { opacity: 0.6; cursor: progress; }
+
+  .oauth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.9rem 0 0.2rem; }
+  button.oauth {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    font-weight: 600;
+  }
+  button.oauth svg { flex: none; }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--faint);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0.95rem 0 0.75rem;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .error { color: var(--bad); min-height: 1.4em; margin: 0.55rem 0 0; width: 100%; font-size: 0.92rem; }
+  .empty { color: var(--muted); margin: 0.35rem 0 0; }
+
+  .balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.7rem; }
+  .balance {
+    background: var(--wash);
+    border-radius: 12px;
+    padding: 0.85rem 0.95rem;
+    min-width: 0;
+  }
+  .balance strong {
+    display: block;
+    font-family: Fraunces, Georgia, serif;
+    font-size: 1.45rem;
+    font-weight: 560;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .balance span { color: var(--muted); font-size: 0.88rem; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 0.9rem;
+    align-items: start;
+  }
+  .layout > * { min-width: 0; }
+
+  .chart { width: 100%; overflow-x: auto; margin-top: 0.85rem; }
+  .chart svg { width: 100%; min-width: 280px; height: auto; display: block; }
+  .chart text { fill: var(--ink); font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif; font-size: 13px; }
+  .chart .tick { fill: var(--muted); }
+
+  .table-wrap { width: 100%; overflow-x: auto; margin-top: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  th, td {
+    text-align: left;
+    padding: 0.55rem 0.4rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.clip { max-width: 16rem; overflow-wrap: anywhere; }
+
+  .pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    background: var(--wash);
+    color: var(--muted);
+  }
+
+  .chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.2rem 0 0.85rem;
+    max-height: 320px;
+    overflow: auto;
+    min-height: 4.5rem;
+  }
+  .bubble {
+    padding: 0.55rem 0.8rem;
+    border-radius: 14px;
+    max-width: min(36rem, 92%);
+    overflow-wrap: anywhere;
+  }
+  .bubble.me { align-self: flex-end; background: var(--accent-soft); border-bottom-right-radius: 4px; }
+  .bubble.them { align-self: flex-start; background: var(--wash); border-bottom-left-radius: 4px; }
+
+  .gate {
+    max-width: 440px;
+    margin: 1.25rem auto 0;
+    padding: 1.15rem 1.2rem 1.2rem;
+  }
+  .gate h2 { font-size: 1.55rem; }
+  .gate .lede { font-size: 0.95rem; }
+  .gate .oauth-row { margin-top: 0.75rem; }
+  .gate .divider { margin: 0.7rem 0 0.6rem; }
+  footer.note {
+    color: var(--faint);
+    font-size: 0.82rem;
+    margin: 1.2rem 0 0;
+    text-align: center;
+  }
+
   #app[hidden], #signed-out[hidden] { display: none; }
+
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+    header.top { align-items: flex-start; }
+    .brand p { display: none; }
+  }
+  @media (max-width: 520px) {
+    .oauth-row { grid-template-columns: 1fr; }
+    .shell { padding-inline: 0.85rem; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>WhatsMyNote</h1>
-    <p class="lede">Tell it what you spent. It keeps the books and answers questions about them.</p>
+<div class="shell">
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M5 16.5V7.8c0-.5.3-.9.7-1.1l6-2.4a1.2 1.2 0 0 1 .9 0l6 2.4c.4.2.7.6.7 1.1v8.7c0 .5-.3.9-.7 1.1l-6 2.4a1.2 1.2 0 0 1-.9 0l-6-2.4a1.2 1.2 0 0 1-.7-1.1Z" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M8.5 12.2h7M12 8.8v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <div>
+      <h1>WhatsMyNote</h1>
+      <p>A quiet place for your own books.</p>
+    </div>
   </div>
   <button id="signout" class="quiet" hidden>Sign out</button>
 </header>
+
 <main>
-  <section id="signed-out" class="card">
+  <section id="signed-out" class="card gate">
     <h2>Sign in</h2>
-    <p class="lede">Use the email and password for your own books. A first visit creates the account here, then asks you to name an account before anything is booked.</p>
-    <form id="signin">
-      <label>Email <input id="email" type="email" autocomplete="username" required></label>
-      <label>Password <input id="password" type="password" autocomplete="current-password" required minlength="6"></label>
-      <button id="signin-button" type="submit">Sign in</button>
-      <button id="signup-button" class="quiet" type="button">Create account</button>
+    <p class="lede">Your books stay yours. Use Google, GitHub, or the email and password for this account. A first visit creates it, then asks you to name an account before anything is booked.</p>
+    <div class="oauth-row">
+      <button id="google" class="oauth" type="button">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.5z"/>
+          <path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.6-1.9.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3A9 9 0 0 0 9 18z"/>
+          <path fill="#FBBC05" d="M3.9 10.7a5.4 5.4 0 0 1 0-3.4V5H.9a9 9 0 0 0 0 8l3-2.3z"/>
+          <path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 .9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z"/>
+        </svg>
+        Google
+      </button>
+      <button id="github" class="oauth" type="button">
+        <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+          <path d="M8 0C3.6 0 0 3.6 0 8c0 3.5 2.3 6.5 5.5 7.6.4.1.5-.2.5-.4v-1.4c-2.2.5-2.7-1.1-2.7-1.1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.2-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.5 7.5 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3.1-1.9 3.7-3.6 3.9.3.3.6.8.6 1.5v2.2c0 .2.1.5.5.4A8 8 0 0 0 16 8c0-4.4-3.6-8-8-8z"/>
+        </svg>
+        GitHub
+      </button>
+    </div>
+    <div class="divider">or email</div>
+    <form id="signin" class="stack">
+      <label class="grow">Email
+        <input id="email" type="email" autocomplete="username" required>
+      </label>
+      <label class="grow">Password
+        <input id="password" type="password" autocomplete="current-password" required minlength="6">
+      </label>
+      <div class="actions">
+        <button id="signin-button" class="primary" type="submit">Sign in</button>
+        <button id="signup-button" class="quiet" type="button">Create account</button>
+      </div>
       <p id="signin-error" class="error" role="alert"></p>
     </form>
   </section>
 
   <section id="app" hidden>
     <div class="card">
-      <h2>Balances</h2>
+      <div class="section-head">
+        <h2>Balances</h2>
+        <p>What each account holds right now.</p>
+      </div>
       <div id="balances" class="balances"><p class="empty">No balances yet.</p></div>
     </div>
 
     <div id="setup" class="card" hidden>
-      <h2>Set up an account</h2>
+      <div class="section-head">
+        <h2>Set up an account</h2>
+      </div>
       <p class="lede">A booking needs an account first. The opening balance is in major units, such as 1000.00.</p>
-      <form id="account-form">
+      <form id="account-form" class="fields" style="margin-top:0.85rem">
         <label>Name <input id="account-name" required placeholder="Cash"></label>
         <label>Currency
           <select id="account-currency">
@@ -122,25 +384,47 @@
           </select>
         </label>
         <label>Opening balance <input id="account-balance" inputmode="decimal" required value="0"></label>
-        <button type="submit">Create account</button>
+        <button class="primary" type="submit">Create account</button>
         <p id="setup-error" class="error" role="alert"></p>
       </form>
     </div>
 
-    <div class="card">
-      <h2>Spending by category</h2>
-      <form id="spending-filter">
-        <label>From <input id="spend-from" type="date"></label>
-        <label>To <input id="spend-to" type="date"></label>
-        <button class="quiet" type="submit">Show</button>
-      </form>
-      <div id="chart" class="chart"><p class="empty">No spending in this range.</p></div>
-      <p id="spending-error" class="error" role="alert"></p>
+    <div class="layout">
+      <div class="card">
+        <div class="section-head">
+          <h2>Spending by category</h2>
+        </div>
+        <form id="spending-filter" class="fields">
+          <label>From <input id="spend-from" type="date"></label>
+          <label>To <input id="spend-to" type="date"></label>
+          <button class="quiet" type="submit">Show</button>
+        </form>
+        <div id="chart" class="chart"><p class="empty">No spending in this range.</p></div>
+        <p id="spending-error" class="error" role="alert"></p>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h2>Ask the books</h2>
+          <p>Plain language in, a booking out.</p>
+        </div>
+        <div id="chat-log" class="chat-log" aria-live="polite"></div>
+        <form id="chat" class="fields">
+          <label class="grow">Message
+            <input id="message" required placeholder="spent 400 on dinner" autocomplete="off">
+          </label>
+          <button class="primary" type="submit">Send</button>
+          <p id="chat-error" class="error" role="alert"></p>
+        </form>
+      </div>
     </div>
 
     <div class="card">
-      <h2>Records</h2>
-      <form id="record-filter">
+      <div class="section-head">
+        <h2>Records</h2>
+        <p>Filter what has already been booked.</p>
+      </div>
+      <form id="record-filter" class="fields">
         <label>Type
           <select id="record-type">
             <option value="">All</option>
@@ -154,31 +438,22 @@
         </label>
         <label>From <input id="record-from" type="date"></label>
         <label>To <input id="record-to" type="date"></label>
-        <label>Search <input id="record-q" placeholder="dinner"></label>
+        <label class="grow">Search <input id="record-q" placeholder="dinner"></label>
         <button class="quiet" type="submit">Filter</button>
       </form>
-      <div id="records"><p class="empty">No records yet.</p></div>
+      <div id="records" class="table-wrap"><p class="empty">No records yet.</p></div>
       <p id="records-error" class="error" role="alert"></p>
-    </div>
-
-    <div class="card">
-      <h2>Chat</h2>
-      <div id="chat-log" class="chat-log"></div>
-      <form id="chat">
-        <label style="flex:1">Message
-          <input id="message" required placeholder="spent 400 on dinner" autocomplete="off">
-        </label>
-        <button type="submit">Send</button>
-        <p id="chat-error" class="error" role="alert"></p>
-      </form>
     </div>
   </section>
 </main>
+<footer class="note">Personal books. Nothing here is shared with anyone else.</footer>
+</div>
 
 <script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.0/+esm";
 
   const API = "https://whatsmynote-staging.onrender.com";
+  const SITE = "https://whatsmynote-staging.onrender.com/";
   const SUPABASE_URL = "https://wxnihqslmljbidbortzp.supabase.co";
   const SUPABASE_KEY = "sb_publishable_iLiN9zD9sD_TSP6HcceLcw_3Zk6v1Wk";
 
@@ -270,7 +545,11 @@
     const host = document.getElementById("balances");
     setup.hidden = rows.length > 0;
     if (!rows.length) {
-      host.innerHTML = '<p class="empty">No balances yet.</p>';
+      host.replaceChildren();
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No balances yet.";
+      host.append(empty);
       return;
     }
     host.replaceChildren(...rows.map((row) => {
@@ -285,6 +564,10 @@
     }));
   }
 
+  function svgEl(name) {
+    return document.createElementNS("http://www.w3.org/2000/svg", name);
+  }
+
   function renderChart(body) {
     const rows = listOf(body, "spending").map((row) => ({
       category: String(row.category || row.name || "other"),
@@ -293,38 +576,52 @@
     const host = document.getElementById("chart");
     host.replaceChildren();
     if (!rows.length) {
-      host.innerHTML = '<p class="empty">No spending in this range.</p>';
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No spending in this range.";
+      host.append(empty);
       return;
     }
     const width = 640;
-    const barH = 28;
-    const gap = 10;
-    const labelW = 120;
-    const height = rows.length * (barH + gap) + 8;
+    const barH = 22;
+    const gap = 14;
+    const labelW = 132;
+    const valueW = 84;
+    const height = rows.length * (barH + gap) + 4;
     const max = Math.max(...rows.map((row) => row.amount));
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const svg = svgEl("svg");
     svg.setAttribute("viewBox", "0 0 " + width + " " + height);
     svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Spending by category");
+    svg.setAttribute("aria-label", "Spending by category, largest first in this range");
     rows.forEach((row, index) => {
       const y = index * (barH + gap);
-      const barW = Math.max(2, ((width - labelW - 90) * row.amount) / max);
-      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const trackW = width - labelW - valueW;
+      const barW = Math.max(4, (trackW * row.amount) / max);
+      const label = svgEl("text");
       label.setAttribute("x", "0");
-      label.setAttribute("y", String(y + 18));
-      label.textContent = row.category;
-      const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      label.setAttribute("y", String(y + 16));
+      label.textContent = row.category.length > 16 ? row.category.slice(0, 15) + "…" : row.category;
+      const track = svgEl("rect");
+      track.setAttribute("x", String(labelW));
+      track.setAttribute("y", String(y + 2));
+      track.setAttribute("width", String(trackW));
+      track.setAttribute("height", "18");
+      track.setAttribute("rx", "4");
+      track.setAttribute("fill", "var(--bar-track)");
+      const bar = svgEl("rect");
       bar.setAttribute("x", String(labelW));
-      bar.setAttribute("y", String(y + 4));
+      bar.setAttribute("y", String(y + 2));
       bar.setAttribute("width", String(barW));
-      bar.setAttribute("height", String(barH - 6));
+      bar.setAttribute("height", "18");
       bar.setAttribute("rx", "4");
       bar.setAttribute("fill", "var(--bar)");
-      const value = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      value.setAttribute("x", String(labelW + barW + 8));
-      value.setAttribute("y", String(y + 18));
+      const value = svgEl("text");
+      value.setAttribute("class", "tick");
+      value.setAttribute("x", String(width));
+      value.setAttribute("y", String(y + 16));
+      value.setAttribute("text-anchor", "end");
       value.textContent = money(row.amount);
-      svg.append(label, bar, value);
+      svg.append(label, track, bar, value);
     });
     host.append(svg);
   }
@@ -334,14 +631,19 @@
     const host = document.getElementById("records");
     host.replaceChildren();
     if (!rows.length) {
-      host.innerHTML = '<p class="empty">No records match that filter.</p>';
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No records match that filter.";
+      host.append(empty);
       return;
     }
     const table = document.createElement("table");
     const head = document.createElement("tr");
-    ["When", "Type", "Detail", "Amount"].forEach((label) => {
+    ["When", "Type", "Detail", "Amount"].forEach((label, index) => {
       const cell = document.createElement("th");
       cell.textContent = label;
+      if (index === 3) cell.className = "num";
+      cell.setAttribute("scope", "col");
       head.append(cell);
     });
     table.append(head);
@@ -349,13 +651,24 @@
       const tr = document.createElement("tr");
       const detail = row.category || row.merchant || row.source || row.person
         || row.name || row.raw_text || "";
-      [row.date || row.expense_date || row.created_at || "",
-       row.record_type || row.type || "",
-       detail,
-       money(row.amount_minor ?? row.amount ?? row.converted_minor, row.currency)
-      ].forEach((value) => {
+      const cells = [
+        row.date || row.expense_date || row.created_at || "",
+        row.record_type || row.type || "",
+        detail,
+        money(row.amount_minor ?? row.amount ?? row.converted_minor, row.currency)
+      ];
+      cells.forEach((value, index) => {
         const cell = document.createElement("td");
         cell.textContent = String(value);
+        if (index === 1 && value) {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = String(value);
+          cell.textContent = "";
+          cell.append(pill);
+        }
+        if (index === 2) cell.className = "clip";
+        if (index === 3) cell.className = "num";
         tr.append(cell);
       });
       table.append(tr);
@@ -432,6 +745,27 @@
     signout.hidden = true;
     signedOut.hidden = false;
   }
+
+  async function signInWith(provider, button) {
+    const error = document.getElementById("signin-error");
+    error.textContent = "";
+    button.disabled = true;
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: SITE }
+    });
+    if (authError) {
+      button.disabled = false;
+      error.textContent = "That sign-in could not start. Try again.";
+    }
+  }
+
+  document.getElementById("google").addEventListener("click", () => {
+    signInWith("google", document.getElementById("google"));
+  });
+  document.getElementById("github").addEventListener("click", () => {
+    signInWith("github", document.getElementById("github"));
+  });
 
   document.getElementById("signin").addEventListener("submit", async (event) => {
     event.preventDefault();
