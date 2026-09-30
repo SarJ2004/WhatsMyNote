@@ -1,93 +1,119 @@
+import asyncio
 import webbrowser
-from textual import work
-from textual.widgets import RichLog, Input
 
-from whatsmynote.app.auth import (
-    login_with_password, signup_with_password, 
-    start_oauth, wait_for_auth_code,
-    reset_password_for_email, update_password,
-    logout
-)
+from textual import work
+
+from whatsmynote.app.ui.present import display_name, note, problem, success
+
 
 class AuthMixin:
-    """Mixin for authentication flows in the TUI."""
+    """Sign-in flows. The password goes only to the sign-in service."""
 
-    @work(thread=True)
-    def do_login(self, email, password):
-        log = self.query_one("#chat-log", RichLog)
+    @work(exclusive=True, group="session")
+    async def restore_session(self) -> None:
         try:
-            user = login_with_password(email, password)
-            self.app.call_from_thread(log.write, f"[#dddddd]logged in successfully as {user.email}[/#dddddd]")
-            self.app.call_from_thread(self.update_user_label)
-            self.check_onboarding_status()
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[#ffaa55]login failed: {str(e)}[/#ffaa55]")
+            user = await asyncio.to_thread(self.app.auth.restore)
+        except Exception:
+            user = None
+        self.checking = False
+        if self.user is None:
+            self.user = user
+        self.refresh_status()
+        if self.user:
+            self.check_accounts()
 
-    @work(thread=True)
-    def do_signup(self, email, password):
-        log = self.query_one("#chat-log", RichLog)
-        try:
-            signup_with_password(email, password)
-            self.app.call_from_thread(log.write, "[#dddddd]sign up successful! you can now log in.[/#dddddd]")
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[#ffaa55]sign up failed: {str(e)}[/#ffaa55]")
+    def signed_in(self, user) -> None:
+        self.user = user
+        self.refresh_status()
+        self.say(success(f"Signed in as {getattr(user, 'email', '') or display_name(user)}."))
+        self.check_accounts()
 
-    @work(thread=True)
-    def do_oauth(self, provider):
-        log = self.query_one("#chat-log", RichLog)
-        try:
-            url = start_oauth(provider)
-            webbrowser.open(url)
-            self.app.call_from_thread(log.write, "[#888888]waiting for authentication code from browser...[/#888888]")
-            user = wait_for_auth_code()
-            if user:
-                self.app.call_from_thread(log.write, f"[#dddddd]successfully authenticated as {user.email}![/#dddddd]")
-                self.app.call_from_thread(self.update_user_label)
-                self.check_onboarding_status()
+    @work(exclusive=True, group="dialog")
+    async def login_flow(self) -> None:
+        from whatsmynote.app.ui.dialogs import EmailForm, SignInMenu
+
+        if self.user:
+            self.say(note("You are already signed in. Type /logout first to switch accounts."))
+            return
+        choice = await self.app.push_screen_wait(SignInMenu())
+        if choice in ("google", "github"):
+            await self._browser_sign_in(choice)
+        elif choice in ("email", "signup"):
+            outcome = await self.app.push_screen_wait(
+                EmailForm(self.app.auth, mode="signup" if choice == "signup" else "signin")
+            )
+            if not outcome:
+                self.say(note("Sign-in cancelled."))
+            elif outcome["signed_in"]:
+                self.signed_in(outcome["user"])
             else:
-                self.app.call_from_thread(log.write, "[#ffaa55]authentication failed: no code received.[/#ffaa55]")
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[#ffaa55]oauth failed: {str(e)}[/#ffaa55]")
+                self.say(success(f"Account created for {outcome['email']}."))
+                self.say(note("Open the confirmation link we emailed you, then type /login to sign in."))
+        elif choice == "reset":
+            await self._reset_password()
+        else:
+            self.say(note("Sign-in cancelled."))
 
-    @work(thread=True)
-    def do_password_reset(self, email):
-        log = self.query_one("#chat-log", RichLog)
-        try:
-            reset_password_for_email(email)
-            self.app.call_from_thread(log.write, "[#888888]password reset email sent. check your inbox and click the link...[/#888888]")
-            
-            user = wait_for_auth_code()
-            if user:
-                self.app.call_from_thread(self.prompt_new_password)
-            else:
-                self.app.call_from_thread(log.write, "[#ffaa55]password reset failed: no code received.[/#ffaa55]")
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[#ffaa55]password reset error: {str(e)}[/#ffaa55]")
-            
-    def prompt_new_password(self):
-        log = self.query_one("#chat-log", RichLog)
-        inp = self.query_one("#main-input", Input)
-        log.write("Enter new password:")
-        inp.password = True
-        self.set_state("AUTH_FORGOT_NEW_PASS")
+    async def _browser_sign_in(self, provider: str) -> None:
+        from whatsmynote.app.auth import auth_error_sentence
+        from whatsmynote.app.ui.dialogs import BrowserWait
 
-    @work(thread=True)
-    def do_password_update(self, new_password):
-        log = self.query_one("#chat-log", RichLog)
+        name = "GitHub" if provider == "github" else "Google"
         try:
-            update_password(new_password)
-            self.app.call_from_thread(log.write, "[#dddddd]password updated successfully! you are now logged in.[/#dddddd]")
-            self.app.call_from_thread(self.update_user_label)
-            self.check_onboarding_status()
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[#ffaa55]password update failed: {str(e)}[/#ffaa55]")
-            
-    @work(thread=True)
-    def do_logout(self):
-        log = self.query_one("#chat-log", RichLog)
+            url = await asyncio.to_thread(self.app.auth.browser_url, provider)
+        except Exception as error:
+            self.say(problem(auth_error_sentence(error)))
+            return
+        await asyncio.to_thread(webbrowser.open, url)
+        outcome = await self.app.push_screen_wait(BrowserWait(
+            f"Continue with {name}",
+            f"Your browser is open at {name}. Sign in there, then come back here.",
+            self.app.auth.wait_for_browser,
+            link=url,
+        ))
+        if not outcome:
+            self.say(note("Sign-in cancelled."))
+        elif outcome.get("error"):
+            self.say(problem(outcome["error"]))
+        elif outcome.get("user"):
+            self.signed_in(outcome["user"])
+        else:
+            self.say(problem(f"{name} did not finish signing you in. Type /login to try again."))
+
+    async def _reset_password(self) -> None:
+        from whatsmynote.app.ui.dialogs import BrowserWait, NewPasswordForm, ResetForm
+
+        email = await self.app.push_screen_wait(ResetForm(self.app.auth))
+        if not email:
+            self.say(note("Password reset cancelled."))
+            return
+        outcome = await self.app.push_screen_wait(BrowserWait(
+            "Check your email",
+            f"We sent a reset link to {email}. Open it on this computer, then come back here.",
+            self.app.auth.wait_for_browser,
+        ))
+        if not outcome:
+            self.say(note("Password reset cancelled. The emailed link still works if you type /login again."))
+            return
+        if outcome.get("error") or not outcome.get("user"):
+            self.say(problem(outcome.get("error") or "The reset link did not come back. Type /login to try again."))
+            return
+        if await self.app.push_screen_wait(NewPasswordForm(self.app.auth)):
+            self.say(success("Password changed."))
+        else:
+            self.say(note("Password not changed. You are signed in with the emailed link."))
+        self.signed_in(outcome["user"])
+
+    @work(exclusive=True, group="dialog")
+    async def logout_flow(self) -> None:
+        if not self.user:
+            self.say(note("You are not signed in."))
+            return
         try:
-            logout()
-            self.app.call_from_thread(log.write, "[#dddddd]logged out successfully.[/#dddddd]")
-            self.app.call_from_thread(self.update_user_label)
-        except Exception as e:
-            self.app.call_from_thread(log.write, f"[#ffaa55]logout failed: {str(e)}[/#ffaa55]")
+            await asyncio.to_thread(self.app.auth.sign_out)
+        except Exception:
+            pass  # The local session is removed either way.
+        self.user = None
+        self.pending = None
+        self.refresh_status()
+        self.say(success("Signed out of this computer."))

@@ -14,71 +14,48 @@ uv tool install whatsmynote
 pip install whatsmynote
 ```
 
-## 2. The Minimalist TUI & Authentication
+## 2. Sign in
 
-WhatsMyNote runs entirely inside a sleek, responsive terminal interface powered by Textual.
+WhatsMyNote runs inside your terminal, on macOS Terminal, Windows Terminal, or any terminal at least 80 columns wide.
 
-Run the CLI:
 ```bash
 whatsmynote
 ```
 
-When you first launch the app, you'll be greeted by the IDLE screen. Since this is your first time, you need to log in to isolate your financial data securely.
+The first screen lists three steps. Type `/login` and pick how to sign in:
 
-**Type the login command:**
+1. **Email and password.** Type them into the form. The password goes only to the sign-in service, never to the WhatsMyNote server.
+2. **Google or GitHub.** Your browser opens. Sign in there, then come back to the terminal. If the browser does not open, the dialog shows a link you can copy.
+3. **Create an account** or **Forgot your password?** work from the same menu.
+
+Your session is saved on this computer, so you sign in once.
+
+## 3. Add your model key (optional)
+
+Type `/key` to use your own OpenAI-compatible key. You can also set a base URL and a model name. The key is kept in a private file on this computer and sent with each message. The server never stores it. Open `/key` again to change or remove it.
+
+## 4. Your first account
+
+After your first sign-in, WhatsMyNote asks for an account to record money against, such as Cash or a bank, and its balance today. Add more any time with `/account`.
+
+## 5. Write what happened
+
 ```text
-> /login
+spent 400 on dinner
+got 50000 salary
+lent 500 to Sam
 ```
 
-The CLI will dynamically prompt you inline:
-`Do you want to (L)og in, (S)ign up, (F)orgot Password, or (O)Auth [Google/GitHub]?`
+When a change needs your say-so, such as deleting a record, a card asks you to confirm. Type `y` to confirm or `n` to cancel.
 
-1. **OAuth:** If you choose `o`, the CLI will pop open your browser. Sign in using Google or GitHub. Once the "Access Granted" page appears, safely close the tab. The CLI will automatically intercept the token in the background and log you in!
-2. **Email:** If you choose `s`, you can sign up with an email and password directly within the terminal.
-
-> **Security Note:** The CLI securely stores your session token locally on your machine. You will only ever have to log in once!
-
-## 3. Initial Setup Wizard
-
-Upon your very first successful login, the interface will detect that your database is empty. It will seamlessly transition into an interactive onboarding wizard.
-
-### Setting up your Accounts
-First, it will ask you what bank accounts or wallets you want to track:
-```text
-Let's set up your accounts.
-Account Name (e.g., SBI, Cash, HDFC) [default: Cash]: HDFC
-Opening Balance (0.0): 1500
-Currency (INR, USD, etc.) [default: USD]: USD
-```
-
-Next, it will ask you to select a **Default Account**. 
-*Why?* If you type *"I bought a coffee for $5"*, the AI will automatically deduct it from your Default Account so you don't have to specify "from HDFC" every single time!
-
-### Setting up your Budgets
-Next, it will ask if you want to configure monthly spending limits:
-```text
-Category Name (e.g., Food, Travel, Rent): Food
-Monthly Budget Amount: 500
-```
-*(You can easily skip any prompt by hitting `Enter` to use the default value).*
-
-## 4. You are ready!
-
-Once the setup wizard finishes, your name will appear in the top-right header, and you can begin chatting.
-
-**Try typing your first message:**
-> *"I just grabbed a $5 coffee"*
-> *"Salary of $5000 deposited into HDFC"*
-> *"My friend Alex borrowed $50 from me"*
-
-**Global Commands & Hotkeys:**
-- `/login`, `/signup`: Authenticate your session.
-- `/logout`: Securely log out and wipe your local session token.
-- `/config`: Set or update your `GROQ_API_KEY`.
-- `/clear`: Clear the chat log.
-- `Ctrl+C` or `Ctrl+Q`: Force quit the application instantly.
-- `Esc`: Cancel any active flow (e.g., back out of a deletion confirmation).
-- `Up/Down Arrows`: Cycle through your previously typed commands.
-
-**Fuzzy Search Modals:**
-If you ever want to update or delete a record (e.g. *"Delete my recent lunch expense"*), the UI will pop up a floating modal table. You can use your keyboard to fuzzy search, select multiple rows with `Space`, or hit `Enter` to confirm your action!
+**Commands and keys:**
+- `/login`: Sign in or create an account.
+- `/key`: Set, change or remove your model key.
+- `/account`: Add an account.
+- `/balances`: Show every account and its balance.
+- `/clear`: Clear the conversation.
+- `/logout`: Sign out of this computer.
+- `/help`: List every command.
+- `Up/Down`: Bring back what you typed before.
+- `Esc`: Cancel what is being asked.
+- `Ctrl+C`: Copy selected text, or quit when nothing is selected. `Ctrl+Q` always quits.
