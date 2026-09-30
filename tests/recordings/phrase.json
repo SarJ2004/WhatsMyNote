@@ -1,0 +1,288 @@
+{
+  "about": "Chat-completion responses in the provider's response shape, replayed with no network. Each case is a typed query result, the model's reply to the phrasing prompt, and whether the reply may be shown.",
+  "cases": [
+    {
+      "name": "quotes every figure",
+      "question": "who owes me money",
+      "facts": [
+        [
+          "Ravi owes you, due 20 Sep 2026",
+          "₹300"
+        ],
+        [
+          "Asha owes you",
+          "₹1,250.50"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "Ravi owes you ₹300, which was due on 20 Sep 2026, and Asha owes you ₹1,250.50."
+            }
+          }
+        ]
+      },
+      "faithful": true
+    },
+    {
+      "name": "reformats a figure without changing it",
+      "question": "how much did I spend this month",
+      "facts": [
+        [
+          "spent in total, this month",
+          "₹1,00,000"
+        ],
+        [
+          "food",
+          "₹70,000"
+        ],
+        [
+          "transport",
+          "₹30,000"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "You've spent 100000 rupees this month: ₹70,000.00 on food and ₹30,000 on transport."
+            }
+          }
+        ]
+      },
+      "faithful": true
+    },
+    {
+      "name": "invents a figure",
+      "question": "who owes me money",
+      "facts": [
+        [
+          "Ravi owes you",
+          "₹300"
+        ],
+        [
+          "Asha owes you",
+          "₹200"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "Ravi owes you ₹300 and Asha owes you ₹200, so ₹500 in all."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "drops a figure",
+      "question": "am I over budget",
+      "facts": [
+        [
+          "food spent this month",
+          "₹700"
+        ],
+        [
+          "food monthly budget",
+          "₹500"
+        ],
+        [
+          "food over by",
+          "₹200"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "Yes, food is ₹200 over budget."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "rounds a figure",
+      "question": "how much did I earn this month",
+      "facts": [
+        [
+          "salary",
+          "₹50,000.75"
+        ],
+        [
+          "freelance",
+          "₹12,000"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "You earned about ₹50,001 from salary and ₹12,000 from freelance work."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "adds a percentage",
+      "question": "how much did I spend this month",
+      "facts": [
+        [
+          "food",
+          "₹700"
+        ],
+        [
+          "transport",
+          "₹300"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "Food was ₹700 (70%) and transport ₹300."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "drops a minus sign",
+      "question": "what are my balances",
+      "facts": [
+        [
+          "HDFC",
+          "-₹2,000"
+        ],
+        [
+          "Cash",
+          "₹500"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "HDFC has ₹2,000 and Cash has ₹500."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "keeps a minus sign",
+      "question": "what are my balances",
+      "facts": [
+        [
+          "HDFC",
+          "-₹2,000"
+        ],
+        [
+          "Cash",
+          "₹500"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "HDFC is at -₹2,000, while Cash has ₹500."
+            }
+          }
+        ]
+      },
+      "faithful": true
+    },
+    {
+      "name": "swaps the currencies",
+      "question": "how much did I spend this month",
+      "facts": [
+        [
+          "food",
+          "₹300"
+        ],
+        [
+          "software",
+          "$15"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "Food came to $300 and software to ₹15."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "gives one person's debt to another",
+      "question": "who owes me money",
+      "facts": [
+        [
+          "Ravi owes you",
+          "₹300"
+        ],
+        [
+          "Asha owes you",
+          "₹200"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "Ravi owes you ₹200 and Asha owes you ₹300."
+            }
+          }
+        ]
+      },
+      "faithful": false
+    },
+    {
+      "name": "puts each figure before its name",
+      "question": "how much did I spend this month",
+      "facts": [
+        [
+          "food",
+          "₹700"
+        ],
+        [
+          "transport",
+          "₹300"
+        ]
+      ],
+      "response": {
+        "choices": [
+          {
+            "message": {
+              "role": "assistant",
+              "content": "You spent ₹700 on food and ₹300 on transport."
+            }
+          }
+        ]
+      },
+      "faithful": true
+    }
+  ]
+}
