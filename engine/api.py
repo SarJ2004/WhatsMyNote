@@ -63,23 +63,25 @@ def build_app(dsn, verify, complete_for=None, fetch_rate=frankfurter, today=None
     @app.exception_handler(RequestValidationError)
     def malformed(request, error):
         if not tokens.user(request):
-            return _sign_in()
-        return _refusal(EngineError("unparseable", "the request body could not be read"))
+            return _refused(request, _SIGN_IN)
+        return _refused(request, EngineError("unparseable", "the request body could not be read",
+                                             reason="the body is not a JSON object"))
 
     def guarded(request, work):
         """Run an endpoint as the signed-in user, turning every failure into the
         fixed error body. Nothing about the model key reaches a log."""
         user = tokens.user(request)
         if not user:
-            return _sign_in()
+            return _refused(request, _SIGN_IN)
         try:
             return work(user)
         except EngineError as error:
-            return _refusal(error)
+            return _refused(request, error)
         except Exception as error:
             key = request.headers.get("x-model-key")
             text = "".join(traceback.format_exception(error))
-            log.error("request failed: %s", text.replace(key, "[model key]") if key else text)
+            log.error("%s %s 500 internal: %s", request.method, request.url.path,
+                      text.replace(key, "[model key]") if key else text)
             return JSONResponse({"code": "internal", "message": sentence("internal")}, 500)
 
     @app.get("/health")
@@ -199,12 +201,27 @@ def _date(text):
         raise EngineError("unparseable", "dates are written YYYY-MM-DD") from None
 
 
-def _refusal(error):
+_SIGN_IN = EngineError("unauthenticated", "sign in first", reason="no valid sign-in token")
+
+
+def _refused(request, error):
+    """The fixed error body, after one log line naming the code, the check that
+    refused, and where it was raised, so a refusal is never invisible. The line
+    holds only fixed text: never the message, a name, or the key."""
+    reason = f" ({error.reason})" if error.reason else ""
+    log.warning("%s %s %s %s%s%s", request.method, request.url.path, error.status, error.code,
+                reason, _raised_at(error))
     return JSONResponse({"code": error.code, "message": str(error)}, error.status)
 
 
-def _sign_in():
-    return _refusal(EngineError("unauthenticated", "sign in first"))
+def _raised_at(error):
+    frame = error.__traceback__
+    if frame is None:
+        return ""
+    while frame.tb_next:
+        frame = frame.tb_next
+    code = frame.tb_frame.f_code
+    return f" at {Path(code.co_filename).name}:{frame.tb_lineno} {code.co_name}"
 
 
 _supabase = None

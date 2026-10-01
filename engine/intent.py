@@ -203,30 +203,48 @@ def judge(message, today, context, complete):
     try:
         items = json.loads(raw)["actions"]
         if not isinstance(items, list) or not 0 < len(items) <= _MAX_ACTIONS:
-            raise ValueError("wrong number of actions")
+            raise _Invalid("wrong number of actions")
         actions = [_action(item, message, today) for item in items]
-    except (ValueError, KeyError, TypeError, AttributeError):
-        raise EngineError("unparseable", "the model's answer could not be read") from None
+    except (ValueError, KeyError, TypeError, AttributeError) as error:
+        raise EngineError("unparseable", "the model's answer could not be read",
+                          reason=_why(error)) from None
     ops = {action.op for action in actions}
     if len(actions) > 1 and not (ops == {"create"} or ops == {"query"}):
-        raise EngineError("ambiguous", "ask for one change at a time")
+        raise EngineError("ambiguous", "ask for one change at a time",
+                          reason="several actions that are not all creates or all queries")
     if ops == {"unsupported"}:
-        raise EngineError("unparseable", "that is not about your money")
+        raise EngineError("unparseable", "that is not about your money",
+                          reason="the model judged it unsupported")
     return actions
+
+
+class _Invalid(ValueError):
+    """A model answer that fails a check. Its text is fixed, so it may be logged."""
+
+
+def _why(error):
+    """Which check refused a model answer, without anything the model wrote."""
+    if isinstance(error, _Invalid):
+        return str(error)
+    if isinstance(error, KeyError):
+        return "the answer has no actions list"
+    if isinstance(error, json.JSONDecodeError):
+        return "the answer is not JSON"
+    return f"the answer has the wrong shape ({type(error).__name__})"
 
 
 def _action(item, message, today):
     if not isinstance(item, dict):
-        raise ValueError("an action is not an object")
+        raise _Invalid("an action is not an object")
     op = _pick(item.get("op"), OPS, required=True)
     action = Action(op)
     action.entity = _pick(item.get("entity"), ENTITIES)
     if op in ("create", "update", "delete") and action.entity is None:
-        raise ValueError("a change names what it changes")
+        raise _Invalid("a change names what it changes")
     written = {n.minor for n in numbers_in(message) if n.minor is not None}
     action.amount = _amount(item.get("amount"), written)
     if op == "create" and action.amount is None and action.entity != "account":
-        raise ValueError("a new entry needs an amount")
+        raise _Invalid("a new entry needs an amount")
     action.target_amount = _amount(item.get("target_amount"), None)
     for name in ("currency", "category", "note", "account", "to_account", "person",
                  "target_text", "question"):
@@ -236,7 +254,7 @@ def _action(item, message, today):
         # message itself names.
         action.currency = action.currency.upper()
         if action.currency not in currencies_in(message):
-            raise ValueError("the currency does not appear in the message")
+            raise _Invalid("the currency does not appear in the message")
     action.direction = _pick(item.get("direction"), DIRECTIONS)
     action.period = _pick(item.get("period"), PERIODS)
     action.metric = _pick(item.get("metric"), METRICS)
@@ -247,14 +265,14 @@ def _action(item, message, today):
     for name in ("date", "due", "target_date", "start", "end"):
         setattr(action, name, _day(item.get(name)))
     if op == "create" and action.date and action.date > today:
-        raise ValueError("an entry cannot happen in the future")
+        raise _Invalid("an entry cannot happen in the future")
     if op == "query" and action.metric is None:
-        raise ValueError("a question names what it asks about")
+        raise _Invalid("a question names what it asks about")
     if op == "clarify" and not action.question:
-        raise ValueError("a clarification carries its question")
+        raise _Invalid("a clarification carries its question")
     if op in ("update", "delete") and not (action.target_text or action.target_amount
                                            or action.target_date or action.target_latest):
-        raise ValueError("a change says which entry it means")
+        raise _Invalid("a change says which entry it means")
     return action
 
 
@@ -262,7 +280,7 @@ def _pick(value, allowed, required=False):
     if value is None and not required:
         return None
     if value not in allowed:
-        raise ValueError(f"unexpected value {value!r}")
+        raise _Invalid("a field has a value outside its choices")
     return value
 
 
@@ -270,7 +288,7 @@ def _string(value):
     if value is None:
         return None
     if not isinstance(value, str):
-        raise ValueError("expected text")
+        raise _Invalid("expected text")
     text = " ".join(value.split())[:300]
     return text or None
 
@@ -283,16 +301,19 @@ def _amount(value, written):
     amounts = [n.minor for n in numbers_in(str(value).replace("₹", "").replace("$", ""))
                if n.minor is not None]
     if len(amounts) != 1 or amounts[0] <= 0:
-        raise ValueError("an amount must be one positive number")
+        raise _Invalid("an amount must be one positive number")
     if written is not None and amounts[0] not in written:
-        raise ValueError("the amount does not appear in the message")
+        raise _Invalid("the amount does not appear in the message")
     return amounts[0]
 
 
 def _day(value):
     if value is None or value == "":
         return None
-    return date.fromisoformat(str(value))
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        raise _Invalid("a date is not YYYY-MM-DD") from None
 
 
 # --- the OpenAI-compatible call ---------------------------------------------
