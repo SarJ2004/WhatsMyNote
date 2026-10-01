@@ -1,204 +1,218 @@
-<br/>
 <div align="center">
-<a href="https://github.com/SarJ2004/WhatsMyNote">
-<img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/logo.png" alt="Logo" width="100" height="100">
-</a>
-<h3 align="center">WhatsMyNote</h3>
-<p align="center">
-<strong>An intelligent, fully conversational financial memory system.</strong><br/>
-Control your lending, borrowing, expenses, income, and transfers through pure natural language right from your terminal.
-<br/>
-<br/>
-<a href="https://pypi.org/project/whatsmynote/">View on PyPI</a>
-·
-<a href="https://github.com/SarJ2004/WhatsMyNote/issues">Report Bug</a>
-·
-<a href="https://github.com/SarJ2004/WhatsMyNote/issues">Request Feature</a>
+<img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/logo.png" alt="WhatsMyNote logo" width="100" height="100">
+<h3>WhatsMyNote</h3>
+<p>
+Track your money by writing what happened, in plain words.<br/>
+One open-source engine behind a website, a terminal app, and MCP tools.
 </p>
 
 [![PyPI Version](https://img.shields.io/pypi/v/whatsmynote.svg?color=blue)](https://pypi.org/project/whatsmynote/)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/whatsmynote?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/whatsmynote)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python Versions](https://img.shields.io/pypi/pyversions/whatsmynote.svg)](https://pypi.org/project/whatsmynote/)
-[![Forks](https://img.shields.io/github/forks/SarJ2004/WhatsMyNote.svg?style=social)](https://github.com/SarJ2004/WhatsMyNote/network/members)
-[![Stars](https://img.shields.io/github/stars/SarJ2004/WhatsMyNote.svg?style=social)](https://github.com/SarJ2004/WhatsMyNote/stargazers)
 </div>
 
 ---
 
-## 📑 Table of Contents
-- [About The Project](#-about-the-project)
-  - [Architecture & Tech Stack](#-architecture--tech-stack)
-- [Getting Started (For Users)](#-getting-started-for-users)
-  - [Installation](#installation)
-  - [Download](#download)
-  - [First Run & Authentication](#first-run--authentication)
-- [Documentation & Features](#-documentation--features)
-- [Local Development (For Contributors)](#-local-development-for-contributors)
-- [License](#-license)
+## Contents
+
+- [What it is](#what-it-is)
+- [Bring your own model key](#bring-your-own-model-key)
+- [Use the website](#use-the-website)
+- [Install the terminal app](#install-the-terminal-app)
+- [MCP tools](#mcp-tools)
+- [Self-host it](#self-host-it)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
-## 🌟 About The Project
+## What it is
 
-Tracking finances shouldn't require complex spreadsheets, clunky UIs, or manual data entry. **WhatsMyNote** brings the power of state-of-the-art Large Language Models (LLMs) directly to your terminal. 
+WhatsMyNote is a personal expense tracker you talk to. Type what happened:
 
-Just type what happened naturally. The AI will instantly parse your intent, validate the transaction using a Human-in-the-Loop mechanism (if it's complex), and persist it securely to your database. 
+> spent 400 on dinner from HDFC
+> John borrowed 50
+> how much did I spend on food this month?
 
-### 📸 Features Showcase
+and it books the expense against the right account, tracks who owes whom, and answers questions about your spending.
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/splash-menu.png" alt="Splash Screen" width="48%">
-  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/listing-expenses.png" alt="Listing Expenses" width="48%">
-</div>
-<br/>
-<div align="center">
-  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/showing-analytics.png" alt="Analytics Charts" width="48%">
-  <img src="https://raw.githubusercontent.com/SarJ2004/WhatsMyNote/main/docs/assets/fuzzy-menu.png" alt="Fuzzy Search Modal" width="48%">
-</div>
+A few things it does on purpose:
 
-**Say goodbye to manual tracking:**
-> *"I spent $15 on coffee today using my HDFC account."*  
-> *"My friend John borrowed $50 from me for lunch."*  
-> *"Show me my expenses for this month as a chart."*  
+- **Money is exact.** Amounts are stored as whole minor units (paise, cents). A booking in another currency keeps the original amount and currency next to the converted one, using [Frankfurter](https://frankfurter.dev) reference rates. If no rate is available it tells you instead of guessing.
+- **Your rows are yours.** Row-level security in the database, not application code, keeps one user from reading or writing another user's records.
+- **The model never touches your data directly.** Plain code parses the message and builds every query. A language model is only asked what you meant and to phrase the answer, and it never writes SQL or sees the schema.
+- **Nothing destructive happens silently.** A delete, or an edit whose target is ambiguous, comes back as a confirmation request. Nothing changes until you confirm it, and the confirmation expires after ten minutes.
 
-### 🏗 Architecture & Tech Stack
+There are three ways in, all talking to the same engine:
 
-WhatsMyNote uses a powerful Multi-Agent Architecture powered by LangGraph. A Supervisor agent routes your query to the exact specialist agent needed to handle your request. 
+| Surface | What it is |
+|---|---|
+| Website | A single page: balances, a spending-by-category chart, a searchable record table, and the chat. |
+| Terminal | `whatsmynote`, a terminal app for macOS, Windows and Linux. |
+| MCP | Tools an AI assistant can call to log and read your books on your behalf. |
 
-```mermaid
-graph TD
-    User([User CLI Input]) --> Supervisor[Supervisor Agent]
-    
-    Supervisor -->|Routing| Classifier[Classifier Agent]
-    Classifier -->|Classified Intent| SpecialistAgents
-    
-    subgraph SpecialistAgents[Specialist Agents]
-        AccountAgent[Account Agent]
-        BudgetAgent[Budget Agent]
-        ExpenseAgent[Expense Agent]
-        IncomeAgent[Income Agent]
-        LendingAgent[Lending Agent]
-        TransferAgent[Transfer Agent]
-    end
-    
-    SpecialistAgents --> Validate{Human-in-the-Loop Validation}
-    
-    Validate -->|Requires Details| Clarify[Ask User for Details]
-    Clarify --> User
-    
-    Validate -->|Confirmed| DB[(PostgreSQL Database)]
-    
-    Supervisor -->|Analytics Query| SQLAgent[Text-to-SQL Agent]
-    SQLAgent --> DB
-    DB --> SQLAgent
-    SQLAgent --> Output([CLI Rich Chart / Table])
-    
-    DB --> Output([Success Message])
-```
+## Bring your own model key
 
-- **Language:** Python
-- **AI/LLM Framework:** LangGraph, LangChain, Groq (Llama-3)
-- **Data Validation:** Pydantic
-- **Database & Persistence:** SQLAlchemy & PostgreSQL (hosted on Render/Supabase)
-- **Authentication:** Supabase OAuth (Google/GitHub)
-- **CLI UI:** Textual (with native Rich rendering)
+WhatsMyNote does not ship or pay for a language model. You bring a key for any OpenAI-compatible endpoint (OpenAI, Groq, OpenRouter, a local server, and so on).
 
-> **Deep Dive:** Check out the [Core Concepts & Architecture](docs/core_concepts.md) page for a full breakdown of the multi-agent system.
+- The website and the terminal ask for your key, and optionally a base URL and model name, and send them with each request.
+- The server uses the key for that one request only. It is never stored server-side, never logged, and never echoed back in a response or an error.
+- The website keeps the key in your browser's local storage. The terminal keeps it in its own config file in your user data directory.
 
----
+If you self-host, clients talk to your server with these request headers:
 
-## 🚀 Getting Started (For Users)
+| Header | Meaning |
+|---|---|
+| `Authorization: Bearer <token>` | Your Supabase access token. Required. |
+| `X-Model-Key` | Your model key. |
+| `X-Model-Base-URL` | Base URL of an OpenAI-compatible API. |
+| `X-Model-Name` | The model to call. |
 
-### Installation
+## Use the website
 
-The recommended way to install WhatsMyNote is directly from PyPI. Ensure you have **Python 3.11+** installed.
+The engine serves the website at the root of the server (`/`). The hosted instance runs at **<https://whatsmynote-staging.onrender.com>** while the rebuilt engine is in staging.
+
+1. Open the site and create an account with your email and a password.
+2. Enter your model key.
+3. On first visit, set up an account (for example `HDFC`, currency `INR`, opening balance) before the chat will book anything.
+4. Start typing what you spent.
+
+The hosted instance runs on a free tier, so the first request after a quiet spell can take up to a minute while the server wakes up.
+
+## Install the terminal app
+
+### With Python (macOS, Windows, Linux)
+
+You need Python 3.11 or newer.
 
 ```bash
-# We highly recommend using uv for lightning-fast installation!
+# Recommended: uv installs it as an isolated tool
 uv tool install whatsmynote
 
-# Or standard pip:
+# Or with pip
 pip install whatsmynote
 ```
 
-### Download
-
-Each version tag also publishes one-file terminal builds. Both Mac and Windows can use either the download or the Python install (`uv tool install whatsmynote`).
-
-| Platform | Asset |
-|---|---|
-| macOS | `whatsmynote-macos` |
-| Windows | `whatsmynote-windows.exe` |
-
-### First Run & Authentication
-
-After installing, simply type the command below in your terminal:
+Then run:
 
 ```bash
 whatsmynote
 ```
 
-1. You will be prompted to log in via your browser using Supabase (Google/GitHub).
-2. The CLI will securely store your token locally. 
-3. The AI will guide you through setting up your first Default Account and your monthly Budgets.
-4. You are ready to chat!
+To upgrade later: `uv tool upgrade whatsmynote` or `pip install --upgrade whatsmynote`.
 
-> **Full Guide:** Read the [Getting Started Guide](docs/getting_started.md) for detailed CLI examples and screenshots.
+### Without Python (download)
 
----
+Every version tag also publishes one-file builds on the [releases page](https://github.com/SarJ2004/WhatsMyNote/releases/latest).
 
-## 📚 Documentation & Features
-
-WhatsMyNote supports an extensive array of financial primitives. Dive into the detailed documentation for each capability below:
-
-| Feature | Description |
+| Platform | Download |
 |---|---|
-| [**Accounts**](docs/features/accounts.md) | Manage multiple bank accounts, cash wallets, and set defaults. |
-| [**Budgets**](docs/features/budgets.md) | Track your spending limits across categories (e.g., Food, Rent). |
-| [**Expenses**](docs/features/expenses.md) | Log spending, automatically categorized against your budgets. |
-| [**Income**](docs/features/income.md) | Track your salary, freelance gigs, and incoming funds. |
-| [**Lending & Borrowing**](docs/features/lending.md) | Never forget who owes you money, and who you owe. |
-| [**Transfers**](docs/features/transfers.md) | Move money seamlessly between your own accounts. |
-| [**Analytics (Text-to-SQL)**](docs/analytics.md) | Ask the AI complex questions ("What did I spend on Food last week?") and it will instantly write and execute secure SQL to show you beautiful charts. |
+| macOS (Apple silicon) | [`whatsmynote-macos`](https://github.com/SarJ2004/WhatsMyNote/releases/latest/download/whatsmynote-macos) |
+| Windows | [`whatsmynote-windows.exe`](https://github.com/SarJ2004/WhatsMyNote/releases/latest/download/whatsmynote-windows.exe) |
 
----
+The builds are not code-signed, so your operating system will warn you the first time:
 
-## 🛠 Local Development (For Contributors)
+- **macOS**: make the file executable and clear the download quarantine, then run it from a terminal.
+  ```bash
+  chmod +x whatsmynote-macos
+  xattr -d com.apple.quarantine whatsmynote-macos
+  ./whatsmynote-macos
+  ```
+- **Windows**: run `whatsmynote-windows.exe` from PowerShell or Windows Terminal. If SmartScreen appears, choose **More info**, then **Run anyway**.
 
-If you'd like to contribute to the codebase or run the backend completely locally, you'll need [`uv`](https://github.com/astral-sh/uv) installed.
+Intel Macs and Linux: use the Python install above.
 
-1. **Clone the repo:**
+### First run
+
+1. Sign in with email and password (or create an account). The session is stored locally, so you sign in once.
+2. Enter your model key when asked.
+3. If you have no account yet, the terminal walks you through creating one.
+4. Type what happened, in plain words.
+
+## MCP tools
+
+The engine also exposes its bookkeeping as MCP tools, in [`mcp_server/server.py`](mcp_server/server.py):
+
+| Tool | What it does |
+|---|---|
+| `log_expense` | Book an expense, from structured fields or a plain sentence. |
+| `log_income` | Book income into an account. |
+| `transfer` | Move money between two of your accounts. |
+| `balances` | Read your account balances. |
+| `spending` | Spending by category over a date range (defaults to this month). |
+| `ask` | Book an expense from one plain sentence and return your balances. |
+
+Every call carries your Supabase access token, and the engine takes your identity from that token. No tool accepts a user id, so an assistant cannot read someone else's books even if it tries.
+
+## Self-host it
+
+You need a [Supabase](https://supabase.com) project (the free tier is enough), a host that can run a Python web service (for example [Render](https://render.com), Fly.io, Railway, or your own machine), and Python 3.11+ with [uv](https://docs.astral.sh/uv/).
+
+### 1. Create the database
+
+1. Create a Supabase project.
+2. Under **Authentication > Sign In / Providers**, make sure **Email** is enabled. Turn off **Confirm email** if you do not want to set up email delivery.
+3. Apply the schema. Every file in [`supabase/migrations/`](supabase/migrations) is plain SQL, applied in filename order. Either paste each file into the Supabase **SQL Editor** and run it, or use `psql`:
    ```bash
-   git clone https://github.com/SarJ2004/WhatsMyNote.git
-   cd WhatsMyNote
+   for f in supabase/migrations/*.sql; do psql "$DATABASE_URL" -f "$f"; done
    ```
+   Warning: `0001_isolation.sql` drops and recreates the WhatsMyNote tables. Run it only on a new, empty project.
 
-2. **Environment Setup:**
-   ```bash
-   cp .env.sample .env
-   ```
-   *You will need to provide your own `GROQ_API_KEY` and Supabase keys in the `.env` file.*
-   > **Important:** For `DATABASE_URL`, use the Supabase **Direct connection** (Port 5432 or Session mode). Do NOT use the Transaction Pooler (Port 6543), as it breaks SQLAlchemy schema migrations during initial setup.
+### 2. Configure the environment
 
-3. **Install Dependencies:**
-   ```bash
-   uv pip install -e .
-   ```
+The engine reads exactly three variables. [`.env.sample`](.env.sample) lists them:
 
-4. **Run the Backend locally:**
-   ```bash
-   uv run uvicorn backend.main:app --reload
-   ```
+| Variable | Where to find it |
+|---|---|
+| `SUPABASE_URL` | Project Settings > Data API > Project URL, for example `https://abcd1234.supabase.co`. |
+| `SUPABASE_KEY` | Project Settings > API Keys: the publishable (anon) key. The engine only uses it to verify sign-in tokens. |
+| `DATABASE_URL` | Connect > Connection string: the **direct connection** or **session pooler** string (port 5432), for the `postgres` user. The engine switches to the restricted `authenticated` role for every request, so this user must be allowed to do that. |
 
-5. **Test the CLI:**
-   Open a new terminal window, ensure `ENV="dev"` is in your `.env`, and run:
-   ```bash
-   uv run whatsmynote
-   ```
+There is no model key in the server environment. Keys come from each user, per request.
 
----
+### 3. Run the engine
 
-## 📄 License
+Locally:
 
-Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+```bash
+git clone https://github.com/SarJ2004/WhatsMyNote.git
+cd WhatsMyNote
+cp .env.sample .env        # then fill in the three values
+uv sync
+uv run --env-file .env uvicorn --factory engine.api:create_live_app --reload
+```
+
+Open <http://127.0.0.1:8000/health>; it should answer `{"status":"ok"}`.
+
+On Render (or any host), create a Python web service from your fork:
+
+| Setting | Value |
+|---|---|
+| Build command | `pip install uv && uv sync --frozen` |
+| Start command | `.venv/bin/uvicorn --factory engine.api:create_live_app --host 0.0.0.0 --port $PORT` |
+| Health check path | `/health` |
+| Environment | `SUPABASE_URL`, `SUPABASE_KEY`, `DATABASE_URL` |
+
+### 4. Point the clients at your server
+
+The website and the terminal have the hosted server's address built in. For your own server, change it in two places:
+
+- **Website**: in [`web/index.html`](web/index.html), set `API` to your server's URL, and `SUPABASE_URL` and `SUPABASE_KEY` to your project's values. The engine serves this file at `/`, so redeploy after editing.
+- **Terminal**: in [`whatsmynote/app/config.py`](whatsmynote/app/config.py), set `API_URL`, `SUPABASE_URL` and `SUPABASE_KEY`, then run it from your clone with `uv run whatsmynote`.
+
+### Deploying from GitHub Actions
+
+If you keep the workflows in [`.github/workflows`](.github/workflows):
+
+- `tests.yml` runs the test suite on every pull request.
+- `render-deploy-staging.yml` deploys a staging service on every push to `deploy/backend-render`. It needs the secrets `RENDER_API_KEY` and `STAGING_RENDER_SERVICE_ID`.
+- `render-deploy.yml` deploys production only when you run it by hand from the Actions tab. It needs `RENDER_API_KEY` and `RENDER_SERVICE_ID`.
+- `release.yml` publishes to PyPI, and `terminal-build.yml` attaches the macOS and Windows downloads, only when a version tag is pushed. See [CONTRIBUTING.md](CONTRIBUTING.md#releasing).
+
+## Contributing
+
+Bug reports and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to set up a checkout and run the tests locally.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

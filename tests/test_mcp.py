@@ -73,7 +73,7 @@ def test_balances_ignore_a_named_other_user(db):
     assert stolen == []
 
     bob = server.call("balances", {"token": "bob-token"})
-    assert bob == [{"name": "HDFC", "currency": "INR", "balance": 50000}]
+    assert bob == [{"name": "HDFC", "currency": "INR", "current_balance": 50000}]
 
 
 def test_unauthenticated_tool_returns_the_code(db):

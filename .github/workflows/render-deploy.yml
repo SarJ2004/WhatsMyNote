@@ -1,9 +1,13 @@
-name: Production deploy to Render 
+name: Production deploy to Render
 
+# Production deploys only when someone runs this workflow by hand
+# (Actions > Production deploy to Render > Run workflow). Nothing deploys it on a push.
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+
+concurrency:
+  group: render-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
