@@ -1,52 +1,60 @@
-import requests
-from textual import work
-from textual.widgets import RichLog
+import asyncio
+import time
 
-from whatsmynote.app.auth import get_supabase
-from whatsmynote.app.config import API_URL
-from whatsmynote.app.ui.errors import sentence_for
+from textual import work
+
+from whatsmynote.app.ui.present import note, problem, result_renderables
+
+CONFIRMATION_LIFETIME = 10 * 60
 
 
 class ChatMixin:
-    """Posts a message to the engine and renders the result or an error sentence.
+    """Sends a message to the engine and renders the reply, the balance, the
+    observations, and any confirmation the engine asks for."""
 
-    The client sends the message and the session token. It does not send a state
-    blob, and it does not send a model key.
-    """
-
-    @work(thread=True)
-    def do_chat(self, message: str):
-        log = self.query_one("#chat-log", RichLog)
-        session = get_supabase().auth.get_session()
-        token = session.access_token if session else ""
-        headers = {"Authorization": f"Bearer {token}"}
-
-        indicator = self.query_one("#thinking-indicator")
-        self.app.call_from_thread(indicator.start)
+    @work(group="chat")
+    async def send_message(self, message: str) -> None:
+        self.chatting = True
+        self.set_busy(True)
         try:
-            response = requests.post(
-                f"{API_URL}/chat", json={"message": message}, headers=headers
-            )
-            body = response.json()
-        except Exception:
-            self.app.call_from_thread(indicator.stop)
-            self.app.call_from_thread(
-                log.write, "[#ffaa55]The server did not answer. Try again.[/#ffaa55]"
-            )
-            return
-        self.app.call_from_thread(indicator.stop)
-        self.app.call_from_thread(self.render_backend_response, body, response.ok)
+            result = await asyncio.to_thread(self.app.engine.chat, message)
+        finally:
+            self.chatting = False
+            self.set_busy(False)
+        self.show_result(result)
 
-    def render_backend_response(self, body: dict, ok: bool):
-        log = self.query_one("#chat-log", RichLog)
-        if not ok or (isinstance(body, dict) and body.get("code")):
-            log.write(f"[#ffaa55]{sentence_for(body)}[/#ffaa55]")
-            self.set_state("IDLE")
+    def show_result(self, result) -> None:
+        kind = "error" if result.error else "reply"
+        self.say(*result_renderables(result), kind=kind)
+        if result.code == "unauthenticated":
+            self.user = None
+        if result.confirmation:
+            self.pending = result.confirmation
+            self.pending_at = time.monotonic()
+        self.refresh_status()
+
+    def confirm_pending(self) -> None:
+        pending, self.pending = self.pending, None
+        if time.monotonic() - self.pending_at > CONFIRMATION_LIFETIME:
+            self.refresh_status()
+            self.say(problem("That confirmation expired, so nothing was saved. Send the message again."),
+                     kind="error")
             return
-        if isinstance(body, dict) and "balance" in body:
-            log.write(f"[#dddddd]Balance: {body['balance']}[/#dddddd]")
-        elif isinstance(body, dict) and body.get("message"):
-            log.write(f"[#dddddd]{body['message']}[/#dddddd]")
-        else:
-            log.write(f"[#dddddd]{body}[/#dddddd]")
-        self.set_state("IDLE")
+        self.refresh_status()
+        self.send_confirmation(pending.token)
+
+    def cancel_pending(self) -> None:
+        self.pending = None
+        self.refresh_status()
+        self.say(note("Cancelled. Nothing was saved."))
+
+    @work(group="chat")
+    async def send_confirmation(self, token: str) -> None:
+        self.chatting = True
+        self.set_busy(True)
+        try:
+            result = await asyncio.to_thread(self.app.engine.confirm, token)
+        finally:
+            self.chatting = False
+            self.set_busy(False)
+        self.show_result(result)

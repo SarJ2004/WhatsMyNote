@@ -1,71 +1,51 @@
-import requests
-from textual import work
-from textual.widgets import RichLog
+import asyncio
 
-from whatsmynote.app.auth import get_supabase
-from whatsmynote.app.config import API_URL
-from whatsmynote.app.ui.errors import sentence_for
+from textual import work
+
+from whatsmynote.app.ui.constants import EXAMPLES
+from whatsmynote.app.ui.present import balances_table, note, problem, success
 
 
 class OnboardingMixin:
-    """Creates the first account through the engine. The terminal holds no
-    finance logic of its own."""
+    """Accounts go through the engine. The terminal holds no finance logic."""
 
-    def _headers(self):
-        session = get_supabase().auth.get_session()
-        token = session.access_token if session else ""
-        return {"Authorization": f"Bearer {token}"}
+    @work(exclusive=True, group="accounts")
+    async def check_accounts(self) -> None:
+        balances = await asyncio.to_thread(self.app.engine.balances)
+        if balances.error:
+            self.say(problem(balances.error), kind="error")
+            if balances.code == "unauthenticated":
+                self.user = None
+                self.refresh_status()
+            return
+        if not balances.rows:
+            await self._add_account(first=True)
+        if not self.app.keys.load().key:
+            await self.edit_key(first=True)
 
-    @work(thread=True)
-    def check_onboarding_status(self):
-        log = self.query_one("#chat-log", RichLog)
+    @work(exclusive=True, group="dialog")
+    async def account_flow(self) -> None:
+        await self._add_account(first=False)
+
+    async def _add_account(self, first: bool) -> None:
+        from whatsmynote.app.ui.dialogs import AccountForm
+
+        name = await self.app.push_screen_wait(AccountForm(self.app.engine, first=first))
+        if name:
+            self.say(success(f"{name} is ready. Write what happened, like: {EXAMPLES[0]}"))
+        elif first:
+            self.say(note("No account yet. Add one any time with /account."))
+        else:
+            self.say(note("No account added."))
+
+    @work(exclusive=True, group="accounts")
+    async def show_balances(self) -> None:
+        self.set_busy(True)
         try:
-            res = requests.get(f"{API_URL}/balances", headers=self._headers())
-            if res.status_code == 401:
-                return
-            res.raise_for_status()
-            balances = res.json().get("balances") or []
-            if not balances:
-                self.app.call_from_thread(self.start_onboarding)
-        except Exception:
-            self.app.call_from_thread(
-                log.write, "[#ffaa55]Could not read your accounts.[/#ffaa55]"
-            )
-
-    def start_onboarding(self):
-        log = self.query_one("#chat-log", RichLog)
-        self.query_one("#startup-container").display = False
-        log.display = True
-        self._chat_started = True
-        self.onboarding_data = {"name": None}
-        self.set_state("OB_ACC_NAME")
-        log.write("\n[#dddddd bold]Welcome to WhatsMyNote.[/#dddddd bold]")
-        log.write("Name your first account. [Default: Cash]")
-
-    @work(thread=True)
-    def do_onboarding_setup(self):
-        log = self.query_one("#chat-log", RichLog)
-        account = self.onboarding_data
-        payload = {
-            "name": account.get("name") or "Cash",
-            "currency": "INR",
-            "opening_balance": account.get("opening_balance") or 0,
-        }
-        try:
-            res = requests.post(
-                f"{API_URL}/accounts", json=payload, headers=self._headers()
-            )
-            if not res.ok:
-                sentence = sentence_for(res.json())
-                self.app.call_from_thread(log.write, f"[#ffaa55]{sentence}[/#ffaa55]")
-                self.app.call_from_thread(self.set_state, "IDLE")
-                return
-            self.app.call_from_thread(
-                log.write, "[#dddddd]Account ready. You can log money now.[/#dddddd]"
-            )
-            self.app.call_from_thread(self.set_state, "IDLE")
-        except Exception:
-            self.app.call_from_thread(
-                log.write, "[#ffaa55]Could not save the account.[/#ffaa55]"
-            )
-            self.app.call_from_thread(self.set_state, "IDLE")
+            balances = await asyncio.to_thread(self.app.engine.balances)
+        finally:
+            self.set_busy(False)
+        if balances.error:
+            self.say(problem(balances.error), kind="error")
+        else:
+            self.say(balances_table(balances.rows), kind="card")

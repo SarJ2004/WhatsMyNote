@@ -39,6 +39,7 @@ dependencies = [
     "uvicorn>=0.51.0",
     "twine>=6.2.0",
     "psycopg2-binary>=2.9.10",
+    "textual>=8.2.0",
     "mcp>=2.2,<3",
     "httpx>=0.27",
 ]

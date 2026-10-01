@@ -1,49 +1,40 @@
-from rich.table import Table
+"""Shared copy and colours. The colours match the web site's dark palette."""
 
-LOGO = """
-█   █ █   █ █[dim]▀▀▀[/dim]█ [dim]▀▀[/dim]█[dim]▀▀[/dim] █[dim]▀▀▀▀[/dim] █[dim]▀[/dim]█[dim]▀[/dim]█ █   █ █[dim]▀▀▀[/dim]█ █[dim]▀▀▀[/dim]█ [dim]▀▀[/dim]█[dim]▀▀[/dim] █[dim]▀▀▀▀[/dim]
-█ █ █ █[dim]▀▀▀[/dim]█ █[dim]▀▀▀[/dim]█   █   [dim]▀▀▀▀[/dim]█ █ █ █ █[dim]▄▄▄[/dim]█ █   █ █   █   █   █[dim]▀▀▀ [/dim]
-█[dim]▄[/dim]█[dim]▄[/dim]█ █   █ █   █   █   [dim]▄▄▄▄[/dim]█ █   █ [dim]▄▄▄▄[/dim]█ █   █ █[dim]▄▄▄[/dim]█   █   █[dim]▄▄▄▄[/dim]
-"""
+PAPER = "#16130f"
+CARD = "#221e19"
+LINE = "#3a342c"
+INK = "#f5f0e8"
+MUTED = "#b5ada3"
+ACCENT = "#fdba74"
+GOOD = "#bef264"
+BAD = "#fda4af"
 
-QUIRKY_PHRASES = [
-    "Crunching your numbers...",
-    "Looking for spare change...",
-    "Consulting the finance oracle...",
-    "Digging through receipts...",
-    "Balancing the ledger...",
-    "Tracking down that last coffee...",
-    "Auditing your wallet...",
+COMMANDS = [
+    ("/login", "Sign in or create an account"),
+    ("/key", "Set, change or remove your model key"),
+    ("/account", "Add an account, like Cash or a bank"),
+    ("/balances", "Show every account and its balance"),
+    ("/clear", "Clear the conversation"),
+    ("/logout", "Sign out of this computer"),
+    ("/help", "Show this list"),
+    ("/quit", "Close WhatsMyNote"),
 ]
 
-DOLLAR_FRAMES = [
-    "[ $       ]",
-    "[  $      ]",
-    "[   $     ]",
-    "[    $    ]",
-    "[     $   ]",
-    "[      $  ]",
-    "[       $ ]",
-    "[        $]",
-    "[       $ ]",
-    "[      $  ]",
-    "[     $   ]",
-    "[    $    ]",
-    "[   $     ]",
-    "[  $      ]",
+# Older names people may still type.
+ALIASES = {
+    "/signin": "/login",
+    "/signup": "/login",
+    "/config": "/key",
+    "/balance": "/balances",
+    "/exit": "/quit",
+    "/signout": "/logout",
+}
+
+EXAMPLES = [
+    "spent 400 on dinner",
+    "got 50000 salary",
+    "lent 500 to Sam",
 ]
 
-def get_commands_table():
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column(style="#ffaa55")
-    table.add_column(style="#dddddd")
-    table.add_column(style="#888888")
-    
-    commands = [
-        ("/login", "login to account"),
-        ("/config", "set api key"),
-        ("/logout", "log out"),
-    ]
-    for cmd, desc in commands:
-        table.add_row(cmd, desc)
-    return table
+YES = {"y", "yes", "confirm", "ok"}
+NO = {"n", "no", "cancel", "q"}

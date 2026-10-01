@@ -124,10 +124,23 @@ Intel Macs and Linux: use the Python install above.
 
 ### First run
 
-1. Sign in with email and password (or create an account). The session is stored locally, so you sign in once.
-2. Enter your model key when asked.
-3. If you have no account yet, the terminal walks you through creating one.
-4. Type what happened, in plain words.
+The terminal works in any terminal at least 80 columns wide, including macOS Terminal and Windows Terminal. The first screen lists these steps:
+
+1. Type `/login` and pick email and password, Google, or GitHub. Creating an account and resetting a password are in the same menu. The password goes only to the sign-in service, and the session is stored locally, so you sign in once.
+2. If you have no account yet, the terminal asks for its name, currency and balance today.
+3. Enter your model key when asked, with an optional base URL and model name, or choose **Not now**: clear bookings work without one. Change or remove it any time with `/key`.
+4. Type what happened, in plain words, such as `spent 400 on dinner`. When a change needs your say-so, a card asks you to confirm: type `y` to confirm or `n` to cancel.
+
+| Command or key | What it does |
+|---|---|
+| `/login`, `/logout` | Sign in or create an account; sign out of this computer. |
+| `/key` | Set, change or remove your model key. |
+| `/account` | Add an account, like Cash or a bank. |
+| `/balances` | Show every account and its balance. |
+| `/clear`, `/help`, `/quit` | Clear the conversation, list every command, close the app. |
+| Up and Down | Bring back what you typed before. |
+| Esc | Cancel what is being asked. |
+| Ctrl+C | Copy selected text, or quit when nothing is selected. Ctrl+Q always quits. |
 
 ## MCP tools
 
@@ -205,7 +218,7 @@ On Render (or any host), create a Python web service from your fork:
 The website and the terminal have the hosted server's address built in. For your own server, change it in two places:
 
 - **Website**: in [`web/index.html`](web/index.html), set `API` to your server's URL, and `SUPABASE_URL` and `SUPABASE_KEY` to your project's values. The engine serves this file at `/`, so redeploy after editing.
-- **Terminal**: in [`whatsmynote/app/config.py`](whatsmynote/app/config.py), set `API_URL`, `SUPABASE_URL` and `SUPABASE_KEY`, then run it from your clone with `uv run whatsmynote`.
+- **Terminal**: in [`whatsmynote/app/config.py`](whatsmynote/app/config.py), set `API_URL`, `SUPABASE_URL` and `SUPABASE_KEY`, then run it from your clone with `uv run whatsmynote`. To try another engine without editing, set `WMN_API_URL`, for example `WMN_API_URL=http://127.0.0.1:8000 uv run whatsmynote`.
 
 ### Deploying from GitHub Actions
 

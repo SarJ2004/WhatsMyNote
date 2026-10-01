@@ -1,0 +1,193 @@
+"""The app's stylesheet. It lives in Python, not a .tcss file, so a one-file
+build of the terminal carries it without bundling data files. Colours come
+from the whatsmynote theme in app.py."""
+
+CSS = """
+MainScreen {
+    background: $background;
+    color: $foreground;
+    layout: vertical;
+}
+
+TopBar {
+    height: 1;
+    padding: 0 2;
+    background: $surface;
+}
+
+#brand {
+    width: 1fr;
+    color: $primary;
+    text-style: bold;
+}
+
+#who {
+    width: auto;
+}
+
+#log {
+    height: 1fr;
+    padding: 1 2 0 2;
+    scrollbar-size-vertical: 1;
+    scrollbar-color: $secondary 30%;
+    scrollbar-background: $background;
+}
+
+.message {
+    width: 100%;
+    height: auto;
+}
+
+.message.you {
+    margin-top: 1;
+}
+
+.message.welcome {
+    padding: 0 0 1 0;
+}
+
+.message.card {
+    margin-top: 1;
+}
+
+.message.error {
+    color: $error;
+}
+
+#main-input {
+    height: 3;
+    margin: 0 1;
+    border: round $secondary 40%;
+    background: $background;
+    padding: 0 1;
+}
+
+#main-input:focus {
+    border: round $primary;
+    background-tint: $background 0%;
+}
+
+#main-input > .input--placeholder {
+    color: $secondary 70%;
+}
+
+#main-input > .input--suggestion {
+    color: $secondary 60%;
+}
+
+HintBar {
+    height: 1;
+    padding: 0 2;
+}
+
+#hint-left {
+    width: 1fr;
+}
+
+#hint-right {
+    width: auto;
+    color: $primary;
+}
+
+/* Dialogs */
+
+ModalScreen {
+    align: center middle;
+    background: $background 70%;
+}
+
+.dialog {
+    width: 64;
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    padding: 0 2 1 2;
+    border: round $primary;
+    border-title-color: $primary;
+    border-title-style: bold;
+    background: $surface;
+}
+
+.dialog .field-label {
+    margin-top: 1;
+    color: $secondary;
+}
+
+.dialog Input {
+    height: 1;
+    border: none;
+    padding: 0 1;
+    background: $background;
+}
+
+.dialog Input:focus {
+    border: none;
+    background: $primary 18%;
+}
+
+.dialog .dialog-help, .dialog .dialog-text {
+    height: auto;
+    margin-top: 1;
+}
+
+#link {
+    height: auto;
+    max-height: 4;
+    margin: 1 0;
+}
+
+.dialog-error {
+    width: 100%;
+    margin-top: 1;
+    color: $error;
+}
+
+.dialog-actions {
+    height: auto;
+    margin-top: 1;
+    align-horizontal: right;
+}
+
+.dialog-actions Button {
+    margin-left: 2;
+    padding: 0 2;
+    min-width: 10;
+}
+
+.dialog-actions Button:focus {
+    text-style: bold;
+}
+
+.field-row {
+    height: auto;
+}
+
+.field-small {
+    width: 14;
+    height: auto;
+    margin-right: 2;
+}
+
+.field-wide {
+    width: 1fr;
+    height: auto;
+}
+
+#sign-in-choices {
+    height: auto;
+    margin-top: 1;
+    padding: 0;
+    border: none;
+    background: $surface;
+}
+
+#sign-in-choices:focus {
+    border: none;
+}
+
+#sign-in-choices > .option-list--option-highlighted {
+    background: $primary 25%;
+    color: $foreground;
+    text-style: bold;
+}
+"""

@@ -1,20 +1,26 @@
 """Sentences for the engine's fixed error codes. The terminal renders these
-and nothing else from an error response."""
+and nothing else from an error response, so a server message can never leak
+a key or an internal detail onto the screen."""
 
 SENTENCES = {
-    "unauthenticated": "Sign in first.",
-    "bad_key": "That model key was rejected.",
-    "rate_unavailable": "The rate service is unavailable, so nothing was booked.",
-    "no_account": "There is no account to book this against.",
-    "unsupported_currency": "That currency is not supported.",
-    "ambiguous": "That matches more than one record. Be more specific.",
-    "unparseable": "That message could not be read as a money action.",
+    "unauthenticated": "You are not signed in, or your sign-in expired. Type /login to sign in.",
+    "bad_key": "Your model key was rejected. Check it, or change it with /key.",
+    "no_key": "That needs your own model key. Add one with /key. Clear bookings work without it.",
+    "rate_unavailable": "Exchange rates are unavailable right now, so nothing was saved. Try again soon.",
+    "no_account": "There is no account to record this in yet. Add one with /account.",
+    "unsupported_currency": "That currency is not supported, so nothing was saved.",
+    "ambiguous": "That matches more than one record. Add a detail, like the date or the amount.",
+    "unparseable": "That did not read as money. Try something like: spent 400 on dinner",
+    "limit_reached": "The model allowance is used up for now. Clear bookings still work; try the rest later.",
 }
 
+UNKNOWN = "Something went wrong, and nothing was changed."
+OFFLINE = "Could not reach WhatsMyNote. Check your internet connection and try again."
+TIMEOUT = "The server took too long to answer. Check /balances before sending it again."
+SERVER = "The server had a problem, and nothing was changed. Try again in a moment."
+CONFIRM_FAILED = "That confirmation expired or was already used, so nothing was saved. Send the message again."
 
-def sentence_for(body):
+
+def sentence_for(body, fallback=UNKNOWN):
     code = body.get("code") if isinstance(body, dict) else None
-    if code in SENTENCES:
-        return SENTENCES[code]
-    message = body.get("message") if isinstance(body, dict) else None
-    return message or "Something went wrong, and nothing was changed."
+    return SENTENCES.get(code, fallback)
