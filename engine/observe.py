@@ -1,5 +1,6 @@
 """Deterministic checks over the user's own data, volunteered with an answer.
-A model never decides whether one fires; each sentence is built here."""
+A model never decides whether one fires; each sentence is built here. A detail
+does not repeat its category, which clients show beside it."""
 
 from dataclasses import dataclass
 
@@ -23,14 +24,12 @@ def observations(conn, today):
         of_budget = f"{format_money(limit, budget['currency'])} {budget['period']} budget"
         if spent > limit:
             over = format_money(spent - limit, budget["currency"])
-            found.append(Observation(
-                "over_budget", budget["category"],
-                f"{budget['category']} is {over} over its {of_budget}"))
+            found.append(Observation("over_budget", budget["category"],
+                                     f"{over} over its {of_budget}"))
         elif spent >= limit * _NEAR:
             used = format_money(spent, budget["currency"])
-            found.append(Observation(
-                "near_budget", budget["category"],
-                f"{budget['category']} has used {used} of its {of_budget}"))
+            found.append(Observation("near_budget", budget["category"],
+                                     f"used {used} of its {of_budget}"))
     for loan in queries.owed(conn, today):
         if loan["overdue"]:
             amount = format_money(loan["outstanding"], loan["currency"])

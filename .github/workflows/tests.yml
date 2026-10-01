@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - deploy/backend-render
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    name: pytest
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: wmn
+          POSTGRES_DB: whatsmynote
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      WMN_TEST_DSN: postgresql://postgres:wmn@localhost:5432/whatsmynote
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Run the test suite
+        run: uv run --locked --with pytest python -m pytest -q

@@ -359,12 +359,7 @@ def test_the_shared_client_keeps_no_cookies_between_callers():
         return httpx.Response(200, headers={"set-cookie": "session=someone; Path=/"},
                               json=completion("ok"))
 
-    client = http.client()
-    original = client._transport
-    client._transport = httpx.MockTransport(handler)
-    try:
-        for _ in range(2):
-            client.post("https://models.example/v1/chat/completions", json={})
-    finally:
-        client._transport = original
+    client = http.make_client(transport=httpx.MockTransport(handler))
+    for _ in range(2):
+        client.post("https://models.example/v1/chat/completions", json={})
     assert not client.cookies

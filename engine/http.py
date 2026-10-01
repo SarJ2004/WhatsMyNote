@@ -17,10 +17,15 @@ def client():
     global _client
     with _lock:
         if _client is None:
-            _client = httpx.Client(
-                timeout=httpx.Timeout(20.0, connect=5.0),
-                limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
-                follow_redirects=False,
-                cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
-            )
+            _client = make_client()
         return _client
+
+
+def make_client(transport=None):
+    return httpx.Client(
+        timeout=httpx.Timeout(20.0, connect=5.0),
+        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        follow_redirects=False,
+        cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
+        transport=transport,
+    )

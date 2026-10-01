@@ -273,7 +273,7 @@ def test_am_i_over_budget(world):
     assert post(client, "/budgets", {"category": "food", "amount": 30000}).status_code == 200
     body = chat(client, "spent 400 on dinner").json()
     assert body["observations"] == [{"kind": "over_budget", "category": "food",
-                                     "detail": "food is ₹100 over its ₹300 monthly budget"}]
+                                     "detail": "₹100 over its ₹300 monthly budget"}]
     reply = chat(client, "am I over budget").json()["reply"]
     assert "food" in reply.lower() and "₹400" in reply and "₹300" in reply and "₹100" in reply
 

@@ -2,13 +2,11 @@
 
 This file is the project's committed home for project-intrinsic agent knowledge: build, test, release, architecture, and sharp-edge notes that should travel with the code.
 
-- Correct entries that work proves wrong; add new ones only by deliberate maintainer choice, never as routine task output.
-
-## Engine
-
-- Tests need a disposable Postgres: point `WMN_TEST_DSN` at it (default in `tests/support.py`), then `uv run pytest`. Every test rebuilds the schema, so never aim it at a shared or hosted database.
-- `supabase/migrations/` is the only schema. `0001` drops and recreates; every later migration is applied over a live database, so it must be additive and idempotent (`if not exists`, `drop policy if exists`).
-- The model never writes SQL or sees a table name, and the caller's model key lives only for its request. Keep both true: see the module docstrings in `engine/intent.py` and `engine/api.py`.
+- Tests: `uv run --with pytest python -m pytest -q` against a throwaway Postgres (`WMN_TEST_DSN`); setup in `CONTRIBUTING.md`. The tests drop and recreate tables, so never point them at a Supabase project.
+- The schema lives only in `supabase/migrations/*.sql`; the engine's environment is `.env.sample`. `0001` drops and recreates. Every later migration is applied over a live database, so it must be additive and idempotent, and must also apply over staging's older schema (`tests/legacy_schema.sql`; the tests run on both).
+- The model never writes SQL or sees a table name, and the caller's model key lives only for its request. Keep both true: see the docstrings in `engine/intent.py` and `engine/api.py`.
+- Publishing is tag-only (`release.yml`, `terminal-build.yml`); production deploy is manual (`render-deploy.yml`). Release steps: `CONTRIBUTING.md#releasing`.
+- Commit as `sargedevx@gmail.com`, and keep employer names out of code, docs and commits.
 
 ## Maintaining this file
 

@@ -26,7 +26,7 @@ def test_observation_fires_when_spend_exceeds_budget(conn):
         apply(conn, food(40000))
         found = observations(conn, DAY)
     assert found == [Observation(
-        "over_budget", "food", "food is ₹100 over its ₹300 monthly budget")]
+        "over_budget", "food", "₹100 over its ₹300 monthly budget")]
 
 
 def test_no_observation_when_spend_is_within_budget(conn):
@@ -47,7 +47,7 @@ def test_a_budget_nearly_used_up_is_mentioned(conn):
         apply(conn, food(38000))
         found = observations(conn, DAY)
     assert found == [Observation(
-        "near_budget", "food", "food has used ₹380 of its ₹400 monthly budget")]
+        "near_budget", "food", "used ₹380 of its ₹400 monthly budget")]
 
 
 def test_last_months_spending_does_not_count_against_this_month(conn):
