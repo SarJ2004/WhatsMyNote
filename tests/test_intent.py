@@ -4,6 +4,7 @@ from datetime import date
 from pathlib import Path
 
 import httpx
+import jsonschema
 import pytest
 
 from engine import intent
@@ -46,6 +47,9 @@ def stub(content, calls=None):
 
 @pytest.mark.parametrize("case", RECORDED["cases"], ids=[c["message"] for c in RECORDED["cases"]])
 def test_a_recorded_model_response_becomes_the_matching_actions(case):
+    # Groq's strict mode refuses an answer that misses the schema, so a recorded
+    # answer must fit it before the engine ever reads it.
+    jsonschema.validate(case["content"], intent.SCHEMA)
     actions = judge(case["message"], TODAY, CONTEXT, stub(case["content"]))
     assert len(actions) == len(case["expect"])
     for action, expected in zip(actions, case["expect"], strict=True):
@@ -209,6 +213,7 @@ def test_endpoint_failures_map_to_fixed_codes_and_never_echo_the_key(status, cod
     with pytest.raises(EngineError) as caught:
         complete([], None)
     assert caught.value.code == code
+    assert caught.value.reason == f"the model provider answered {status}"
     assert "sk-secret" not in str(caught.value)
 
 
@@ -363,3 +368,72 @@ def test_the_shared_client_keeps_no_cookies_between_callers():
     for _ in range(2):
         client.post("https://models.example/v1/chat/completions", json={})
     assert not client.cookies
+
+
+# What Groq's strict mode said about openai/gpt-oss-120b's real answer to
+# "i wanaa edit my expenses" on staging's data: the model writes null for a flag.
+GROQ_SCHEMA_MISS = {"error": {
+    "message": "Generated JSON does not match the expected schema. Please adjust your prompt. "
+               "See 'failed_generation' for more details. Error: jsonschema: "
+               "'/actions/0/target_latest' does not validate with "
+               "/properties/actions/items/properties/target_latest/type: "
+               "expected boolean, but got null",
+    "type": "invalid_request_error", "code": "json_validate_failed"}}
+
+
+def test_the_schema_takes_the_null_flags_the_default_model_writes():
+    answer = {"actions": [blank(op="clarify", question="Which expense?",
+                                repayment=None, target_latest=None)]}
+    jsonschema.validate(answer, intent.SCHEMA)
+    [action] = judge("i wanaa edit my expenses", TODAY, CONTEXT, stub(answer))
+    assert (action.op, action.repayment, action.target_latest) == ("clarify", False, False)
+
+
+def test_an_answer_that_misses_the_schema_does_not_switch_the_endpoint_to_plain_json():
+    formats = []
+
+    def handler(request):
+        formats.append(json.loads(request.content)["response_format"]["type"])
+        if len(formats) == 1:
+            return httpx.Response(400, json=GROQ_SCHEMA_MISS)
+        return httpx.Response(200, json=completion('{"actions": []}'))
+
+    def complete():
+        return openai_complete(intent.DEFAULT_BASE_URL, intent.DEFAULT_MODEL, "k",
+                               client=transport(handler), resolve=public)
+
+    with pytest.raises(EngineError) as caught:
+        complete()([], intent.SCHEMA)
+    assert (caught.value.code, caught.value.status) == ("unparseable", 502)
+    assert caught.value.reason == "the model's answer did not match the schema"
+    complete()([], intent.SCHEMA)
+    assert formats == ["json_schema", "json_schema"]
+
+
+def test_plain_json_mode_tells_the_model_the_shape_it_must_answer_in():
+    sent = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        sent.append(body)
+        if body["response_format"]["type"] == "json_schema":
+            return httpx.Response(400, json={"error": {"message": "response_format"}})
+        return httpx.Response(200, json=completion('{"actions": []}'))
+
+    openai_complete("https://plain.example/v1", "m", "k", client=transport(handler),
+                    resolve=public)([{"role": "user", "content": "hi"}], intent.SCHEMA)
+    plain = sent[-1]
+    assert plain["response_format"] == {"type": "json_object"}
+    told = [m["content"] for m in plain["messages"] if m["role"] == "system"]
+    assert told and json.dumps(intent.SCHEMA) in told[-1]
+
+
+def test_the_model_sees_each_account_name_on_its_own():
+    # Shown as "Cash (INR, default)", the default model copied that whole label
+    # back as the account name, and the booking found no such account.
+    calls = []
+    judge("got a toothpaste for 60", TODAY, CONTEXT,
+          stub({"actions": [blank(op="create", entity="expense", amount="60")]}, calls))
+    sent = json.loads(calls[0][0][-1]["content"])
+    assert sent["accounts"] == [{"name": "HDFC", "currency": "INR", "default": True},
+                                {"name": "Cash", "currency": "INR", "default": False}]

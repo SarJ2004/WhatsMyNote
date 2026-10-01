@@ -955,10 +955,19 @@
     return ERRORS[code] || GENERIC;
   }
 
-  function failure(code) {
+  function failure(code, message) {
     const error = new Error(code);
     error.code = code;
+    error.detail = typeof message === "string" ? message.trim() : "";
     return error;
+  }
+
+  // What the engine said went wrong, as a sentence; the fixed one for the code
+  // when the response carried no message.
+  function explain(err) {
+    if (!err.detail) return sentence(err.code);
+    const text = err.detail.charAt(0).toUpperCase() + err.detail.slice(1);
+    return /[.!?]$/.test(text) ? text : text + ".";
   }
 
   function setBusy(button, busy, label) {
@@ -1091,7 +1100,7 @@
       throw failure("unauthenticated");
     }
     if (!response.ok) {
-      throw failure(data && typeof data.code === "string" ? data.code : "failed");
+      throw failure(data && typeof data.code === "string" ? data.code : "failed", data && data.message);
     }
     return data || {};
   }
@@ -1362,9 +1371,10 @@
     return turn;
   }
 
-  function sayError(turn, code) {
+  function sayError(turn, err) {
+    const code = err.code;
     turn.classList.add("failed");
-    turn.replaceChildren(el("div", "bubble", sentence(code)));
+    turn.replaceChildren(el("div", "bubble", explain(err)));
     if (code === "no_key" || code === "bad_key") {
       const button = el("button", "btn btn-quiet", "Open settings");
       button.type = "button";
@@ -1482,7 +1492,7 @@
       await refresh();
     } catch (err) {
       if (err.code === "unauthenticated") turn.remove();
-      else sayError(turn, err.code);
+      else sayError(turn, err);
     } finally {
       chatBusy = false;
       setBusy($("send"), false);

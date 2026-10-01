@@ -82,6 +82,12 @@ def _choice(values, description):
     return {"type": ["string", "null"], "enum": [*values, None], "description": description}
 
 
+def _flag(description):
+    # Nullable like every other field: the default model writes null for a flag
+    # it has no view on, and Groq's strict mode refuses the whole answer for it.
+    return {"type": ["boolean", "null"], "description": description}
+
+
 _ACTION = {
     "type": "object",
     "additionalProperties": False,
@@ -92,20 +98,20 @@ _ACTION = {
         "currency": _text("ISO code, only if the message names a currency"),
         "category": _text("spending category, or the source of income"),
         "note": _text("the item or merchant, in a few words"),
-        "account": _text("account named in the message; for a transfer, the source"),
+        "account": _text("the account named in the message, or a new account's name; "
+                         "for a transfer, the source"),
         "to_account": _text("for a transfer, the destination account"),
         "person": _text("the other person in a loan"),
         "direction": _choice(DIRECTIONS, "lent: they owe the user; borrowed: "
                                                    "the user owes them"),
-        "repayment": {"type": "boolean", "description": "true when a loan is paid back"},
+        "repayment": _flag("true when a loan is paid back"),
         "date": _text("YYYY-MM-DD when it happened; null for today"),
         "due": _text("YYYY-MM-DD a loan should be paid back by"),
         "period": _choice(PERIODS, "a budget's period"),
         "target_text": _text("words that identify the existing entry to change or delete"),
         "target_amount": _text("the amount of the existing entry, if mentioned"),
         "target_date": _text("YYYY-MM-DD of the existing entry, if mentioned"),
-        "target_latest": {"type": "boolean",
-                          "description": "true when they mean the most recent one"},
+        "target_latest": _flag("true when they mean the most recent one"),
         "metric": _choice(METRICS, "what a question asks about"),
         "range": _choice(RANGES, "the period a question covers"),
         "start": _text("YYYY-MM-DD, only for range custom"),
@@ -127,7 +133,8 @@ what they want done. You never answer a question yourself and never compute a to
 
 op is one of:
 - create: record something new. entity is expense, income, transfer, lending, account \
-(account is the name, amount the opening balance), or budget.
+(account is the new account's name exactly as written, amount the opening balance), \
+or budget.
 - update: change an existing entry. Identify it with target_text, target_amount, \
 target_date, or target_latest (true for "last", "latest", "that", "it"). The other fields \
 hold only the new values.
@@ -143,7 +150,8 @@ Rules:
 - amount is the number exactly as the person wrote it, such as 400, 1,200, or 2k. Never \
 invent an amount.
 - currency is an ISO code only when they name a currency; otherwise null.
-- Use a name from accounts when they mention an account; otherwise null.
+- When they mention one of their accounts, use its name from accounts. A new account \
+keeps the name they give it. Otherwise account is null.
 - For an expense, use a name from categories when one fits, otherwise one lowercase word \
 such as """ + ", ".join(CATEGORIES) + """.
 - For lending, direction is lent when they gave money and borrowed when they received it; \
@@ -187,10 +195,8 @@ def judge(message, today, context, complete):
     """One model call. Returns validated actions, or raises with a fixed code."""
     user = {
         "today": f"{today.isoformat()} ({today:%A})",
-        "accounts": [
-            f"{a['name']} ({a['currency']}{', default' if a['default'] else ''})"
-            for a in context["accounts"]
-        ],
+        "accounts": [{"name": a["name"], "currency": a["currency"], "default": a["default"]}
+                     for a in context["accounts"]],
         "categories": context["categories"],
         "people": context["people"],
         "message": message,
@@ -203,30 +209,48 @@ def judge(message, today, context, complete):
     try:
         items = json.loads(raw)["actions"]
         if not isinstance(items, list) or not 0 < len(items) <= _MAX_ACTIONS:
-            raise ValueError("wrong number of actions")
+            raise _Invalid("wrong number of actions")
         actions = [_action(item, message, today) for item in items]
-    except (ValueError, KeyError, TypeError, AttributeError):
-        raise EngineError("unparseable", "the model's answer could not be read") from None
+    except (ValueError, KeyError, TypeError, AttributeError) as error:
+        raise EngineError("unparseable", "the model's answer could not be read",
+                          reason=_why(error)) from None
     ops = {action.op for action in actions}
     if len(actions) > 1 and not (ops == {"create"} or ops == {"query"}):
-        raise EngineError("ambiguous", "ask for one change at a time")
+        raise EngineError("ambiguous", "ask for one change at a time",
+                          reason="several actions that are not all creates or all queries")
     if ops == {"unsupported"}:
-        raise EngineError("unparseable", "that is not about your money")
+        raise EngineError("unparseable", "that is not about your money",
+                          reason="the model judged it unsupported")
     return actions
+
+
+class _Invalid(ValueError):
+    """A model answer that fails a check. Its text is fixed, so it may be logged."""
+
+
+def _why(error):
+    """Which check refused a model answer, without anything the model wrote."""
+    if isinstance(error, _Invalid):
+        return str(error)
+    if isinstance(error, KeyError):
+        return "the answer has no actions list"
+    if isinstance(error, json.JSONDecodeError):
+        return "the answer is not JSON"
+    return f"the answer has the wrong shape ({type(error).__name__})"
 
 
 def _action(item, message, today):
     if not isinstance(item, dict):
-        raise ValueError("an action is not an object")
+        raise _Invalid("an action is not an object")
     op = _pick(item.get("op"), OPS, required=True)
     action = Action(op)
     action.entity = _pick(item.get("entity"), ENTITIES)
     if op in ("create", "update", "delete") and action.entity is None:
-        raise ValueError("a change names what it changes")
+        raise _Invalid("a change names what it changes")
     written = {n.minor for n in numbers_in(message) if n.minor is not None}
     action.amount = _amount(item.get("amount"), written)
     if op == "create" and action.amount is None and action.entity != "account":
-        raise ValueError("a new entry needs an amount")
+        raise _Invalid("a new entry needs an amount")
     action.target_amount = _amount(item.get("target_amount"), None)
     for name in ("currency", "category", "note", "account", "to_account", "person",
                  "target_text", "question"):
@@ -236,7 +260,7 @@ def _action(item, message, today):
         # message itself names.
         action.currency = action.currency.upper()
         if action.currency not in currencies_in(message):
-            raise ValueError("the currency does not appear in the message")
+            raise _Invalid("the currency does not appear in the message")
     action.direction = _pick(item.get("direction"), DIRECTIONS)
     action.period = _pick(item.get("period"), PERIODS)
     action.metric = _pick(item.get("metric"), METRICS)
@@ -247,14 +271,14 @@ def _action(item, message, today):
     for name in ("date", "due", "target_date", "start", "end"):
         setattr(action, name, _day(item.get(name)))
     if op == "create" and action.date and action.date > today:
-        raise ValueError("an entry cannot happen in the future")
+        raise _Invalid("an entry cannot happen in the future")
     if op == "query" and action.metric is None:
-        raise ValueError("a question names what it asks about")
+        raise _Invalid("a question names what it asks about")
     if op == "clarify" and not action.question:
-        raise ValueError("a clarification carries its question")
+        raise _Invalid("a clarification carries its question")
     if op in ("update", "delete") and not (action.target_text or action.target_amount
                                            or action.target_date or action.target_latest):
-        raise ValueError("a change says which entry it means")
+        raise _Invalid("a change says which entry it means")
     return action
 
 
@@ -262,7 +286,7 @@ def _pick(value, allowed, required=False):
     if value is None and not required:
         return None
     if value not in allowed:
-        raise ValueError(f"unexpected value {value!r}")
+        raise _Invalid("a field has a value outside its choices")
     return value
 
 
@@ -270,7 +294,7 @@ def _string(value):
     if value is None:
         return None
     if not isinstance(value, str):
-        raise ValueError("expected text")
+        raise _Invalid("expected text")
     text = " ".join(value.split())[:300]
     return text or None
 
@@ -283,16 +307,19 @@ def _amount(value, written):
     amounts = [n.minor for n in numbers_in(str(value).replace("₹", "").replace("$", ""))
                if n.minor is not None]
     if len(amounts) != 1 or amounts[0] <= 0:
-        raise ValueError("an amount must be one positive number")
+        raise _Invalid("an amount must be one positive number")
     if written is not None and amounts[0] not in written:
-        raise ValueError("the amount does not appear in the message")
+        raise _Invalid("the amount does not appear in the message")
     return amounts[0]
 
 
 def _day(value):
     if value is None or value == "":
         return None
-    return date.fromisoformat(str(value))
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        raise _Invalid("a date is not YYYY-MM-DD") from None
 
 
 # --- the OpenAI-compatible call ---------------------------------------------
@@ -315,17 +342,23 @@ def openai_complete(base_url, model, key, client=None, resolve=socket.getaddrinf
         body = {"model": model, "messages": messages}
         if "gpt-oss" in model:
             body.update(reasoning_effort="low", max_completion_tokens=2048)
-        if schema is not None:
-            body["response_format"] = (
-                {"type": "json_schema",
-                 "json_schema": {"name": "actions", "strict": True, "schema": schema}}
-                if endpoint not in _NO_SCHEMAS else {"type": "json_object"})
+        if schema is not None and endpoint in _NO_SCHEMAS:
+            _plain_json(body, messages, schema)
+        elif schema is not None:
+            body["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "actions", "strict": True, "schema": schema}}
         response = _post(client, url, key, body)
         if response.status_code == 400 and schema is not None and endpoint not in _NO_SCHEMAS:
+            if _missed_schema(response):
+                # The endpoint takes schemas; this one answer did not fit. That
+                # says nothing about the next call, so nothing is remembered.
+                raise EngineError("unparseable", "the model's answer could not be read",
+                                  status=502, reason="the model's answer did not match the schema")
             # Not every endpoint takes a JSON schema. Plain JSON mode is checked
             # just as strictly here, so fall back to it for this endpoint.
             _NO_SCHEMAS.add(endpoint)
-            body["response_format"] = {"type": "json_object"}
+            _plain_json(body, messages, schema)
             response = _post(client, url, key, body)
         _refuse(response.status_code)
         try:
@@ -339,27 +372,49 @@ def openai_complete(base_url, model, key, client=None, resolve=socket.getaddrinf
     return complete
 
 
+def _plain_json(body, messages, schema):
+    """Ask for plain JSON, which carries no schema, so the schema goes in the prompt:
+    without it the model does not know the shape its answer must take."""
+    body["response_format"] = {"type": "json_object"}
+    body["messages"] = [*messages, {
+        "role": "system",
+        "content": "Answer with one JSON object that matches this JSON schema exactly, "
+                   "with every property present:\n" + json.dumps(schema)}]
+
+
+def _missed_schema(response):
+    """Whether a 400 is the endpoint checking one answer against the schema, as
+    Groq's strict mode does, rather than refusing schemas altogether."""
+    try:
+        error = response.json().get("error") or {}
+        return error.get("code") == "json_validate_failed"
+    except (ValueError, AttributeError):
+        return False
+
+
 def _post(client, url, key, body):
     try:
         return client.post(url, json=body, headers={"authorization": f"Bearer {key}"},
                            timeout=httpx.Timeout(30.0, connect=5.0))
-    except httpx.HTTPError:
+    except httpx.HTTPError as error:
         raise EngineError("unparseable", "the model did not answer, so nothing was changed",
-                          status=502) from None
+                          status=502, reason=f"the call failed ({type(error).__name__})") from None
 
 
 def _refuse(status):
     if status < 400:
         return
+    reason = f"the model provider answered {status}"
     if status in (401, 403):
-        raise EngineError("bad_key", "the model provider rejected that key")
+        raise EngineError("bad_key", "the model provider rejected that key", reason=reason)
     if status == 404:
-        raise EngineError("bad_key", "the model provider does not know that model or address")
+        raise EngineError("bad_key", "the model provider does not know that model or address",
+                          reason=reason)
     if status == 429:
         raise EngineError("limit_reached", "the model provider is limiting this key; "
-                                           "try again shortly")
+                                           "try again shortly", reason=reason)
     raise EngineError("unparseable", "the model did not answer, so nothing was changed",
-                      status=502)
+                      status=502, reason=reason)
 
 
 def _check_address(base_url, resolve, allow_private):

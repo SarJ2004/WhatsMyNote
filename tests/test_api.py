@@ -681,3 +681,102 @@ def test_the_default_model_call_refuses_a_private_address(dsn, monkeypatch):
                         {**WITH_KEY, "x-model-base-url": "https://127.0.0.1/v1"})
     assert (response.status_code, response.json()["code"]) == (400, "bad_key")
     assert sent == []
+
+
+def test_a_refused_chat_logs_its_code_and_reason_but_never_the_message(world, caplog, capsys):
+    client, model, _ = world
+    open_accounts(client, Cash=50000)
+    caplog.set_level(logging.INFO)
+    model.say(actions(act(op="create", entity="expense", amount="10", currency="INR",
+                          category="food", note="chocolates")))
+    response = chat(client, "got chocolates for 10", WITH_KEY)
+    assert (response.status_code, response.json()["code"]) == (422, "unparseable")
+    line = next(r.getMessage() for r in caplog.records if r.name == "whatsmynote")
+    assert "POST /chat" in line and "422" in line and "unparseable" in line
+    assert "the currency does not appear in the message" in line
+    captured = capsys.readouterr()
+    for text in (caplog.text, captured.out, captured.err):
+        assert "chocolates" not in text and KEY not in text
+
+
+def test_every_refused_chat_is_logged_with_its_code(world, caplog):
+    client, _, _ = world
+    caplog.set_level(logging.INFO)
+    assert client.post("/chat", json={"message": "spent 400"}).status_code == 401
+    assert post(client, "/chat", ["not", "an", "object"]).status_code == 422
+    assert chat(client, "spent 400 on dinner").status_code == 422
+    lines = [r.getMessage() for r in caplog.records if r.name == "whatsmynote"]
+    assert len(lines) == 3
+    assert "401 unauthenticated" in lines[0]
+    assert "422 unparseable" in lines[1]
+    assert "422 no_account" in lines[2]
+
+
+def groq_like(answers):
+    """A stand-in for Groq serving openai/gpt-oss-120b, as it behaved on staging.
+
+    In strict mode Groq checks the model's answer against the schema and answers
+    400 json_validate_failed when it does not match. In plain JSON mode the model
+    only knows the {"actions": [...]} wrapper if a system message spells it out;
+    otherwise it answers with a bare action, as it did on staging.
+    """
+    import httpx
+    import jsonschema
+
+    def handler(request):
+        body = json.loads(request.content)
+        message = json.loads(body["messages"][-1]["content"])["message"]
+        answer = {"actions": answers[message]}
+        fmt = body["response_format"]
+        if fmt["type"] == "json_schema":
+            try:
+                jsonschema.validate(answer, fmt["json_schema"]["schema"])
+            except jsonschema.ValidationError:
+                return httpx.Response(400, json={"error": {
+                    "message": "Generated JSON does not match the expected schema.",
+                    "type": "invalid_request_error", "code": "json_validate_failed"}})
+        else:
+            told = any('"actions"' in m["content"] for m in body["messages"]
+                       if m["role"] == "system")
+            answer = answer if told else answer["actions"][0]
+        content = json.dumps(answer)
+        return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+
+    return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def test_the_default_model_books_staging_messages_through_the_real_call_path(dsn):
+    from engine import intent
+    from engine.api import build_app
+
+    flags = {"repayment": None, "target_latest": None}
+    groq = groq_like({
+        "i wanaa edit my expenses": [act(op="clarify", question="Which expense?", **flags)],
+        "got a toothpaste for 60": [act(op="create", entity="expense", amount="60",
+                                        category="other", note="toothpaste", **flags)],
+        "lent amish 50 and smit 80": [
+            act(op="create", entity="lending", amount="50", person="amish",
+                direction="lent", **flags),
+            act(op="create", entity="lending", amount="80", person="smit",
+                direction="lent", **flags)],
+    })
+
+    def complete_for(model):
+        return intent.openai_complete(model.base_url, model.name, model.key, client=groq,
+                                      resolve=lambda host, port, **kw: [
+                                          (2, 1, 6, "", ("104.18.0.1", port))])
+
+    app = build_app(dsn=dsn, verify=Verifier({"alice-token": ALICE}), complete_for=complete_for,
+                    fetch_rate=None, today=lambda: TODAY, daily_limit=5)
+    intent._NO_SCHEMAS.clear()
+    with TestClient(app) as client:
+        open_accounts(client, Cash=50000)
+        asked = chat(client, "i wanaa edit my expenses", WITH_KEY)
+        assert (asked.status_code, asked.json()["reply"]) == (200, "Which expense?")
+        booked = chat(client, "got a toothpaste for 60", WITH_KEY)
+        assert booked.status_code == 200, booked.text
+        assert booked.json()["balance"] == 50000 - 6000
+        lent = chat(client, "lent amish 50 and smit 80", WITH_KEY)
+        assert lent.status_code == 200, lent.text
+        assert balances(client) == {"Cash": 50000 - 6000 - 5000 - 8000}
+    intent._NO_SCHEMAS.clear()

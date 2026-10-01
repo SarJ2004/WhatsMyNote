@@ -27,12 +27,17 @@ STATUS = {
 
 
 class EngineError(Exception):
-    """A refusal with a fixed code. The message is for people and never carries a key."""
+    """A refusal with a fixed code. The message is for people and never carries a key.
 
-    def __init__(self, code, message, status=None):
+    reason, when given, says for the log which check refused. It is fixed text
+    written here, never a key or anything the person or the model wrote.
+    """
+
+    def __init__(self, code, message, status=None, reason=None):
         super().__init__(message)
         self.code = code
         self.status = status or STATUS.get(code, 500)
+        self.reason = reason
 
 
 def sentence(code):
