@@ -345,7 +345,8 @@ class KeyForm(Dialog):
         self.current: ModelSettings = store.load()
 
     def body(self) -> ComposeResult:
-        lead = "WhatsMyNote reads your messages with your own model. " if self.first else ""
+        lead = ("Clear bookings like \"spent 400 on dinner\" work without a key. Questions "
+                "and advice use your own model. ") if self.first else ""
         yield Static(Text(
             lead + "Use any OpenAI-compatible key. It stays on this computer and is "
             "sent with each message, never stored by the server.", style=MUTED), classes="dialog-help")

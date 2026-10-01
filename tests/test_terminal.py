@@ -452,17 +452,33 @@ def test_first_run_asks_for_the_key_then_it_can_be_removed(tmp_path):
     _run(check, tmp_path, user=ADA, key="")
 
 
-def test_a_message_without_a_key_asks_for_one_and_is_not_sent(tmp_path):
+def test_without_a_key_a_message_is_still_sent(tmp_path):
     async def check(app, pilot):
         await pilot.pause(0.2)
         await pilot.press("escape")
         await pilot.pause(0.1)
-        assert "Add one with /key" in _screen_text(app)
+        assert "Clear bookings work without one" in _screen_text(app)
         await _type(pilot, "spent 400 on dinner")
-        assert _errors().SENTENCES["no_key"] in _screen_text(app)
+        await pilot.pause(0.1)
+        assert "Saved." in _screen_text(app)
 
-    _, _, engine = _run(check, tmp_path, user=ADA, key="")
-    assert engine.sent == []
+    _, _, engine = _run(check, tmp_path, user=ADA, key="", replies=[{"reply": "Saved."}])
+    assert engine.sent == ["spent 400 on dinner"]
+
+
+def test_a_used_confirmation_says_so_whatever_its_code():
+    from whatsmynote.app.client import read_result
+
+    result = read_result(410, {"code": "ambiguous", "message": "expired"}, confirming=True)
+    assert result.error == _errors().CONFIRM_FAILED
+
+
+def test_engine_observation_kinds_are_labelled():
+    from whatsmynote.app.ui.present import observation_line
+
+    text = _plain(observation_line("over_budget", "food", "₹500 over its ₹4,000.00 monthly budget"))
+    assert "food" in text and "over its" in text
+    assert "near budget" in _plain(observation_line("near_budget", "", "used most of it"))
 
 
 def test_email_sign_in_keeps_the_password_away_from_the_engine(tmp_path):

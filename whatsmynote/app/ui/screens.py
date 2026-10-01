@@ -8,7 +8,6 @@ from textual.screen import Screen
 from textual.widgets import Input, Label
 
 from whatsmynote.app.ui.constants import ACCENT, ALIASES, COMMANDS, MUTED, NO, YES
-from whatsmynote.app.ui.errors import SENTENCES
 from whatsmynote.app.ui.mixins.auth import AuthMixin
 from whatsmynote.app.ui.mixins.chat import ChatMixin
 from whatsmynote.app.ui.mixins.onboarding import OnboardingMixin
@@ -125,9 +124,6 @@ class MainScreen(AuthMixin, OnboardingMixin, ChatMixin, Screen):
         elif not self.user:
             self.say(problem("Sign in first so this can be saved. Type /login."))
             self.say(note("Press ↑ after signing in to bring this line back."))
-        elif not self.app.keys.load().key:
-            self.say(problem(SENTENCES["no_key"]))
-            self.say(note("Press ↑ after adding it to bring this line back."))
         elif self.chatting:
             self.say(note("Still working on your last message. Send this one when it is done."))
         else:
@@ -202,7 +198,8 @@ class MainScreen(AuthMixin, OnboardingMixin, ChatMixin, Screen):
         elif outcome == "removed":
             self.say(success("Model key removed from this computer."))
         elif first:
-            self.say(note("No model key yet. Add one with /key before you send a message."))
+            self.say(note("No model key yet. Clear bookings work without one; add it with /key "
+                          "for questions and advice."))
         else:
             self.say(note("Model key unchanged."))
         self.refresh_status()

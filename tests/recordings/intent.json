@@ -1,0 +1,51 @@
+{
+  "about": "Chat-completion responses in the provider's response shape for the intent prompt, replayed with no network.",
+  "today": "2026-09-26",
+  "cases": [
+    {
+      "message": "spent 400 on dinner and 250 on an uber from Cash",
+      "content": {"actions": [
+        {"op": "create", "entity": "expense", "amount": "400", "currency": null, "category": "food", "note": "dinner", "account": "Cash", "to_account": null, "person": null, "direction": null, "repayment": false, "date": null, "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": false, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null},
+        {"op": "create", "entity": "expense", "amount": "250", "currency": null, "category": "transport", "note": "uber", "account": "Cash", "to_account": null, "person": null, "direction": null, "repayment": false, "date": null, "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": false, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null}
+      ]},
+      "expect": [
+        {"op": "create", "entity": "expense", "amount": 40000, "category": "food", "note": "dinner", "account": "Cash"},
+        {"op": "create", "entity": "expense", "amount": 25000, "category": "transport", "note": "uber", "account": "Cash"}
+      ]
+    },
+    {
+      "message": "change yesterday's uber to 300",
+      "content": {"actions": [
+        {"op": "update", "entity": "expense", "amount": "300", "currency": null, "category": null, "note": null, "account": null, "to_account": null, "person": null, "direction": null, "repayment": false, "date": null, "due": null, "period": null, "target_text": "uber", "target_amount": null, "target_date": "2026-09-25", "target_latest": false, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null}
+      ]},
+      "expect": [
+        {"op": "update", "entity": "expense", "amount": 30000, "target_text": "uber", "target_date": "2026-09-25"}
+      ]
+    },
+    {
+      "message": "what were my biggest expenses last month?",
+      "content": {"actions": [
+        {"op": "query", "entity": "expense", "amount": null, "currency": null, "category": null, "note": null, "account": null, "to_account": null, "person": null, "direction": null, "repayment": false, "date": null, "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": false, "metric": "transactions", "range": "last_month", "start": null, "end": null, "order": "largest", "question": null}
+      ]},
+      "expect": [
+        {"op": "query", "entity": "expense", "metric": "transactions", "range": "last_month", "order": "largest"}
+      ]
+    },
+    {
+      "message": "where can I cut back?",
+      "content": {"actions": [
+        {"op": "advise", "entity": null, "amount": null, "currency": null, "category": null, "note": null, "account": null, "to_account": null, "person": null, "direction": null, "repayment": false, "date": null, "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": false, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null}
+      ]},
+      "expect": [{"op": "advise"}]
+    },
+    {
+      "message": "gave Ravi 2k, he'll return it by 15 oct",
+      "content": {"actions": [
+        {"op": "create", "entity": "lending", "amount": "2k", "currency": null, "category": null, "note": null, "account": null, "to_account": null, "person": "Ravi", "direction": "lent", "repayment": false, "date": null, "due": "2026-10-15", "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": false, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null}
+      ]},
+      "expect": [
+        {"op": "create", "entity": "lending", "amount": 200000, "person": "Ravi", "direction": "lent", "due": "2026-10-15"}
+      ]
+    }
+  ]
+}

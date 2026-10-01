@@ -10,7 +10,7 @@ Thanks for helping. Bug reports, fixes and features are all welcome: open an
 | `engine/` | The stateless engine: parsing, money, rates, the ledger, queries, and the FastAPI app. |
 | `web/index.html` | The website. One file, no build step; the engine serves it at `/`. |
 | `whatsmynote/` | The terminal app published to PyPI. |
-| `mcp_server/` | MCP tools over the engine. |
+| `whatsmynote/mcp_server.py` | The `whatsmynote-mcp` stdio MCP server, a client of the engine's API. |
 | `supabase/migrations/` | The schema, as plain SQL. It is the only description of the database. |
 | `tests/` | The test suite. |
 

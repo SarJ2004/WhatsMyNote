@@ -79,6 +79,9 @@ def _observations(value):
 
 
 def _failure(status, body, confirming=False):
+    if confirming and status == 410:
+        # A used or expired token. Whatever code it carries, say what happened.
+        return CONFIRM_FAILED, ""
     if status >= 500:
         fallback = SERVER
     elif confirming:

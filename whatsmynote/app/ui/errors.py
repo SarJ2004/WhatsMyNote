@@ -5,13 +5,13 @@ a key or an internal detail onto the screen."""
 SENTENCES = {
     "unauthenticated": "You are not signed in, or your sign-in expired. Type /login to sign in.",
     "bad_key": "Your model key was rejected. Check it, or change it with /key.",
-    "no_key": "Add your model key first. Type /key to add it.",
+    "no_key": "That needs your own model key. Add one with /key. Clear bookings work without it.",
     "rate_unavailable": "Exchange rates are unavailable right now, so nothing was saved. Try again soon.",
     "no_account": "There is no account to record this in yet. Add one with /account.",
     "unsupported_currency": "That currency is not supported, so nothing was saved.",
     "ambiguous": "That matches more than one record. Add a detail, like the date or the amount.",
     "unparseable": "That did not read as money. Try something like: spent 400 on dinner",
-    "limit_reached": "You have reached a usage limit for now. Wait a little, then try again.",
+    "limit_reached": "The model allowance is used up for now. Clear bookings still work; try the rest later.",
 }
 
 UNKNOWN = "Something went wrong, and nothing was changed."

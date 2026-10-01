@@ -1,29 +1,86 @@
 """The HTTP surface. Identity comes from the verified token and is applied as
 the transaction role; nothing in a request body can name a user.
+
+The caller's model key arrives in a header, is used for that request only, and
+is never stored, logged, or echoed: an unexpected failure is logged with the key
+scrubbed out, and every error body is written here from a fixed code.
 """
 
 import hashlib
+import logging
+import os
+import threading
 import time
-
-import psycopg2
+import traceback
+from contextlib import asynccontextmanager
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 
-from engine.ledger import LedgerError, apply, open_account
-from engine.parse import parse_message
+from engine import intent, queries
+from engine.chat import Chat, Model
+from engine.db import Database
+from engine.errors import EngineError, sentence
+from engine.ledger import is_minor, open_account, set_budget
 from engine.queries import balances as query_balances
 from engine.queries import spending_by_category
-from datetime import date
-
+from engine.rates import frankfurter
 
 _TOKEN_TTL = 60
+_DEFAULT_DAILY_CALLS = 100
+log = logging.getLogger("whatsmynote")
 
 
-def build_app(dsn, verify):
-    app = FastAPI()
-    cache = {}
+def build_app(dsn, verify, complete_for=None, fetch_rate=frankfurter, today=None,
+              daily_limit=None, pool_size=5, allow_private_models=False, clock=time.monotonic):
+    db = Database(dsn, size=pool_size)
+    if complete_for is None:
+        def complete_for(model):
+            return intent.openai_complete(model.base_url, model.name, model.key,
+                                          allow_private=allow_private_models)
+    if daily_limit is None:
+        daily_limit = int(os.environ.get("WMN_DAILY_MODEL_CALLS", _DEFAULT_DAILY_CALLS))
+    if today is None:
+        zone = ZoneInfo(os.environ.get("WMN_TIMEZONE", "UTC"))
+
+        def today():
+            return datetime.now(zone).date()
+
+    chat = Chat(db, complete_for, fetch_rate, today, daily_limit)
+    tokens = _TokenCache(verify, clock)
+
+    @asynccontextmanager
+    async def lifespan(app):
+        yield
+        db.close()
+
+    app = FastAPI(lifespan=lifespan)
+
+    @app.exception_handler(RequestValidationError)
+    def malformed(request, error):
+        if not tokens.user(request):
+            return _sign_in()
+        return _refusal(EngineError("unparseable", "the request body could not be read"))
+
+    def guarded(request, work):
+        """Run an endpoint as the signed-in user, turning every failure into the
+        fixed error body. Nothing about the model key reaches a log."""
+        user = tokens.user(request)
+        if not user:
+            return _sign_in()
+        try:
+            return work(user)
+        except EngineError as error:
+            return _refusal(error)
+        except Exception as error:
+            key = request.headers.get("x-model-key")
+            text = "".join(traceback.format_exception(error))
+            log.error("request failed: %s", text.replace(key, "[model key]") if key else text)
+            return JSONResponse({"code": "internal", "message": sentence("internal")}, 500)
 
     @app.get("/health")
     def health():
@@ -34,122 +91,140 @@ def build_app(dsn, verify):
         page = Path(__file__).resolve().parents[1] / "web" / "index.html"
         return FileResponse(page)
 
-    def identity(request):
-        header = request.headers.get("authorization", "")
-        if not header.startswith("Bearer "):
-            return None
-        token = header.split(" ", 1)[1]
-        key = hashlib.sha256(token.encode()).hexdigest()
-        cached = cache.get(key)
-        if cached and time.monotonic() - cached[1] < _TOKEN_TTL:
-            return cached[0]
-        user = verify(token)
-        if user:
-            cache[key] = (user, time.monotonic())
-        return user
+    @app.post("/chat")
+    def chat_turn(body: dict, request: Request):
+        model = Model(
+            key=request.headers.get("x-model-key") or None,
+            base_url=request.headers.get("x-model-base-url") or intent.DEFAULT_BASE_URL,
+            name=request.headers.get("x-model-name") or intent.DEFAULT_MODEL,
+        )
+        return guarded(request, lambda user: chat.reply(user, body.get("message"), model))
 
-    def connect(user):
-        conn = psycopg2.connect(dsn)
-        with conn.cursor() as cur:
-            cur.execute("set local role authenticated")
-            cur.execute(
-                "select set_config('request.jwt.claim.sub', %s, true)", (user,)
-            )
-        return conn
+    @app.post("/confirm")
+    def confirm_turn(body: dict, request: Request):
+        return guarded(request, lambda user: chat.confirm(user, body.get("token")))
 
     @app.post("/accounts")
     def accounts(body: dict, request: Request):
-        user = identity(request)
-        if not user:
-            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
-        with connect(user) as conn:
-            open_account(conn, body["name"], body["currency"], body["opening_balance"],
-                         is_default=True)
-        return {"status": "ok"}
+        def work(user):
+            name, currency, opening = (body.get("name"), body.get("currency"),
+                                       body.get("opening_balance"))
+            if not isinstance(name, str) or not isinstance(currency, str) \
+                    or not is_minor(opening):
+                raise EngineError("unparseable", "an account needs a name, a currency, "
+                                                 "and an opening balance in minor units")
+            with db.user(user) as conn:
+                open_account(conn, name, currency, opening,
+                             is_default=body.get("is_default") is True)
+            return {"status": "ok"}
+        return guarded(request, work)
 
-    @app.post("/chat")
-    def chat(body: dict, request: Request):
-        user = identity(request)
-        if not user:
-            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
-        parsed = parse_message(body["message"], date.today())
-        try:
-            with connect(user) as conn:
-                apply(conn, {
-                    "type": "expense",
-                    "account": parsed.account,
-                    "amount": parsed.amount,
-                    "currency": parsed.currency or "INR",
-                    "category": parsed.merchant or "general",
-                    "date": parsed.date or date.today(),
-                    "raw_text": body["message"],
-                })
-                with conn.cursor() as cur:
-                    cur.execute("select current_balance from account_records limit 1")
-                    balance = cur.fetchone()[0]
-        except LedgerError as error:
-            return JSONResponse({"code": error.code, "message": str(error)}, 422)
-        return {"balance": balance}
+    @app.post("/budgets")
+    def budgets(body: dict, request: Request):
+        def work(user):
+            category, amount = body.get("category"), body.get("amount")
+            period, currency = body.get("period") or "monthly", body.get("currency")
+            if not isinstance(category, str) or not is_minor(amount) \
+                    or not isinstance(period, str) or not isinstance(currency, (str, type(None))):
+                raise EngineError("unparseable", "a budget needs a category, an amount in "
+                                                 "minor units, and optionally a period and "
+                                                 "a currency")
+            with db.user(user) as conn:
+                record_id = set_budget(conn, category, amount, period, currency)
+                return {"status": "ok", "budget": queries.budget(conn, record_id)}
+        return guarded(request, work)
 
     @app.get("/balances")
     def balances(request: Request):
-        user = identity(request)
-        if not user:
-            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
-        with connect(user) as conn:
-            return {"balances": query_balances(conn)}
+        def work(user):
+            with db.user(user) as conn:
+                return {"balances": query_balances(conn)}
+        return guarded(request, work)
 
     @app.get("/spending")
     def spending(request: Request, start: str, end: str):
-        user = identity(request)
-        if not user:
-            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
-        with connect(user) as conn:
-            rows = spending_by_category(conn, start, end)
-        return {"spending": [{"category": category, "converted_minor": amount} for category, amount in rows]}
+        def work(user):
+            with db.user(user) as conn:
+                rows = spending_by_category(conn, _date(start), _date(end))
+            return {"spending": [{"category": category, "converted_minor": amount}
+                                 for category, amount in rows]}
+        return guarded(request, work)
 
     @app.get("/records")
     def records(request: Request, type: str = "", start: str = "", end: str = "", q: str = ""):
-        user = identity(request)
-        if not user:
-            return JSONResponse({"code": "unauthenticated", "message": "sign in first"}, 401)
-        clauses = ["1=1"]
-        params = []
-        if type:
-            clauses.append("r.record_type = %s")
-            params.append(type)
-        if start:
-            clauses.append("r.created_at::date >= %s")
-            params.append(start)
-        if end:
-            clauses.append("r.created_at::date <= %s")
-            params.append(end)
-        if q:
-            clauses.append("r.raw_text ilike %s")
-            params.append("%" + q + "%")
-        with connect(user) as conn, conn.cursor() as cur:
-            cur.execute(
-                "select r.created_at::date, r.record_type, r.raw_text "
-                "from records r where " + " and ".join(clauses) + " order by r.created_at desc",
-                params,
-            )
-            rows = [
-                {"date": str(row[0]), "record_type": row[1], "raw_text": row[2]}
-                for row in cur.fetchall()
-            ]
-        return {"records": rows}
+        def work(user):
+            with db.user(user) as conn:
+                return {"records": queries.records(conn, type, start, end, q)}
+        return guarded(request, work)
 
     return app
 
 
-def _live_verify(token):
-    import os
-    from supabase import create_client
+class _TokenCache:
+    """Verified tokens, remembered for a minute by a hash so the token itself is
+    never kept. Expired entries are dropped so the cache cannot grow without bound."""
 
-    url = os.environ["SUPABASE_URL"]
-    key = os.environ["SUPABASE_KEY"]
-    client = create_client(url, key)
-    result = client.auth.get_user(token)
+    def __init__(self, verify, clock):
+        self.verify = verify
+        self.clock = clock
+        self.entries = {}
+        self.lock = threading.Lock()
+
+    def user(self, request):
+        header = request.headers.get("authorization", "")
+        if not header.startswith("Bearer "):
+            return None
+        token = header.split(" ", 1)[1].strip()
+        if not token:
+            return None
+        key = hashlib.sha256(token.encode()).hexdigest()
+        now = self.clock()
+        with self.lock:
+            cached = self.entries.get(key)
+            if cached and now - cached[1] < _TOKEN_TTL:
+                return cached[0]
+        user = self.verify(token)
+        with self.lock:
+            if len(self.entries) > 1000:
+                self.entries = {k: v for k, v in self.entries.items() if now - v[1] < _TOKEN_TTL}
+            if user:
+                self.entries[key] = (user, now)
+        return user
+
+
+def _date(text):
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        raise EngineError("unparseable", "dates are written YYYY-MM-DD") from None
+
+
+def _refusal(error):
+    return JSONResponse({"code": error.code, "message": str(error)}, error.status)
+
+
+def _sign_in():
+    return _refusal(EngineError("unauthenticated", "sign in first"))
+
+
+_supabase = None
+_supabase_lock = threading.Lock()
+
+
+def _live_verify(token):
+    """The user id a Supabase access token belongs to, or None when it is invalid
+    or expired. The client is created once, so a check reuses its connection."""
+    global _supabase
+    from supabase import create_client
+    from supabase_auth.errors import AuthApiError
+
+    with _supabase_lock:
+        if _supabase is None:
+            _supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+    try:
+        result = _supabase.auth.get_user(token)
+    except AuthApiError:
+        return None
     if not result or not result.user:
         return None
     return result.user.id
@@ -157,7 +232,6 @@ def _live_verify(token):
 
 def create_live_app():
     """The process Render starts. Tests build their own app and never call this."""
-    import os
-
     database_url = os.environ["DATABASE_URL"].replace("postgresql+psycopg2://", "postgresql://")
-    return build_app(database_url, _live_verify)
+    return build_app(database_url, _live_verify,
+                     allow_private_models=os.environ.get("WMN_ALLOW_PRIVATE_MODEL_HOSTS") == "1")

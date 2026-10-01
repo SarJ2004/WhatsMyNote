@@ -15,6 +15,10 @@ class Cache:
     def get(self, on, base, quote):
         return self.rates.get((on, base, quote))
 
+    def last(self, on, base, quote):
+        earlier = [day for (day, b, q) in self.rates if b == base and q == quote and day <= on]
+        return self.rates[(max(earlier), base, quote)] if earlier else None
+
     def put(self, on, base, quote, rate):
         self.rates[(on, base, quote)] = rate
         self.writes.append((on, base, quote, rate))
@@ -99,3 +103,92 @@ def test_unsupported_currency_raises():
 
     with pytest.raises(UnsupportedCurrency):
         convert(Money(100, "XYZ"), "INR", TODAY, Cache(), fetcher=fetcher)
+
+
+def test_fetcher_failure_uses_the_last_cached_rate():
+    cache = Cache({(date(2026, 9, 20), "USD", "INR"): Decimal("82")})
+
+    def fetcher(base, quote, on):
+        raise RuntimeError("down")
+
+    result = convert(Money(100, "USD"), "INR", TODAY, cache, fetcher=fetcher)
+    assert result.amount == 8200
+
+
+def test_an_unsupported_currency_never_reaches_the_fetcher():
+    calls = []
+
+    def fetcher(base, quote, on):
+        calls.append(base)
+        return Decimal("1")
+
+    with pytest.raises(UnsupportedCurrency):
+        convert(Money(100, "BTC"), "INR", TODAY, Cache(), fetcher=fetcher)
+    assert calls == []
+
+
+def test_the_converter_reports_the_rate_it_used():
+    from engine.rates import Converter
+
+    converter = Converter(Cache({(TODAY, "USD", "INR"): Decimal("83.2")}), fetcher=None)
+    assert converter.convert(Money(1500, "USD"), "INR", TODAY) == (
+        Money(124800, "INR"), Decimal("83.2"))
+    assert converter.convert(Money(1500, "INR"), "INR", TODAY) == (Money(1500, "INR"), None)
+
+
+def test_the_database_cache_reads_rates_and_writes_only_when_flushed(dsn):
+    from engine.db import Database
+    from engine.rates import DbCache
+    from tests.support import ALICE
+
+    db = Database(dsn, size=2)
+    try:
+        with db.user(ALICE) as conn:
+            cache = DbCache(conn)
+            cache.put(TODAY, "USD", "INR", Decimal("83.5"))
+            assert cache.get(TODAY, "USD", "INR") == Decimal("83.5")
+        cache.flush(db)
+        with db.user(ALICE) as conn:
+            fresh = DbCache(conn)
+            assert fresh.get(TODAY, "USD", "INR") == Decimal("83.5")
+            assert fresh.last(date(2026, 9, 30), "USD", "INR") == Decimal("83.5")
+            assert fresh.get(date(2026, 9, 30), "USD", "INR") is None
+    finally:
+        db.close()
+
+
+def _transport(status, body):
+    import httpx
+
+    seen = []
+
+    def handler(request):
+        seen.append(str(request.url))
+        return httpx.Response(status, json=body)
+
+    return httpx.Client(transport=httpx.MockTransport(handler)), seen
+
+
+def test_the_live_fetcher_reads_the_rate_for_the_day():
+    from engine.rates import frankfurter
+
+    client, seen = _transport(200, {"base": "USD", "date": "2026-09-25", "rates": {"INR": 95.82}})
+    assert frankfurter("USD", "INR", TODAY, client=client) == Decimal("95.82")
+    assert seen == ["https://api.frankfurter.dev/v1/2026-09-26?base=USD&symbols=INR"]
+
+
+def test_the_live_fetcher_returns_nothing_for_an_unknown_currency():
+    from engine.rates import frankfurter
+
+    client, _ = _transport(404, {"message": "not found"})
+    assert frankfurter("USD", "AED", TODAY, client=client) is None
+
+
+def test_the_live_fetcher_raises_when_the_service_fails():
+    from engine.rates import frankfurter
+
+    import httpx
+
+    client, _ = _transport(502, {"message": "bad gateway"})
+    with pytest.raises(httpx.HTTPStatusError):
+        frankfurter("USD", "INR", TODAY, client=client)

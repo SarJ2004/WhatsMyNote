@@ -128,7 +128,7 @@ The terminal works in any terminal at least 80 columns wide, including macOS Ter
 
 1. Type `/login` and pick email and password, Google, or GitHub. Creating an account and resetting a password are in the same menu. The password goes only to the sign-in service, and the session is stored locally, so you sign in once.
 2. If you have no account yet, the terminal asks for its name, currency and balance today.
-3. Enter your model key when asked, with an optional base URL and model name. Change or remove it any time with `/key`.
+3. Enter your model key when asked, with an optional base URL and model name, or choose **Not now**: clear bookings work without one. Change or remove it any time with `/key`.
 4. Type what happened, in plain words, such as `spent 400 on dinner`. When a change needs your say-so, a card asks you to confirm: type `y` to confirm or `n` to cancel.
 
 | Command or key | What it does |
@@ -144,18 +144,25 @@ The terminal works in any terminal at least 80 columns wide, including macOS Ter
 
 ## MCP tools
 
-The engine also exposes its bookkeeping as MCP tools, in [`mcp_server/server.py`](mcp_server/server.py):
+`whatsmynote-mcp` is a stdio MCP server over the engine's API, in [`whatsmynote/mcp_server.py`](whatsmynote/mcp_server.py). It installs with the terminal app. Run it from an MCP client with your Supabase access token in the environment:
+
+```bash
+WMN_ACCESS_TOKEN=<your Supabase access token> WMN_MODEL_KEY=<optional model key> whatsmynote-mcp
+```
+
+Optional: `WMN_API_URL` (default the staging service), `WMN_MODEL_BASE_URL` and `WMN_MODEL_NAME`. An access token expires after an hour; the tools then answer `unauthenticated`.
 
 | Tool | What it does |
 |---|---|
-| `log_expense` | Book an expense, from structured fields or a plain sentence. |
-| `log_income` | Book income into an account. |
-| `transfer` | Move money between two of your accounts. |
+| `ask` | Say anything about your money in plain words: book, change, or delete an entry, or ask a question. |
+| `confirm` | Carry out a delete or an unclear change that `ask` asked to confirm. |
 | `balances` | Read your account balances. |
-| `spending` | Spending by category over a date range (defaults to this month). |
-| `ask` | Book an expense from one plain sentence and return your balances. |
+| `spending` | Spending by category between two dates. |
+| `records` | Your entries, filtered by type, dates, and words. |
+| `open_account` | Open an account. |
+| `set_budget` | Set a monthly or weekly budget for a category. |
 
-Every call carries your Supabase access token, and the engine takes your identity from that token. No tool accepts a user id, so an assistant cannot read someone else's books even if it tries.
+The engine takes your identity from the token. No tool accepts a user id or a token, so an assistant cannot read someone else's books even if it tries.
 
 ## Self-host it
 
@@ -173,7 +180,7 @@ You need a [Supabase](https://supabase.com) project (the free tier is enough), a
 
 ### 2. Configure the environment
 
-The engine reads exactly three variables. [`.env.sample`](.env.sample) lists them:
+The engine needs three variables. [`.env.sample`](.env.sample) lists them, with the optional ones (a daily ceiling on model calls, the timezone, and whether a model may run on a private host):
 
 | Variable | Where to find it |
 |---|---|

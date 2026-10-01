@@ -63,9 +63,10 @@ def balance_line(balance: int) -> Text:
 
 
 def observation_line(kind: str, category: str, detail: str) -> Table:
-    label = category or kind
-    warn = kind.lower() in {"warning", "warn", "alert", "limit", "budget"}
-    colour = ACCENT if warn else MUTED
+    label = category or kind.replace("_", " ")
+    urgent = kind in {"over_budget", "overdue_debt"}
+    warn = urgent or kind == "near_budget"
+    colour = BAD if urgent else ACCENT if warn else MUTED
     text = Text()
     if label:
         text.append(f"{label}  ", style=f"bold {colour}")
@@ -164,7 +165,7 @@ def welcome(signed_in: bool, name: str = "", key_hint: str = "", checking: bool 
     if key_hint:
         steps.add_row(*_step(True, "2", f"Model key {key_hint}", "/key", "to change or remove"))
     else:
-        steps.add_row(*_step(False, "2", "Add your model key", "/key", "any OpenAI-compatible key"))
+        steps.add_row(*_step(False, "2", "Add your model key", "/key", "for questions and advice"))
     steps.add_row(*_step(False, "3", "Write what happened", "", ""))
     for example in EXAMPLES:
         steps.add_row("", Text(example, style=ACCENT), "", "")
