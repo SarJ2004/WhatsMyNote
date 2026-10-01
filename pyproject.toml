@@ -38,12 +38,9 @@ dependencies = [
     "fastapi[standard]>=0.139.0",
     "uvicorn>=0.51.0",
     "twine>=6.2.0",
-    "langsmith>=0.10.2",
-    "sentry-sdk[fastapi]>=2.11.0",
-    "langgraph>=0.2.6",
-    "langchain-groq>=0.2.1",
-    "sqlalchemy>=2.0.36",
     "psycopg2-binary>=2.9.10",
+    "mcp>=2.2,<3",
+    "httpx>=0.27",
 ]
 
 [project.urls]
@@ -52,8 +49,15 @@ Repository = "https://github.com/SarJ2004/WhatsMyNote"
 
 [project.scripts]
 whatsmynote = "whatsmynote.app.main:main"
+whatsmynote-mcp = "whatsmynote.mcp_server:main"
 
 [dependency-groups]
-dev = []
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
 
 # Trigger PyPI release for v0.1.0

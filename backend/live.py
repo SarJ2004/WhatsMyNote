@@ -1,13 +1,6 @@
-"""Staging entry. Render still starts backend.main, so staging is switched by env.
+"""The process Render starts: `uvicorn backend.live:app`. It serves the engine
+and nothing else; the old backend is gone."""
 
-Set WMN_ENGINE=1 on the staging service only. Production does not set it.
-"""
+from engine.api import create_live_app
 
-import os
-
-if os.environ.get("WMN_ENGINE") == "1":
-    from engine.api import create_live_app
-
-    app = create_live_app()
-else:
-    from backend.main import app
+app = create_live_app()
