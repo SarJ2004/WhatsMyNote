@@ -215,13 +215,11 @@ def _refused(request, error):
 
 
 def _raised_at(error):
-    frame = error.__traceback__
-    if frame is None:
+    frames = traceback.extract_tb(error.__traceback__)
+    if not frames:
         return ""
-    while frame.tb_next:
-        frame = frame.tb_next
-    code = frame.tb_frame.f_code
-    return f" at {Path(code.co_filename).name}:{frame.tb_lineno} {code.co_name}"
+    last = frames[-1]
+    return f" at {Path(last.filename).name}:{last.lineno} {last.name}"
 
 
 _supabase = None

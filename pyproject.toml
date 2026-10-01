@@ -54,6 +54,7 @@ whatsmynote-mcp = "whatsmynote.mcp_server:main"
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.26.0",
     "pytest>=9.1.1",
 ]
 

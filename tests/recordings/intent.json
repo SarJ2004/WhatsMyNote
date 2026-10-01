@@ -1,5 +1,5 @@
 {
-  "about": "Chat-completion responses in the provider's response shape for the intent prompt, replayed with no network.",
+  "about": "Chat-completion responses in the provider's response shape for the intent prompt, replayed with no network. The last four are real answers from openai/gpt-oss-120b on Groq, recorded with this prompt and schema; the model writes null for a flag it has no view on.",
   "today": "2026-09-26",
   "cases": [
     {
@@ -46,6 +46,38 @@
       "expect": [
         {"op": "create", "entity": "lending", "amount": 200000, "person": "Ravi", "direction": "lent", "due": "2026-10-15"}
       ]
+    },
+    {
+      "message": "i wanaa edit my expenses",
+      "content": {"actions": [
+        {"op": "clarify", "entity": null, "amount": null, "currency": null, "category": null, "note": null, "account": null, "to_account": null, "person": null, "direction": null, "repayment": null, "date": null, "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": null, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": "Which expense would you like to edit and what changes should be made?"}
+      ]},
+      "expect": [{"op": "clarify", "repayment": false, "target_latest": false}]
+    },
+    {
+      "message": "create an SBI account with initial 50 balance",
+      "content": {"actions": [
+        {"op": "create", "entity": "account", "account": "SBI", "amount": "50", "currency": null, "date": null, "category": null, "note": null, "to_account": null, "person": null, "direction": null, "repayment": null, "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": null, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null}
+      ]},
+      "expect": [{"op": "create", "entity": "account", "amount": 5000, "account": "SBI"}]
+    },
+    {
+      "message": "lent amish 50 and smit 80",
+      "content": {"actions": [
+        {"op": "create", "entity": "lending", "amount": "50", "currency": null, "date": "2026-09-26", "note": null, "account": null, "to_account": null, "person": "amish", "direction": "lent", "repayment": false, "due": null, "category": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": null, "metric": null, "range": null, "start": null, "end": null, "order": null, "period": null, "question": null},
+        {"op": "create", "entity": "lending", "amount": "80", "currency": null, "date": "2026-09-26", "note": null, "account": null, "to_account": null, "person": "smit", "direction": "lent", "repayment": false, "due": null, "category": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": null, "metric": null, "range": null, "start": null, "end": null, "order": null, "period": null, "question": null}
+      ]},
+      "expect": [
+        {"op": "create", "entity": "lending", "amount": 5000, "person": "amish", "direction": "lent"},
+        {"op": "create", "entity": "lending", "amount": 8000, "person": "smit", "direction": "lent"}
+      ]
+    },
+    {
+      "message": "got a toothpaste for 60",
+      "content": {"actions": [
+        {"op": "create", "entity": "expense", "amount": "60", "currency": null, "category": "shopping", "note": "toothpaste", "account": "HDFC", "to_account": null, "person": null, "direction": null, "repayment": null, "date": "2026-09-26", "due": null, "period": null, "target_text": null, "target_amount": null, "target_date": null, "target_latest": null, "metric": null, "range": null, "start": null, "end": null, "order": null, "question": null}
+      ]},
+      "expect": [{"op": "create", "entity": "expense", "amount": 6000, "note": "toothpaste"}]
     }
   ]
 }
