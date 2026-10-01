@@ -338,15 +338,17 @@ class KeyForm(Dialog):
 
     TITLE_TEXT = "Your model key"
 
-    def __init__(self, store):
+    def __init__(self, store, first: bool = False):
         super().__init__()
         self.store = store
+        self.first = first
         self.current: ModelSettings = store.load()
 
     def body(self) -> ComposeResult:
+        lead = "WhatsMyNote reads your messages with your own model. " if self.first else ""
         yield Static(Text(
-            "Use your own OpenAI-compatible key. It stays on this computer and is "
-            "sent with each message.", style=MUTED), classes="dialog-help")
+            lead + "Use any OpenAI-compatible key. It stays on this computer and is "
+            "sent with each message, never stored by the server.", style=MUTED), classes="dialog-help")
         yield Label("Model key", classes="field-label")
         saved = f"saved key {self.current.masked()}, leave blank to keep it" if self.current.key else "sk-..."
         yield Input(password=True, placeholder=saved, id="key")
@@ -357,7 +359,7 @@ class KeyForm(Dialog):
 
     def actions(self) -> ComposeResult:
         others = [("Remove key", "remove")] if self.current.key else []
-        yield _buttons("Save", *others, ("Cancel", "cancel"))
+        yield _buttons("Save", *others, ("Not now" if self.first else "Cancel", "cancel"))
 
     def on_mount(self) -> None:
         super().on_mount()

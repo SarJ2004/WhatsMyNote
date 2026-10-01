@@ -20,6 +20,8 @@ class OnboardingMixin:
             return
         if not balances.rows:
             await self._add_account(first=True)
+        if not self.app.keys.load().key:
+            await self.edit_key(first=True)
 
     @work(exclusive=True, group="dialog")
     async def account_flow(self) -> None:

@@ -358,12 +358,15 @@ class FakeEngine:
 ADA = types.SimpleNamespace(email="ada@example.com", user_metadata={"full_name": "Ada Lovelace"})
 
 
-def _run(test, tmp_path, user=None, replies=()):
-    from whatsmynote.app.config import ModelKeyStore
+def _run(test, tmp_path, user=None, replies=(), key="sk-saved-key-0000"):
+    from whatsmynote.app.config import ModelKeyStore, ModelSettings
     from whatsmynote.app.ui.app import WhatsMyNoteApp
 
+    keys = ModelKeyStore(tmp_path / "config.env")
+    if key:
+        keys.save(ModelSettings(key=key))
     auth, engine = FakeAuth(user), FakeEngine(replies)
-    app = WhatsMyNoteApp(auth=auth, engine=engine, keys=ModelKeyStore(tmp_path / "config.env"))
+    app = WhatsMyNoteApp(auth=auth, engine=engine, keys=keys)
 
     async def go():
         async with app.run_test(size=(80, 24)) as pilot:
@@ -427,10 +430,12 @@ def test_a_confirmation_can_be_declined(tmp_path):
     assert engine.confirmed == []
 
 
-def test_the_key_dialog_saves_and_removes_the_key(tmp_path):
+def test_first_run_asks_for_the_key_then_it_can_be_removed(tmp_path):
+    from whatsmynote.app.ui.dialogs import KeyForm
+
     async def check(app, pilot):
-        await _type(pilot, "/key")
-        await pilot.pause(0.1)
+        await pilot.pause(0.2)
+        assert isinstance(app.screen, KeyForm)
         await pilot.press(*"sk-test-key-5678")
         await pilot.press("enter", "enter", "enter")
         await pilot.pause(0.1)
@@ -444,7 +449,20 @@ def test_the_key_dialog_saves_and_removes_the_key(tmp_path):
         await pilot.pause(0.1)
         assert app.keys.load().key == ""
 
-    _run(check, tmp_path, user=ADA)
+    _run(check, tmp_path, user=ADA, key="")
+
+
+def test_a_message_without_a_key_asks_for_one_and_is_not_sent(tmp_path):
+    async def check(app, pilot):
+        await pilot.pause(0.2)
+        await pilot.press("escape")
+        await pilot.pause(0.1)
+        assert "Add one with /key" in _screen_text(app)
+        await _type(pilot, "spent 400 on dinner")
+        assert _errors().SENTENCES["no_key"] in _screen_text(app)
+
+    _, _, engine = _run(check, tmp_path, user=ADA, key="")
+    assert engine.sent == []
 
 
 def test_email_sign_in_keeps_the_password_away_from_the_engine(tmp_path):

@@ -1,5 +1,8 @@
-/* Colours come from the whatsmynote theme in app.py. */
+"""The app's stylesheet. It lives in Python, not a .tcss file, so a one-file
+build of the terminal carries it without bundling data files. Colours come
+from the whatsmynote theme in app.py."""
 
+CSS = """
 MainScreen {
     background: $background;
     color: $foreground;
@@ -187,4 +190,4 @@ ModalScreen {
     color: $foreground;
     text-style: bold;
 }
-
+"""

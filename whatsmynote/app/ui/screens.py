@@ -8,6 +8,7 @@ from textual.screen import Screen
 from textual.widgets import Input, Label
 
 from whatsmynote.app.ui.constants import ACCENT, ALIASES, COMMANDS, MUTED, NO, YES
+from whatsmynote.app.ui.errors import SENTENCES
 from whatsmynote.app.ui.mixins.auth import AuthMixin
 from whatsmynote.app.ui.mixins.chat import ChatMixin
 from whatsmynote.app.ui.mixins.onboarding import OnboardingMixin
@@ -64,7 +65,10 @@ class MainScreen(AuthMixin, OnboardingMixin, ChatMixin, Screen):
             who.update(Text("checking sign-in...", style=MUTED))
         elif self.user:
             status = Text(display_name(self.user), style=ACCENT)
-            status.append("  ·  " + ("your model key" if key.key else "default model"), style=MUTED)
+            if key.key:
+                status.append("  ·  model key " + key.masked(), style=MUTED)
+            else:
+                status.append("  ·  no model key  ·  /key", style=MUTED)
             who.update(status)
         else:
             who.update(Text("not signed in  ·  /login", style=MUTED))
@@ -121,6 +125,9 @@ class MainScreen(AuthMixin, OnboardingMixin, ChatMixin, Screen):
         elif not self.user:
             self.say(problem("Sign in first so this can be saved. Type /login."))
             self.say(note("Press ↑ after signing in to bring this line back."))
+        elif not self.app.keys.load().key:
+            self.say(problem(SENTENCES["no_key"]))
+            self.say(note("Press ↑ after adding it to bring this line back."))
         elif self.chatting:
             self.say(note("Still working on your last message. Send this one when it is done."))
         else:
@@ -182,15 +189,20 @@ class MainScreen(AuthMixin, OnboardingMixin, ChatMixin, Screen):
 
     @work(exclusive=True, group="dialog")
     async def key_flow(self) -> None:
+        await self.edit_key()
+
+    async def edit_key(self, first: bool = False) -> None:
         from whatsmynote.app.ui.dialogs import KeyForm
         from whatsmynote.app.ui.present import success
 
-        outcome = await self.app.push_screen_wait(KeyForm(self.app.keys))
+        outcome = await self.app.push_screen_wait(KeyForm(self.app.keys, first=first))
         if outcome == "saved":
             self.say(success(f"Model key {self.app.keys.load().masked()} saved on this computer. "
                              "It goes with each message you send."))
         elif outcome == "removed":
             self.say(success("Model key removed from this computer."))
+        elif first:
+            self.say(note("No model key yet. Add one with /key before you send a message."))
         else:
             self.say(note("Model key unchanged."))
         self.refresh_status()

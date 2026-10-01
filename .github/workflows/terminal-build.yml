@@ -75,8 +75,13 @@ jobs:
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
+          # The release workflow creates the release too; whichever runs first wins.
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 \
+            || gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes \
+            || gh release view "${GITHUB_REF_NAME}" >/dev/null
           gh release upload "${GITHUB_REF_NAME}" \
             dist/whatsmynote-macos/whatsmynote-macos \
             dist/whatsmynote-windows/whatsmynote-windows.exe \

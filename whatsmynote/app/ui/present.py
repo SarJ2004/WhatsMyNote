@@ -164,7 +164,7 @@ def welcome(signed_in: bool, name: str = "", key_hint: str = "", checking: bool 
     if key_hint:
         steps.add_row(*_step(True, "2", f"Model key {key_hint}", "/key", "to change or remove"))
     else:
-        steps.add_row(*_step(False, "2", "Add a model key", "/key", "optional, stays on this computer"))
+        steps.add_row(*_step(False, "2", "Add your model key", "/key", "any OpenAI-compatible key"))
     steps.add_row(*_step(False, "3", "Write what happened", "", ""))
     for example in EXAMPLES:
         steps.add_row("", Text(example, style=ACCENT), "", "")

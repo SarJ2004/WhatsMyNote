@@ -8,6 +8,7 @@ from textual.theme import Theme
 
 from whatsmynote.app.ui.constants import ACCENT, BAD, CARD, GOOD, INK, MUTED, PAPER
 from whatsmynote.app.ui.screens import MainScreen
+from whatsmynote.app.ui.styles import CSS as STYLES
 
 THEME = Theme(
     name="whatsmynote",
@@ -27,7 +28,7 @@ THEME = Theme(
 
 class WhatsMyNoteApp(App):
     TITLE = "WhatsMyNote"
-    CSS_PATH = "screens.tcss"
+    CSS = STYLES
     ENABLE_COMMAND_PALETTE = False
     BINDINGS = [
         # Not a priority binding, so ctrl+c copies selected text first and
